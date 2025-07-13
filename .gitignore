@@ -1,2 +1,4 @@
 .env
 .venv
+# ignore python cache for all folders
+__pycache__/    

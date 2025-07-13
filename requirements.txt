@@ -1,3 +1,23 @@
+# 基础依赖
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# 数据库相关
+sqlalchemy>=2.0.0
+aiomysql>=0.1.1
+alembic>=1.11.0
+
+# API 文档
+python-multipart>=0.0.6
+
+# 认证与安全
+python-jose>=3.3.0
+passlib>=1.7.4
+bcrypt>=4.0.1
+
+# 已有的依赖
 qdrant-client
 openai
 python-dotenv 

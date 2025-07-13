@@ -8,11 +8,10 @@ class User(BaseModel):
     """
     The User table by SQLAlchemy.
     これはUser Tableです。
-    id: ユーザーID
-    name: ユーザー名
-    email: ユーザーのメールアドレス
-    password: ユーザーのパスワード
-    
+    id: user's id
+    name: user's name
+    email: user's email
+    password: user's password
     create_at and updated_at are defined in BaseModel.
     create_at と updated_at は BaseModel で定義されています。
     """
