@@ -4,46 +4,46 @@ from typing import List
 from qdrant_client import models
 from qdrant_client.http.models import ScoredPoint
 
-from app.repositories.vector.base import BaseVectorRepository
-from app.repositories.vector.embeddings import get_embedding, EMBEDDING_DIMENSION
+from app.core.vector.base import BaseVectorRepository
+from app.core.vector.embeddings import get_embedding, EMBEDDING_DIMENSION
 
 
-class VocabVectorRepository(BaseVectorRepository):
+class MistakeVectorRepository(BaseVectorRepository):
     """
-    Repository for vocabulary usages.
-    This class handles vectorization and search for vocabulary usage examples.
-    語彙の使用例を vectorに変換して検索するための repositoryです。
+    Repository for mistake error reasons.
+    This class handles vectorization and search for mistake error reasons.
+    間違いの理由を vectorに変換して検索するための repositoryです。
     """
     
     def __init__(self):
         """
-        Initialize the vocabulary vector repository.
-        語彙 vector repositoryを初期化します。
+        Initialize the mistake vector repository.
+        間違い vector repositoryを初期化します。
         """
         # 调用父类构造函数，设置集合名称和向量维度
         # 使用预定义的向量维度常量
         # Call parent constructor with collection name and vector dimension
-        super().__init__(collection_name="vocabs", vector_size=EMBEDDING_DIMENSION)
+        super().__init__(collection_name="mistakes", vector_size=EMBEDDING_DIMENSION)
 
-    def upsert_vector(self, relational_id: int, usage: str):
+    def upsert_vector(self, relational_id: int, error_reason: str):
         """
-        Upsert a vector for a vocab's usage.
+        Upsert a vector for a mistake's error reason.
         The vector ID will be a deterministic UUID based on the relational ID.
         
         Args:
-            relational_id: ID of the vocabulary in the relational database
-            usage: Vocabulary usage text to vectorize
+            relational_id: ID of the mistake in the relational database
+            error_reason: Error reason text to vectorize
         """
         # 基于关系ID生成确定性UUID
-        # 这确保了同一个vocab_id总是对应相同的vector_id
+        # 这确保了同一个mistake_id总是对应相同的vector_id
         # Generate deterministic UUID based on relational ID
-        # This ensures the same vocab_id always maps to the same vector_id
-        vector_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"vocab-{relational_id}"))
+        # This ensures the same mistake_id always maps to the same vector_id
+        vector_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"mistake-{relational_id}"))
         
-        # 使用OpenAI的嵌入模型将词汇用法文本转换为向量
-        # Convert vocabulary usage text to vector using OpenAI's embedding model
-        # 語彙の使用例 textを vectorに変換します
-        vector = get_embedding(usage)
+        # 使用OpenAI的嵌入模型将错误原因文本转换为向量
+        # Convert error reason text to vector using OpenAI's embedding model
+        # エラー理由の textを vectorに変換します
+        vector = get_embedding(error_reason)
 
         # 将向量和相关信息上传到Qdrant
         # 包括向量本身、ID和载荷（附加信息）
@@ -57,7 +57,7 @@ class VocabVectorRepository(BaseVectorRepository):
                     vector=vector,
                     payload={
                         "relational_id": relational_id,  # 关系数据库中的ID
-                        "text": usage,  # 原始词汇用法文本
+                        "text": error_reason,  # 原始错误原因文本
                     },
                 )
             ],
@@ -66,7 +66,8 @@ class VocabVectorRepository(BaseVectorRepository):
 
     def search(self, text: str, limit: int = 5) -> List[ScoredPoint]:
         """
-        Search for similar vocabulary usages.
+        Search for similar error reasons.
+        返回包含相似度分数、载荷和其他信息的 ScoredPoint 对象列表。
         
         Args:
             text: Query text to search for
@@ -78,6 +79,7 @@ class VocabVectorRepository(BaseVectorRepository):
         # 将查询文本转换为向量
         # 使用与上传时相同的嵌入模型
         # Convert query text to vector using the same embedding model
+        # query textを vectorに変換します
         vector = get_embedding(text)
         
         # 在Qdrant中搜索最相似的向量

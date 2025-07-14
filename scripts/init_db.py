@@ -34,7 +34,7 @@ async def init_db():
     
     async with engine.begin() as conn:
         # 创建所有表
-        from app.repositories.relational.base import Base
+        from app.core.db.base import Base
         await conn.run_sync(Base.metadata.create_all)
     
     # 创建初始管理员用户

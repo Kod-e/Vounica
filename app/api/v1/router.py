@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from typing import List, Optional
 
-from app.repositories.relational import get_db
+from app.core.db import get_db
 
 # 创建路由实例
 router = APIRouter(tags=["v1"])

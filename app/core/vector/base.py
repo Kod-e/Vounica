@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from qdrant_client import QdrantClient, models
 
-from app.repositories.vector.client import client
+from app.core.vector.client import client
 
 
 class BaseVectorRepository(ABC):

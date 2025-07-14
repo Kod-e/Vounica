@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from app.repositories.relational.base import BaseModel
+from app.core.db.base import BaseModel
 
 
 # 用户表, 记录用户的基本信息
@@ -12,6 +12,7 @@ class User(BaseModel):
     name: user's name
     email: user's email
     password: user's password
+    token_balance: user's token balance
     create_at and updated_at are defined in BaseModel.
     create_at と updated_at は BaseModel で定義されています。
     """
@@ -19,6 +20,10 @@ class User(BaseModel):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     email = Column(String, unique=True, index=True)
+    
+    # 用户的token余额
+    token_balance = Column(Integer)
+    
     password = Column(String)
     
     def __repr__(self):

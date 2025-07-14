@@ -4,8 +4,8 @@ from typing import List
 from qdrant_client import models
 from qdrant_client.http.models import ScoredPoint
 
-from app.repositories.vector.base import BaseVectorRepository
-from app.repositories.vector.embeddings import get_embedding, EMBEDDING_DIMENSION
+from app.core.vector.base import BaseVectorRepository
+from app.core.vector.embeddings import get_embedding, EMBEDDING_DIMENSION
 
 
 class GrammarVectorRepository(BaseVectorRepository):

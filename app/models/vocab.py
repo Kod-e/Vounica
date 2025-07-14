@@ -1,7 +1,7 @@
 # 记录用户单词的习得状态
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float
 from sqlalchemy.orm import relationship
-from app.repositories.relational.base import BaseModel
+from app.core.db.base import BaseModel
 
 
 # 单词习得状态表, 记录用户单词的习得状态

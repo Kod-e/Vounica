@@ -1,12 +1,26 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+import os
+from dotenv import load_dotenv
 
 from fastapi import FastAPI, Depends
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.api.v1.router import router as v1_router
 
-# 配置数据库 URL (建议实际项目中通过环境变量或配置文件加载)
-DATABASE_URL = "mysql+aiomysql://user:password@localhost:3306/vounica"
+# ---------------------------------------------------------------
+# 数据库连接 URL
+#   1. 首先通过 python-dotenv 读取 .env（方便本地开发）
+#   2. 然后从环境变量 DATABASE_URL 获取；若不存在则降级到默认值
+# ---------------------------------------------------------------
+
+# 读取 .env 文件变量
+load_dotenv()
+
+# 从环境变量获取数据库 URL；如果没有配置则使用默认值
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "mysql+aiomysql://user:password@localhost:3306/vounica",
+)
 
 # 全局变量，用于存储引擎和会话工厂
 engine = None

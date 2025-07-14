@@ -4,7 +4,7 @@ from sqlalchemy import select, update, delete, insert
 from sqlalchemy.sql import Select
 from sqlalchemy.engine.result import ScalarResult
 
-from app.repositories.relational.base import BaseModel
+from app.core.db.base import BaseModel
 
 # 泛型类型变量，代表特定的模型类型
 T = TypeVar('T', bound=BaseModel)

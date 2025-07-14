@@ -1,7 +1,7 @@
 # 错题集记录时, 记录整个题目的string内容, 并且让GPT生成错在哪里的评价
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from app.repositories.relational.base import BaseModel
+from app.core.db.base import BaseModel
 
 
 # 错题集表, 记录用户的基本信息

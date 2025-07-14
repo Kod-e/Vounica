@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 
-from app.repositories.relational import get_db
+from app.core.db import get_db
 
 
 # 后续添加JWT验证
