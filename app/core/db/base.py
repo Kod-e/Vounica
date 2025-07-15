@@ -1,4 +1,4 @@
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy import Column, DateTime
 from datetime import datetime
 from typing import AsyncGenerator
@@ -9,7 +9,8 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession
 import importlib
 
-Base = declarative_base()
+# 使用显式类型标注，避免 Base 被推断为 Any
+Base: DeclarativeMeta = declarative_base()
 
 # 增加基础的表, 定义created_at和updated_at
 class BaseModel(Base):
@@ -40,6 +41,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         raise RuntimeError("DB Session Maker is not initialized")
 
     async with session_maker() as session:
+        session: AsyncSession
         try:
             yield session
             await session.commit()

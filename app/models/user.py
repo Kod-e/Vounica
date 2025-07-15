@@ -18,13 +18,13 @@ class User(BaseModel):
     """
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
-    name = Column(String)
-    email = Column(String, unique=True, index=True)
+    name = Column(String(128))
+    email = Column(String(254), unique=True, index=True)
     
     # 用户的token余额
     token_balance = Column(Integer)
     
-    password = Column(String)
+    password = Column(String(256))
     
     def __repr__(self):
         return f"<User {self.name}>"

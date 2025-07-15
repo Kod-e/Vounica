@@ -1,5 +1,5 @@
 # 记录用户语法的习得状态
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Text
 from sqlalchemy.orm import relationship
 from app.core.db.base import BaseModel
 
@@ -12,12 +12,12 @@ class Memory(BaseModel):
     """
     __tablename__ = "memories"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     
     # This key is used to search the memory.
     # 记忆内容, 记忆内容需要可以被string化, 由LLM生成, 并且会vector化
-    content = Column(String)
+    content = Column(Text)
     
     # This key is used to search the memory, and it is a tree structure.
     # 记忆的category, 最终这个category会作为一个Tree状目录
-    category = Column(String)
+    category = Column(String(32))

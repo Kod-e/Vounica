@@ -1,5 +1,5 @@
 # 记录用户单词的习得状态
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Text
 from sqlalchemy.orm import relationship
 from app.core.db.base import BaseModel
 
@@ -11,13 +11,13 @@ class Vocab(BaseModel):
     """
     __tablename__ = "vocabs"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     
     # 单词的名称, 单词的名称需要可以被string化
-    name = Column(String)
+    name = Column(String(32))
     
     # 单词的使用场景, 单词的使用场景需要可以被string化, 并且应该由LLM生成
-    usage = Column(String)
+    usage = Column(Text)
     
     # 单词的习得状态, 这是在附近最近N次练习中, 单词被正确使用的概率, 从0-1
     status = Column(Float)
