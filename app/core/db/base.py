@@ -7,7 +7,7 @@ from typing import AsyncGenerator
 # 这里通过 importlib 在每次 get_db 调用时按需获取最新的
 # async_session_maker，保证依赖注入正常。
 from sqlalchemy.ext.asyncio import AsyncSession
-import importlib
+from .provider import get_async_session_maker
 
 # 使用显式类型标注，避免 Base 被推断为 Any
 Base: DeclarativeMeta = declarative_base()
@@ -34,11 +34,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     # DB Session依存関数
     # このfuncは FastAPI の Depends で注入されます。
     """
-    main_module = importlib.import_module("app.main")
-    session_maker = getattr(main_module, "async_session_maker", None)
-
-    if session_maker is None:
-        raise RuntimeError("DB Session Maker is not initialized")
+    session_maker = get_async_session_maker()
 
     async with session_maker() as session:
         session: AsyncSession
