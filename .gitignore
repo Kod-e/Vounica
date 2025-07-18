@@ -3,3 +3,4 @@
 .*
 # ignore python cache for all folders
 __pycache__/    
+!.vscode/    

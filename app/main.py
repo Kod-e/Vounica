@@ -67,10 +67,10 @@ app = FastAPI(
 )
 
 # 注册路由
-app.include_router(v1_router, prefix="/api/v1")
+app.include_router(v1_router, prefix="/v1")
 
 # 健康检查端点
-@app.get("/healthz")
+@app.get("/health")
 async def health_check():
     return {"status": "healthy"}
 

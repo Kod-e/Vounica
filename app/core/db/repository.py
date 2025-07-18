@@ -11,33 +11,37 @@ T = TypeVar('T', bound=BaseModel)
 
 class Repository(Generic[T]):
     """
-    The base repository class
-    Provides generic CRUD operations that can be extended to implement specific business logic
-    基本の repository class、　CRUD 操作を提供します。
-    
-    Uses asynchronous SQLAlchemy and yield-based session management
-    Async SQLAlchemy と yield-based Session管理を使用します。
+    Generic asynchronous repository providing CRUD operations for SQLAlchemy models.
+
+    汎用(はんよう)的(てき)な非同期(ひどうき)Repoです。CRUD 操作(そうさ)を提供(ていきょう)します。
+
+    通用异步仓库，封装常见的 CRUD 操作。
     """
     
     def __init__(self, model: Type[T]):
         """
-        Initialize the repository
-        
+        Initialize repository with the given model.
+
+        指定(してい)された model ClassでRepoを初期化(しょきか)します。
+
         Args:
-            model: 
+            model: SQLAlchemy model class
         """
         self.model = model
+        # 保存模型类供 CRUD 方法使用
     
     async def get_by_id(self, db: AsyncSession, id: Any) -> Optional[T]:
         """
-        根据 ID 获取实体
-        
+        Retrieve a single record by primary key.
+
+        主鍵(しゅけん)でrecordを取得(しゅとく)します。
+
         Args:
-            db: 数据库会话
-            id: 实体 ID
-            
+            db: Async database session
+            id: Primary key value
+
         Returns:
-            找到的实体，如果不存在则返回 None
+            The found entity or ``None`` if not exists.
         """
         query = select(self.model).where(self.model.id == id)
         result = await db.execute(query)
@@ -45,15 +49,17 @@ class Repository(Generic[T]):
     
     async def get_all(self, db: AsyncSession, skip: int = 0, limit: int = 100) -> List[T]:
         """
-        获取实体列表
-        
+        Retrieve a list of records with optional pagination.
+
+        record一覧(いちらん)を取得(しゅとく)します。pagination可能(かのう)。
+
         Args:
-            db: 数据库会话
-            skip: 跳过的记录数
-            limit: 返回的最大记录数
-            
+            db: Async database session
+            skip: Number of records to skip (offset)
+            limit: Maximum number of records to return
+
         Returns:
-            实体列表
+            A list of entities
         """
         query = select(self.model).offset(skip).limit(limit)
         result = await db.execute(query)
@@ -61,14 +67,16 @@ class Repository(Generic[T]):
     
     async def create(self, db: AsyncSession, obj_in: Dict[str, Any]) -> T:
         """
-        创建新实体
-        
+        Create a new record with the given data.
+
+        渡(わた)されたdataでrecordを作成(さくせい)します。
+
         Args:
-            db: 数据库会话
-            obj_in: 实体数据
-            
+            db: Async database session
+            obj_in: Data dict used to initialize the model
+
         Returns:
-            创建的实体
+            The newly created entity
         """
         db_obj = self.model(**obj_in)
         db.add(db_obj)
@@ -78,15 +86,17 @@ class Repository(Generic[T]):
     
     async def update(self, db: AsyncSession, id: Any, obj_in: Dict[str, Any]) -> Optional[T]:
         """
-        更新实体
-        
+        Update an existing record by primary key.
+
+        主鍵(しゅけん)で既存(きそん)recordを更新(こうしん)します。
+
         Args:
-            db: 数据库会话
-            id: 实体 ID
-            obj_in: 更新的数据
-            
+            db: Async database session
+            id: Primary key value
+            obj_in: Partial data dict with fields to update
+
         Returns:
-            更新后的实体，如果不存在则返回 None
+            The updated entity or ``None`` when not found
         """
         stmt = update(self.model).where(self.model.id == id).values(**obj_in).returning(self.model)
         result = await db.execute(stmt)
@@ -94,14 +104,16 @@ class Repository(Generic[T]):
     
     async def delete(self, db: AsyncSession, id: Any) -> Optional[T]:
         """
-        删除实体
-        
+        Delete a record by primary key.
+
+        主鍵(しゅけん)でrecordを削除(さくじょ)します。
+
         Args:
-            db: 数据库会话
-            id: 实体 ID
-            
+            db: Async database session
+            id: Primary key value
+
         Returns:
-            删除的实体，如果不存在则返回 None
+            The deleted entity or ``None`` when not found
         """
         # 先查询实体是否存在
         db_obj = await self.get_by_id(db, id)
@@ -113,14 +125,16 @@ class Repository(Generic[T]):
     
     async def exists(self, db: AsyncSession, id: Any) -> bool:
         """
-        检查实体是否存在
-        
+        Check whether a record exists.
+
+        recordの存在(そんざい)を確認(かくにん)します。
+
         Args:
-            db: 数据库会话
-            id: 实体 ID
-            
+            db: Async database session
+            id: Primary key value
+
         Returns:
-            如果实体存在则返回 True，否则返回 False
+            ``True`` when exists, else ``False``
         """
         query = select(self.model.id).where(self.model.id == id)
         result = await db.execute(query)
@@ -128,13 +142,15 @@ class Repository(Generic[T]):
     
     async def count(self, db: AsyncSession) -> int:
         """
-        获取实体总数
-        
+        Count total number of records in the table.
+
+        テーブル内(ない)のrecord総数(そうすう)を取得(しゅとく)します。
+
         Args:
-            db: 数据库会话
-            
+            db: Async database session
+
         Returns:
-            实体总数
+            Total count of records
         """
         from sqlalchemy import func
         query = select(func.count()).select_from(self.model)

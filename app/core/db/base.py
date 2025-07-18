@@ -24,15 +24,15 @@ class BaseModel(Base):
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
-    
-# DB セッション依存関数
-# この関数は FastAPI の Depends で注入されます。
 # 每次调用时动态获取 app.main.async_session_maker，保证其已在 lifespan 中初始化。
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Get database session for each request
     Use async context manager to ensure session is properly released
+    
+    # DB Session依存関数
+    # このfuncは FastAPI の Depends で注入されます。
     """
     main_module = importlib.import_module("app.main")
     session_maker = getattr(main_module, "async_session_maker", None)
