@@ -1,7 +1,6 @@
-# 移除同步 Session, 使用通用异步 Repository
 from app.core.db.repository import Repository
-from app.models.answers import Answer
-
+from ..models import Answer
+    
 
 class AnswerRepository(Repository[Answer]):
     """Repository class for Answer model.djbbbf

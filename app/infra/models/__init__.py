@@ -4,6 +4,7 @@ from .story import Story
 from .grammer import Grammer
 from .memory import Memory
 from .mistake import Mistake
+from .answers import Answer
 
 __all__ = [
     "User",
@@ -12,4 +13,5 @@ __all__ = [
     "Grammer",
     "Memory",
     "Mistake",
+    "Answer",
 ]

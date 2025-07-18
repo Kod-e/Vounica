@@ -1,6 +1,5 @@
-# 移除同步 Session, 使用通用异步 Repository
 from app.core.db.repository import Repository
-from app.models.user import User
+from ..models import User
 
 
 class UserRepository(Repository[User]):
