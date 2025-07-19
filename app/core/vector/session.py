@@ -58,6 +58,27 @@ class VectorSession:
             )
         )
 
+    # -----------------------------------------------------------------
+    # Delete helpers
+    # -----------------------------------------------------------------
+
+    def delete_by_filter(self, collection_name: str, filter_: Dict[str, Any]) -> None:
+        """Queue deletion of points that match the given Qdrant filter.
+
+        Args:
+            collection_name: Target Qdrant collection.
+            filter_: Qdrant filter dict or model instance specifying match rules.
+        """
+        self._operations.append(
+            (
+                "delete",
+                {
+                    "collection_name": collection_name,
+                    "filter": filter_,
+                },
+            )
+        )
+
     async def commit(self) -> None:
         """Flush queued operations to Qdrant. Called automatically by dependency."""
         if not self._operations:
@@ -72,6 +93,9 @@ class VectorSession:
             if op_name == "upsert":
                 # QdrantClient.upsert is synchronous; call directly inside async context
                 self._client.upsert(collection_name=params["collection_name"], points=params["points"])
+            elif op_name == "delete":
+                # Delete points matching filter
+                self._client.delete(collection_name=params["collection_name"], points_selector=params["filter"]) # pass filter as points_selector
             # 未来可以在这里支持更多操作，如 delete, search 等
 
         # 清理已执行操作

@@ -78,4 +78,37 @@ def queue_vector_from_instance(
         point = _build_point(vector, payload_extra)
 
         # 将point添加到vector session中
-        session.add_point(collection.value, point) 
+        session.add_point(collection.value, point)
+
+
+# --------------------------------------------------------------
+# 删除操作: 从 Qdrant 中删除与 ORM 实例关联的全部向量
+# --------------------------------------------------------------
+
+
+def queue_vector_delete_for_instance(
+    instance: Any,
+    session: VectorSession,
+) -> None:
+    """Queue deletion of all vector points associated with the given ORM instance.
+
+    根据 ``MODEL_FIELD_TO_COLLECTION`` 的映射，通过 `origin_id` 来删除。
+    """
+
+    model_name = instance.__class__.__name__
+    origin_id = getattr(instance, "id", None)
+    if origin_id is None:
+        return
+
+    for (mapped_model, _field_name), collection in MODEL_FIELD_TO_COLLECTION.items():
+        if mapped_model != model_name:
+            continue
+
+        # Qdrant filter dict: match origin_id
+        filter_dict = {
+            "must": [
+                {"key": "origin_id", "match": {"value": origin_id}},
+            ]
+        }
+
+        session.delete_by_filter(collection.value, filter_dict) 
