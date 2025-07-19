@@ -1,12 +1,5 @@
 from __future__ import annotations
-
-"""
-Generic unit-of-work that coordinates multiple backend resources (database,
-vector store, etc.) and guarantees that they are committed or rolled back in
-sync.
-"""
-
-from typing import Any, Dict, AsyncGenerator
+from typing import Any, Dict, AsyncGenerator, TYPE_CHECKING
 import inspect
 
 from fastapi import Depends
@@ -17,15 +10,12 @@ from app.core.vector.session import VectorSession, get_vector_session
 
 
 class UnitOfWork:  # pylint: disable=too-few-public-methods
-    """Coordinate commit/rollback across heterogeneous resources.
+    """Forward commit / rollback / close 操作到所有注入的资源。"""
 
-    This class is intentionally lightweight: it simply forwards *commit*,
-    *rollback* and *close* calls to every managed resource that exposes such
-    methods.
-
-    You can dynamically add new resources (cache, message bus, etc.) without
-    changing the core logic—just pass them into the constructor.
-    """
+    # 类型
+    if TYPE_CHECKING:
+        db: AsyncSession
+        vector: VectorSession
 
     def __init__(self, **resources: Any) -> None:
         # 将资源同时存入私有 dict，并挂到实例属性上，便于外部通过 uow.db 直接访问
