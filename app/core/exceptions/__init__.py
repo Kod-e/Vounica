@@ -7,9 +7,10 @@ from .base import BaseException
 from .types import ErrorType
 
 # Auth 401
-from .auth import UnauthorizedException, InvalidTokenException, PermissionDeniedException
-# Client 404
-from .client import UserNotFoundException, ResourceNotFoundException
+from .auth import AuthException, UnauthorizedException, InvalidTokenException, PermissionDeniedException
+# Resource 404
+from .common import NotFoundException
+from .resource import UserNotFoundException, ResourceNotFoundException
 # Server 500
 from .server import InternalErrorException
 
@@ -17,10 +18,12 @@ __all__ = [
     "BaseException",
     "ErrorType",
     # auth
+    "AuthException",
     "UnauthorizedException",
     "InvalidTokenException",
     "PermissionDeniedException",
-    # client
+    # common / resource
+    "NotFoundException",
     "UserNotFoundException",
     "ResourceNotFoundException",
     # server

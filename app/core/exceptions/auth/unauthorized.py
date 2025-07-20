@@ -1,16 +1,12 @@
 from typing import Optional
 
-from ..base import BaseException
+from .base import AuthException
 from ..types import ErrorType
 
-"""
-Unauthorized exception.
+"""Unauthorized request (401)."""
 
-認証(にんしょう)されていないリクエストに対(たい)して使用(しよう)します。
-"""
-
-class UnauthorizedException(BaseException):
+class UnauthorizedException(AuthException):
     """Raised when authentication credentials are missing or invalid."""
 
     def __init__(self, message: str = "Unauthorized", detail: Optional[dict] = None):
-        super().__init__(code="401", message=message, error_type=ErrorType.UNAUTHORIZED, detail=detail) 
+        super().__init__(message=message, error_type=ErrorType.UNAUTHORIZED, detail=detail) 

@@ -1,8 +1,4 @@
-"""
-Client-related (4xx) exceptions.
-
-クライアントエラー(4xx)に関(かん)する例外(れいがい)をまとめます。
-"""
+"""Resource-related not-found exceptions."""
 from .user_not_found import UserNotFoundException
 from .resource_not_found import ResourceNotFoundException
 

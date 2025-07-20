@@ -6,8 +6,10 @@ Authentication-related exceptions.
 from .unauthorized import UnauthorizedException
 from .invalid_token import InvalidTokenException
 from .permission_denied import PermissionDeniedException
+from .base import AuthException
 
 __all__ = [
+    "AuthException",
     "UnauthorizedException",
     "InvalidTokenException",
     "PermissionDeniedException",
