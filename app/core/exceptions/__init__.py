@@ -9,10 +9,18 @@ from .types import ErrorType
 # Auth 401
 from .auth import AuthException, UnauthorizedException, InvalidTokenException, PermissionDeniedException
 # Resource 404
-from .common import NotFoundException
-from .resource import UserNotFoundException, ResourceNotFoundException
+from .common import NotFoundException, BadRequestException, ValidationException
+from .resource import (
+    UserNotFoundException,
+    ResourceNotFoundException,
+    StoryNotFoundException,
+    VocabNotFoundException,
+    GrammarNotFoundException,
+    MistakeNotFoundException,
+    MemoryNotFoundException,
+)
 # Server 500
-from .server import InternalErrorException
+from .server import InternalErrorException, DatabaseException
 
 __all__ = [
     "BaseException",
@@ -24,8 +32,16 @@ __all__ = [
     "PermissionDeniedException",
     # common / resource
     "NotFoundException",
+    "BadRequestException",
+    "ValidationException",
     "UserNotFoundException",
     "ResourceNotFoundException",
+    "StoryNotFoundException",
+    "VocabNotFoundException",
+    "GrammarNotFoundException",
+    "MistakeNotFoundException",
+    "MemoryNotFoundException",
     # server
     "InternalErrorException",
+    "DatabaseException",
 ] 
