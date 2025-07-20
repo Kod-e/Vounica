@@ -22,3 +22,20 @@ class Grammer(BaseModel):
     
     # 语法的习得状态, 这是在附近最近N次练习中, 语法被正确使用的概率, 从0-1
     status = Column(Float)
+
+    # SRS 相关字段
+
+    # 近期正确率 (0~1)
+    correct_rate = Column(Float, default=0.0)
+
+    # 累计复习次数
+    review_count = Column(Integer, default=0)
+
+    # 上次复习时间
+    last_review_at = Column(DateTime)
+
+    # 下一次复习时间（SRS 算法计算）
+    next_review_at = Column(DateTime)
+
+    # SM-2 easiness factor，默认 2.5
+    easiness_factor = Column(Float, default=2.5)

@@ -23,3 +23,6 @@ class Story(BaseModel):
     # 故事的category, 最终这个category会作为一个Tree状目录, 这个category是用户自己定义的, 默认会进入"default"目录, GPT会给用户这个category的建议
     # 在命名建议前, GPT会知道用户有多少个Category建议, 并且会根据用户输入的story, 给出最合适的Category建议, 比如说用户已经有一个“最近的旅行‘ , 那这个category应该被归类进“最近的旅行”而不是新创建一个“最近去了哪里”
     category = Column(String(32))
+
+    # 故事的语言, ISO 639-1 code, 用于多语区分
+    language = Column(String(8), default="zh")

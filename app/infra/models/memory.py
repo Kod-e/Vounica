@@ -21,3 +21,9 @@ class Memory(BaseModel):
     # This key is used to search the memory, and it is a tree structure.
     # 记忆的category, 最终这个category会作为一个Tree状目录
     category = Column(String(32))
+
+    # 记忆的语言, ISO 639-1 code，例如 "en", "ja", "zh"
+    language = Column(String(8), default="zh")
+
+    # 优先级, 数值越高越先被注入 GPT 上下文
+    priority = Column(Integer, default=0)

@@ -1,13 +1,14 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Debug Vounica API",
             "type": "debugpy",
             "request": "launch",
             "module": "uvicorn",
             "args": [
-                "app.main:app",   // 注意这里是 app.main，而不是 main
+                "app.main:app",
                 "--reload"
             ],
             "jinja": true,
@@ -15,6 +16,19 @@
                 "PYTHONPATH": "${workspaceFolder}"  // 设置为工作目录
             },
             "cwd": "${workspaceFolder}",            // 设置当前工作目录
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run All Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "scripts.run_tests",
+            "args": [],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         }
     ]

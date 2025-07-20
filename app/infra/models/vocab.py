@@ -21,3 +21,10 @@ class Vocab(BaseModel):
     
     # 单词的习得状态, 这是在附近最近N次练习中, 单词被正确使用的概率, 从0-1
     status = Column(Float)
+
+    # SRS 相关字段
+    correct_rate = Column(Float, default=0.0)
+    review_count = Column(Integer, default=0)
+    last_review_at = Column(DateTime)
+    next_review_at = Column(DateTime)
+    easiness_factor = Column(Float, default=2.5)
