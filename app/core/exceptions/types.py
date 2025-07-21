@@ -19,4 +19,5 @@ class ErrorType(str, Enum):
     BAD_REQUEST = "bad_request"
     VALIDATION_ERROR = "validation_error"
     DATABASE_ERROR = "database_error"
-    INTERNAL_ERROR = "internal_error" 
+    INTERNAL_ERROR = "internal_error"
+    INVALID_CREDENTIALS = "invalid_credentials" 

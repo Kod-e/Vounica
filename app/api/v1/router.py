@@ -4,6 +4,7 @@ from sqlalchemy import text
 from typing import List, Optional
 
 from app.core.db import get_db
+from app.api.v1.endpoints.user import router as auth_router
 
 # 创建路由实例
 router = APIRouter(tags=["v1"])
@@ -31,3 +32,5 @@ async def db_test(db: AsyncSession = Depends(get_db)):
         return {"status": "database connection successful", "result": None}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
+
+router.include_router(auth_router)
