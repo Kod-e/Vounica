@@ -40,9 +40,19 @@ for _info in iter_modules(__path__):
 FUNCTION_SCHEMAS: List[Dict[str, Any]] = _FUNCTION_SCHEMAS
 
 
-def make_dispatch(uow: UnitOfWork) -> Dict:
+def make_dispatch(uow: UnitOfWork) -> Dict[str, Callable[..., Coroutine[Any, Any, Any]]]:
 
-    mapping: Dict = {}
+    mapping: Dict[
+        str, # func名 用于OpenAI的function call前缀
+        Callable[ # 可以Call的Funtion
+            ..., # 接受任意参数
+            Coroutine[
+                Any, # 在await过程中 yield出去的value为Any
+                Any, # 可以通过.send() 传入的参数的类型为Any 
+                Any #  最终return的value的类型为Any
+            ]
+        ]
+    ] = {}
     for mod in _TOOL_MODULES:
         mapping.update(mod.make_dispatch(uow))
     return mapping
