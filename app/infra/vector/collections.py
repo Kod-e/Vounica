@@ -15,7 +15,7 @@ class VectorCollection(str, Enum):
     # Memory
     MEMORY_CONTENT = "memory_content"
     # Grammar
-    GRAMMER_USAGE = "grammar_usage"
+    GRAMMAR_USAGE = "grammar_usage"
     # Vocabulary
     VOCAB_USAGE = "vocab_usage"
 
@@ -43,7 +43,7 @@ MODEL_FIELD_TO_COLLECTION: Dict[Tuple[str, str], VectorCollection] = {
     ("Memory", "content"): VectorCollection.MEMORY_CONTENT,
 
     # Grammar
-    ("Grammar", "usage"): VectorCollection.GRAMMER_USAGE,
+    ("Grammar", "usage"): VectorCollection.GRAMMAR_USAGE,
 
     # Vocab
     ("Vocab", "usage"): VectorCollection.VOCAB_USAGE,

@@ -46,7 +46,7 @@ _SEARCH_META: Dict[ResourceLiteral, Dict[str, Any]] = {
         "model": _grammar_model.Grammar,
         "fields": {
             "name": {"regex": True, "vector": False},
-            "usage": {"regex": True, "vector": True, "collection": VectorCollection.GRAMMER_USAGE},
+            "usage": {"regex": True, "vector": True, "collection": VectorCollection.GRAMMAR_USAGE},
         },
     },
     "memory": {

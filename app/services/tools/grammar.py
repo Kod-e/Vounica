@@ -79,7 +79,7 @@ async def search_grammar_usage_vector(
     q_filter = {"must": [{"key": "user_id", "match": {"value": uow.user_id}}]}
 
     points = client.search(
-        collection_name=VectorCollection.GRAMMER_USAGE.value,
+        collection_name=VectorCollection.GRAMMAR_USAGE.value,
         query_vector=embedding,
         limit=limit,
         query_filter=q_filter,
