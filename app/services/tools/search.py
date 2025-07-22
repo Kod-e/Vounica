@@ -33,12 +33,99 @@ ResourceLiteral = Literal[
     "story",
     "memory",
 ]
+_SEARCH_SCHEMA = {
+    "name": "search_resource",
+    "description": """ 
+    检索用户在Vounica中记录的资源
+    Vocab
+    可以检索name和usage两个字段, 其中usage通过LLM生成, 表示了这个usage的使用场景
+    return: 
+    {
+        "name": "单词",
+        "usage": "单词的使用场景",
+        "status": "单词的习得状态, 这是最近N次练习中, 单词被正确使用的概率, 从0-1"
+    }
+    
+    
+    Grammar
+    可以检索name和usage两个字段, 其中usage通过LLM生成, 表示了这个usage的使用场景
+    return: 
+    {
+        "name": "语法",
+        "usage": "语法的使用场景",
+        "status": "语法被正确使用的概率, 从0-1“
+    }
+    
+    
+    Memory
+    Content: 记忆内容, 记忆内容需要可以被string化, 只能由LLM主动生成添加, 这里代表了你自己对这个用户的记忆
+    return: 
+    {
+        "content": "记忆内容",
+        "status": "记忆被正确使用的概率, 从0-1"
+    }
+    
+    
+    Story
+    Content: 故事内容, 这里代表了用户自己记录的故事
+    Summary: 故事概要, 这里代表了你阅读这个故事后对故事的总结, 只能由LLM主动生成添加
+    return: 
+    {
+        "content": "故事内容",
+        "summary": "故事概要",
+        "category": "故事分类"
+    }
+    
+    
+    Mistake
+    Question: 错误题目的内容
+    Answer: 错题答案
+    Correct_Answer: 正确答案
+    Error_Reason: 错误原因, 只能由LLM根据回答主动生成添加
+    return: 
+    {
+        "question": "错题题目",
+        "question_type": "错题题目类型",
+        "answer": "错题答案",
+        "correct_answer": "正确答案",
+        "error_reason": "错误原因"
+    }
+    
+    资源/字段/方法对照：
+    vocab.name → regex only
+    vocab.usage → regex / vector
+    grammar.name → regex only
+    grammar.usage → regex / vector
+    memory.content → regex / vector
+    story.content → regex / vector
+    story.summary → regex / vector
+    story.category → regex only
+    mistake.question → regex / vector
+    mistake.answer → regex / vector
+    mistake.correct_answer → regex / vector
+    mistake.error_reason → regex / vector
+    """,
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "resource": {
+                "type": "string",
+                "enum": ["vocab", "grammar", "mistake", "story", "memory"],
+            },
+            "field": {"type": "string"},
+            "method": {"type": "string", "enum": ["regex", "vector"], "default": "regex"},
+            "query": {"type": "string"},
+            "limit": {"type": "integer", "default": 20},
+        },
+        "required": ["resource", "field", "query"],
+    },
+}
 
 _SEARCH_META: Dict[ResourceLiteral, Dict[str, Any]] = {
     "vocab": {
         "model": _vocab_model.Vocab,
         "fields": {
-            "name": {},  # regex only (default)
+            "name": {},  # regex only
             "usage": {"vector": True, "collection": VectorCollection.VOCAB_USAGE},
         },
     },
@@ -46,7 +133,7 @@ _SEARCH_META: Dict[ResourceLiteral, Dict[str, Any]] = {
         "model": _grammar_model.Grammar,
         "fields": {
             "name": {},
-            "usage": {"vector": True, "collection": VectorCollection.GRAMMER_USAGE},
+            "usage": {"vector": True, "collection": VectorCollection.GRAMMAR_USAGE},
         },
     },
     "memory": {
@@ -109,22 +196,30 @@ async def search_resource(
         method:  "regex" (ILIKE) or "vector".
         limit:   Max rows.
     """
-
+    # 检查是否是一个合法的查询
+    # check if the resource is a valid query
+    
+    # 检查是否是一个合法的资源
     if resource not in _SEARCH_META:
         raise ValueError("Unsupported resource")
-
+    
+    # 检查是否是一个合法的字段
     meta = _SEARCH_META[resource]
     if field not in meta["fields"]:
         raise ValueError("Unsupported field for resource")
 
+    # 检查是否是一个合法的查询方法
     field_cfg = meta["fields"][field]
+    # 考虑到regex是默认的查询方法, 所以不需要检查
     # Regex is always supported; vector only when flag set.
     if method == "vector" and not field_cfg.get("vector", False):
         raise ValueError(f"{resource}.{field} does not support vector search")
 
+    # 获取模型和字段
     Model = meta["model"]
     column = getattr(Model, field)
 
+    # regex search
     if method == "regex":
         regex = f"%{query}%"
         stmt = select(Model).where(Model.user_id == uow.user_id, column.ilike(regex)).limit(limit)
@@ -135,20 +230,37 @@ async def search_resource(
     collection: VectorCollection = field_cfg["collection"]
     embedding = get_embedding(query)
     client = get_qdrant_client()
+    
+    # 获取qdrant的client
     q_filter = {"must": [{"key": "user_id", "match": {"value": uow.user_id}}]}
+
+    # 进行向量查询
     points = client.search(
         collection_name=collection.value,
         query_vector=embedding,
         limit=limit,
         query_filter=q_filter,
     )
+
+    # 获取原始id
     origin_ids = [p.payload.get("origin_id") for p in points if p.payload.get("origin_id")]
     if not origin_ids:
         return []
+
+    # 获取排序map
     order_map = {oid: idx for idx, oid in enumerate(origin_ids)}
     stmt = select(Model).where(Model.id.in_(origin_ids))
+
+    # 执行查询
     res = await uow.db.execute(stmt)
-    return sorted([_to_dict(r) for r in res.scalars().all()], key=lambda r: order_map.get(r["id"], 9999))
+
+    # 返回排序后的结果
+    return sorted(
+        # 将查询结果转换为字典
+        [_to_dict(r) for r in res.scalars().all()],
+        # 按向量检索返回的相似度排名排序
+        key=lambda r: order_map.get(r["id"], len(order_map)),
+    )
 
 
 __all__ = ["search_resource", "ResourceLiteral"] 
