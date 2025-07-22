@@ -2,11 +2,14 @@ from __future__ import annotations
 from typing import Any, Dict, AsyncGenerator, TYPE_CHECKING
 import inspect
 
-from fastapi import Depends
+from fastapi import Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db.base import get_db
 from app.core.vector.session import VectorSession, get_vector_session
+from app.core.auth.jwt import verify_access_token
+from app.core.exceptions.auth.unauthorized import UnauthorizedException
+from app.core.exceptions.auth.invalid_token import InvalidTokenException
 
 
 class UnitOfWork:  # pylint: disable=too-few-public-methods
@@ -16,6 +19,7 @@ class UnitOfWork:  # pylint: disable=too-few-public-methods
     if TYPE_CHECKING:
         db: AsyncSession
         vector: VectorSession
+        user_id: int
 
     def __init__(self, **resources: Any) -> None:
         # 将资源同时存入私有 dict，并挂到实例属性上，便于外部通过 uow.db 直接访问
@@ -72,14 +76,42 @@ class UnitOfWork:  # pylint: disable=too-few-public-methods
 # FastAPI dependency helper
 
 async def get_uow(
+    authorization: str | None = Header(default=None, alias="Authorization"),
     db: AsyncSession = Depends(get_db),
     vector: VectorSession = Depends(get_vector_session),
 ) -> AsyncGenerator[UnitOfWork, None]:
     """
-    Aggregate db and vector into a single unit-of-work object.
+    Aggregate db, vector, and authenticated user context into a single unit-of-work
+    object. If JWT is missing or invalid, raise 401 immediately.
+    
+    認証(にんしょう)トークンがない、または無効(むこう)の場合(ばあい)は 401 を返(かえ)します。
     """
 
-    uow = UnitOfWork(db=db, vector=vector)
+    # 如果没有提供 Authorization 头，直接返回 401
+    if authorization is None or not authorization.startswith("Bearer "):
+        raise UnauthorizedException("Missing bearer token")
+
+    token = authorization.split(" ", 1)[1]
+
+    try:
+        payload = verify_access_token(token)
+    except InvalidTokenException as exc:
+        # 直接向上抛出，FastAPI 会转换为 JSON 响应
+        raise UnauthorizedException("Invalid token") from exc
+
+    # 提取用户 ID；payload 必须包含 sub 字段
+    user_sub = payload.get("sub")
+    if user_sub is None:
+        raise UnauthorizedException("Token missing subject")
+
+    try:
+        user_id = int(user_sub)
+    except ValueError:
+        raise UnauthorizedException("Malformed subject in token")
+
+    # 将 user_id 注入到 uow，方便下游逻辑使用
+    uow = UnitOfWork(db=db, vector=vector, user_id=user_id)
+
     try:
         yield uow
         await uow.commit()
