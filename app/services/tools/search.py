@@ -1,5 +1,5 @@
 """
-Unified search tool for all resources (vocab/grammer/mistake/story/memory).
+Unified search tool for all resources (vocab/grammar/mistake/story/memory).
 
 LLM 只需一个函数 `search_resource` 即可完成所有正则/向量检索，
 有效降低函数 schema 数量、节省 token，并提高模型选择正确参数的概率。
@@ -13,7 +13,7 @@ from sqlalchemy import select
 
 from app.core.uow import UnitOfWork
 from app.infra.models import vocab as _vocab_model
-from app.infra.models import grammer as _grammer_model
+from app.infra.models import grammar as _grammar_model
 from app.infra.models import mistake as _mistake_model
 from app.infra.models import story as _story_model
 from app.infra.models import memory as _memory_model
@@ -28,7 +28,7 @@ from app.infra.vector.collections import VectorCollection
 
 ResourceLiteral = Literal[
     "vocab",
-    "grammer",
+    "grammar",
     "mistake",
     "story",
     "memory",
@@ -38,38 +38,38 @@ _SEARCH_META: Dict[ResourceLiteral, Dict[str, Any]] = {
     "vocab": {
         "model": _vocab_model.Vocab,
         "fields": {
-            "name": {"regex": True, "vector": False},
-            "usage": {"regex": True, "vector": True, "collection": VectorCollection.VOCAB_USAGE},
+            "name": {},  # regex only (default)
+            "usage": {"vector": True, "collection": VectorCollection.VOCAB_USAGE},
         },
     },
-    "grammer": {
-        "model": _grammer_model.Grammar,
+    "grammar": {
+        "model": _grammar_model.Grammar,
         "fields": {
-            "name": {"regex": True, "vector": False},
-            "usage": {"regex": True, "vector": True, "collection": VectorCollection.GRAMMER_USAGE},
+            "name": {},
+            "usage": {"vector": True, "collection": VectorCollection.GRAMMER_USAGE},
         },
     },
     "memory": {
         "model": _memory_model.Memory,
         "fields": {
-            "content": {"regex": True, "vector": True, "collection": VectorCollection.MEMORY_CONTENT},
+            "content": {"vector": True, "collection": VectorCollection.MEMORY_CONTENT},
         },
     },
     "story": {
         "model": _story_model.Story,
         "fields": {
-            "content": {"regex": True, "vector": True, "collection": VectorCollection.STORY_CONTENT},
-            "summary": {"regex": True, "vector": True, "collection": VectorCollection.STORY_SUMMARY},
-            "category": {"regex": True, "vector": False},
+            "content": {"vector": True, "collection": VectorCollection.STORY_CONTENT},
+            "summary": {"vector": True, "collection": VectorCollection.STORY_SUMMARY},
+            "category": {},
         },
     },
     "mistake": {
         "model": _mistake_model.Mistake,
         "fields": {
-            "question": {"regex": True, "vector": True, "collection": VectorCollection.MISTAKE_QUESTION},
-            "answer": {"regex": True, "vector": True, "collection": VectorCollection.MISTAKE_ANSWER},
-            "correct_answer": {"regex": True, "vector": True, "collection": VectorCollection.MISTAKE_CORRECT_ANSWER},
-            "error_reason": {"regex": True, "vector": True, "collection": VectorCollection.MISTAKE_ERROR_REASON},
+            "question": {"vector": True, "collection": VectorCollection.MISTAKE_QUESTION},
+            "answer": {"vector": True, "collection": VectorCollection.MISTAKE_ANSWER},
+            "correct_answer": {"vector": True, "collection": VectorCollection.MISTAKE_CORRECT_ANSWER},
+            "error_reason": {"vector": True, "collection": VectorCollection.MISTAKE_ERROR_REASON},
         },
     },
 }
@@ -118,8 +118,9 @@ async def search_resource(
         raise ValueError("Unsupported field for resource")
 
     field_cfg = meta["fields"][field]
-    if not field_cfg.get(method, False):
-        raise ValueError(f"Method {method} not supported on {resource}.{field}")
+    # Regex is always supported; vector only when flag set.
+    if method == "vector" and not field_cfg.get("vector", False):
+        raise ValueError(f"{resource}.{field} does not support vector search")
 
     Model = meta["model"]
     column = getattr(Model, field)

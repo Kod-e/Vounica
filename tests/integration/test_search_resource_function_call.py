@@ -13,7 +13,7 @@ _SEARCH_SCHEMA = {
         "properties": {
             "resource": {
                 "type": "string",
-                "enum": ["vocab", "grammer", "mistake", "story", "memory"],
+                "enum": ["vocab", "grammar", "mistake", "story", "memory"],
             },
             "field": {"type": "string"},
             "method": {"type": "string", "enum": ["regex", "vector"], "default": "regex"},
