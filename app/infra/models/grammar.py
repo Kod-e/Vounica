@@ -5,12 +5,12 @@ from app.core.db.base import BaseModel
 
 
 # 语法习得状态表, 记录用户语法的习得状态
-class Grammer(BaseModel):
+class Grammar(BaseModel):
     """
-    The Grammer table by SQLAlchemy.
+    The Grammar table by SQLAlchemy.
     これはMistake Tableです。
     """
-    __tablename__ = "grammers"
+    __tablename__ = "grammars"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     

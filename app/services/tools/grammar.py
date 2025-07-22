@@ -1,5 +1,5 @@
 """
-OpenAI function-call tools for Grammer entity (grammar mistakes).
+OpenAI function-call tools for Grammar entity (grammar mistakes).
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Callable, Coroutine
 from sqlalchemy import select
 
 from app.core.uow import UnitOfWork
-from app.infra.models.grammer import Grammer
+from app.infra.models.grammar import Grammar
 from app.core.vector.embeddings import get_embedding
 from app.core.vector.provider import get_qdrant_client
 from app.infra.vector.collections import VectorCollection
@@ -19,7 +19,7 @@ from app.infra.vector.collections import VectorCollection
 # Helpers
 # ------------------------------------------------------------------
 
-def _to_dict(obj: Grammer) -> Dict[str, Any]:
+def _to_dict(obj: Grammar) -> Dict[str, Any]:
     return {
         "id": obj.id,
         "user_id": obj.user_id,
@@ -40,9 +40,9 @@ async def search_grammar_name_regex(
     limit: int = 20,
 ) -> List[Dict[str, Any]]:
     regex = f"%{pattern}%"
-    stmt = select(Grammer).where(
-        Grammer.user_id == uow.user_id,
-        Grammer.name.ilike(regex),
+    stmt = select(Grammar).where(
+        Grammar.user_id == uow.user_id,
+        Grammar.name.ilike(regex),
     ).limit(limit)
     res = await uow.db.execute(stmt)
     return [_to_dict(r) for r in res.scalars().all()]
@@ -55,9 +55,9 @@ async def search_grammar_usage_regex(
     limit: int = 20,
 ) -> List[Dict[str, Any]]:
     regex = f"%{pattern}%"
-    stmt = select(Grammer).where(
-        Grammer.user_id == uow.user_id,
-        Grammer.usage.ilike(regex),
+    stmt = select(Grammar).where(
+        Grammar.user_id == uow.user_id,
+        Grammar.usage.ilike(regex),
     ).limit(limit)
     res = await uow.db.execute(stmt)
     return [_to_dict(r) for r in res.scalars().all()]
@@ -90,7 +90,7 @@ async def search_grammar_usage_vector(
         return []
 
     order_map = {oid: idx for idx, oid in enumerate(origin_ids)}
-    stmt = select(Grammer).where(Grammer.id.in_(origin_ids))
+    stmt = select(Grammar).where(Grammar.id.in_(origin_ids))
     res = await uow.db.execute(stmt)
     return sorted([_to_dict(r) for r in res.scalars().all()], key=lambda r: order_map.get(r["id"], 9999))
 
