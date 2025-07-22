@@ -1,5 +1,5 @@
 """
-Unified search tool for all resources (vocab/grammar/mistake/story/memory).
+Unified search tool for all resources (vocab/grammer/mistake/story/memory).
 
 LLM 只需一个函数 `search_resource` 即可完成所有正则/向量检索，
 有效降低函数 schema 数量、节省 token，并提高模型选择正确参数的概率。
@@ -13,7 +13,7 @@ from sqlalchemy import select
 
 from app.core.uow import UnitOfWork
 from app.infra.models import vocab as _vocab_model
-from app.infra.models import grammar as _grammar_model
+from app.infra.models import grammer as _grammer_model
 from app.infra.models import mistake as _mistake_model
 from app.infra.models import story as _story_model
 from app.infra.models import memory as _memory_model
@@ -28,7 +28,7 @@ from app.infra.vector.collections import VectorCollection
 
 ResourceLiteral = Literal[
     "vocab",
-    "grammar",
+    "grammer",
     "mistake",
     "story",
     "memory",
@@ -42,11 +42,11 @@ _SEARCH_META: Dict[ResourceLiteral, Dict[str, Any]] = {
             "usage": {"regex": True, "vector": True, "collection": VectorCollection.VOCAB_USAGE},
         },
     },
-    "grammar": {
-        "model": _grammar_model.Grammar,
+    "grammer": {
+        "model": _grammer_model.Grammar,
         "fields": {
             "name": {"regex": True, "vector": False},
-            "usage": {"regex": True, "vector": True, "collection": VectorCollection.GRAMMAR_USAGE},
+            "usage": {"regex": True, "vector": True, "collection": VectorCollection.GRAMMER_USAGE},
         },
     },
     "memory": {

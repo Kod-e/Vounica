@@ -111,15 +111,6 @@ async def search_by_usage_vector(
     return sorted([_to_dict(r) for r in records], key=lambda r: order_map.get(r["id"], 9999))
 
 
-RULES = {
-    "vocab": {
-        "fields": {
-            "name":      ["regex"],
-            "usage":  ["regex", "vector"],
-        }
-    },
-}
-
 __all__ = [
     "search_by_name_regex",
     "search_by_usage_regex",
