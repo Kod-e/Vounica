@@ -1,0 +1,13 @@
+关于function call的tools
+
+在function的init里写了一套自动导入FUNCTION_SCHEMAS和make_dispatch的工具
+
+只需要在app/service/tools下暴露make_dispatch这个函数和FUNCTION_SCHEMAS就行
+
+
+
+在调用时, 只需要简单的dispatch = make_dispatch(uow)之后就可以直接用dispatch了, 但是这需要手动的去通过uow获取dispatch
+
+这是出于安全考虑使用uow(而不是直接让openai去选择user id), 如果手动让ai可以选择user id, 可能会发生prompt注入, 导致用户可以恶意访问修改其他用户的内容, 所以uow应该被自动注入
+
+一开始也考虑过使用Depends, 但是考虑到Depends需要在route顶层一路带着dispatch传递到function call, 这应该会增加代码的复杂度, 不如直接在需要的层级手动获取dispatch
