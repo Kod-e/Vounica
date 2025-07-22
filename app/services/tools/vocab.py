@@ -1,8 +1,5 @@
 """
 OpenAI function-call tools for querying Vocab **based on UnitOfWork**.
-
-改写为依赖 ``UnitOfWork``，复用请求级别数据库/向量会话与 ``user_id``，避免在工具内部
-私自创建 session，提升一致性与安全性。
 """
 
 from __future__ import annotations
@@ -114,79 +111,7 @@ async def search_by_usage_vector(
     return sorted([_to_dict(r) for r in records], key=lambda r: order_map.get(r["id"], 9999))
 
 
-
-FUNCTION_SCHEMAS: List[Dict[str, Any]] = [
-    {
-        "name": "search_by_name_regex",
-        "description": "Search vocab by name using case-insensitive regex (current user scope)",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "pattern": {"type": "string", "description": "Case-insensitive regex pattern"},
-                "limit": {
-                    "type": "integer",
-                    "description": "Max number of records (default 20)",
-                    "default": 20,
-                },
-            },
-            "required": ["pattern"],
-        },
-    },
-    {
-        "name": "search_by_usage_regex",
-        "description": "Search vocab usage via regex (current user scope)",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "pattern": {"type": "string", "description": "Regex pattern"},
-                "limit": {
-                    "type": "integer",
-                    "description": "Max number of records (default 20)",
-                    "default": 20,
-                },
-            },
-            "required": ["pattern"],
-        },
-    },
-    {
-        "name": "search_by_usage_vector",
-        "description": "Vector similarity search on vocab usage (current user scope)",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string", "description": "Query text"},
-                "limit": {
-                    "type": "integer",
-                    "description": "Top-k (default 20)",
-                    "default": 20,
-                },
-            },
-            "required": ["query"],
-        },
-    },
-]
-
-
-def make_dispatch(uow: UnitOfWork) -> Dict[str, Callable[..., Coroutine[Any, Any, Any]]]:
-    """Return function-name → coroutine mapping bound to given ``uow``.
-
-    FastAPI handler can call::
-
-        dispatch = make_dispatch(uow)
-        result = await dispatch[name](**args)
-    """
-
-    return {
-        "search_by_name_regex": lambda **kw: search_by_name_regex(uow, **kw),
-        "search_by_usage_regex": lambda **kw: search_by_usage_regex(uow, **kw),
-        "search_by_usage_vector": lambda **kw: search_by_usage_vector(uow, **kw),
-    }
-
-
-# Re-export
 __all__ = [
-    "FUNCTION_SCHEMAS",
-    "make_dispatch",
     "search_by_name_regex",
     "search_by_usage_regex",
     "search_by_usage_vector",
