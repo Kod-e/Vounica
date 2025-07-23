@@ -123,7 +123,7 @@ async def get_uow(
     # 把user_id转换为user
     from app.infra.repo.user_repository import UserRepository
     user_repository = UserRepository()
-    user = await user_repository.get_by_id(user_id)
+    user : 'User' = await user_repository.get_by_id(db, user_id)
     if user is None:
         raise UnauthorizedException("User not found")
     # 将 user 注入到 uow，方便下游逻辑使用
@@ -131,7 +131,6 @@ async def get_uow(
     quota_bucket = QuotaBucket(redis_client=redis_client, user_id=user.id)
 
     uow = UnitOfWork(db=db, vector=vector, redis=redis_client, quota=quota_bucket, user=user)
-
     try:
         yield uow
         await uow.commit()
