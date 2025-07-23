@@ -7,6 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db.base import get_db
 from app.core.vector.session import VectorSession, get_vector_session
+from app.core.redis import get_redis_client
+
+import redis.asyncio as redis
+
 from app.core.auth.jwt import verify_access_token
 from app.core.exceptions.auth.unauthorized import UnauthorizedException
 from app.core.exceptions.auth.invalid_token import InvalidTokenException
@@ -14,13 +18,14 @@ from app.core.exceptions.auth.invalid_token import InvalidTokenException
 if TYPE_CHECKING:
     from app.infra.models.user import User
 
-class UnitOfWork:  # pylint: disable=too-few-public-methods
+class UnitOfWork:
     """Forward commit / rollback / close 操作到所有注入的资源。"""
 
     # 类型
     if TYPE_CHECKING:
         db: AsyncSession
         vector: VectorSession
+        redis: redis.Redis
         user: 'User'
 
     def __init__(self, **resources: Any) -> None:
@@ -81,6 +86,7 @@ async def get_uow(
     authorization: str | None = Header(default=None, alias="Authorization"),
     db: AsyncSession = Depends(get_db),
     vector: VectorSession = Depends(get_vector_session),
+    redis_client: redis.Redis = Depends(get_redis_client),
 ) -> AsyncGenerator[UnitOfWork, None]:
     """
     Aggregate db, vector, and authenticated user context into a single unit-of-work
@@ -118,7 +124,7 @@ async def get_uow(
     if user is None:
         raise UnauthorizedException("User not found")
     # 将 user_id 注入到 uow，方便下游逻辑使用
-    uow = UnitOfWork(db=db, vector=vector, user=user)
+    uow = UnitOfWork(db=db, vector=vector, redis=redis_client, user=user)
 
     try:
         yield uow
