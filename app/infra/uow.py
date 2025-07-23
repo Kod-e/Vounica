@@ -11,6 +11,8 @@ from app.core.auth.jwt import verify_access_token
 from app.core.exceptions.auth.unauthorized import UnauthorizedException
 from app.core.exceptions.auth.invalid_token import InvalidTokenException
 
+if TYPE_CHECKING:
+    from app.infra.models.user import User
 
 class UnitOfWork:  # pylint: disable=too-few-public-methods
     """Forward commit / rollback / close 操作到所有注入的资源。"""
@@ -19,7 +21,7 @@ class UnitOfWork:  # pylint: disable=too-few-public-methods
     if TYPE_CHECKING:
         db: AsyncSession
         vector: VectorSession
-        user_id: int
+        user: 'User'
 
     def __init__(self, **resources: Any) -> None:
         # 将资源同时存入私有 dict，并挂到实例属性上，便于外部通过 uow.db 直接访问
@@ -109,8 +111,14 @@ async def get_uow(
     except ValueError:
         raise UnauthorizedException("Malformed subject in token")
 
+    # 把user_id转换为user
+    from app.infra.repo.user_repository import UserRepository
+    user_repository = UserRepository()
+    user = await user_repository.get_by_id(user_id)
+    if user is None:
+        raise UnauthorizedException("User not found")
     # 将 user_id 注入到 uow，方便下游逻辑使用
-    uow = UnitOfWork(db=db, vector=vector, user_id=user_id)
+    uow = UnitOfWork(db=db, vector=vector, user=user)
 
     try:
         yield uow
