@@ -9,6 +9,8 @@ from app.core.db.base import get_db
 from app.core.vector.session import VectorSession, get_vector_session
 from app.core.redis import get_redis_client
 
+from app.infra.quota.bucket import QuotaBucket
+
 import redis.asyncio as redis
 
 from app.core.auth.jwt import verify_access_token
@@ -26,6 +28,7 @@ class UnitOfWork:
         db: AsyncSession
         vector: VectorSession
         redis: redis.Redis
+        quota: QuotaBucket
         user: 'User'
 
     def __init__(self, **resources: Any) -> None:
@@ -123,8 +126,11 @@ async def get_uow(
     user = await user_repository.get_by_id(user_id)
     if user is None:
         raise UnauthorizedException("User not found")
-    # 将 user_id 注入到 uow，方便下游逻辑使用
-    uow = UnitOfWork(db=db, vector=vector, redis=redis_client, user=user)
+    # 将 user 注入到 uow，方便下游逻辑使用
+    # 初始化 quota bucket，并进行配额检查（不预扣）
+    quota_bucket = QuotaBucket(redis_client=redis_client, user_id=user.id)
+
+    uow = UnitOfWork(db=db, vector=vector, redis=redis_client, quota=quota_bucket, user=user)
 
     try:
         yield uow

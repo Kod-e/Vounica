@@ -2,6 +2,11 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.core.db.base import BaseModel
 
+# 从.env中获取默认token配额
+from dotenv import load_dotenv
+import os
+load_dotenv()
+TOKEN_QUOTA = int(os.getenv("TOKEN_QUOTA", 1000))
 
 # 用户表, 记录用户的基本信息
 class User(BaseModel):
@@ -21,8 +26,8 @@ class User(BaseModel):
     name = Column(String(128))
     email = Column(String(254), unique=True, index=True)
     
-    # 用户的token余额
-    token_balance = Column(Integer)
+    # 用户的token配额
+    token_quota = Column(Integer, default=TOKEN_QUOTA)
     
     password = Column(String(256))
     
