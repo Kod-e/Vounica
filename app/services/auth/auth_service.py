@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.uow import UnitOfWork
+from app.infra.uow  import UnitOfWork
 from app.core.auth.password import hash_password, verify_password
 from app.core.auth.jwt import create_access_token
 from app.infra.repo.user_repository import UserRepository

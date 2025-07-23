@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Callable, Coroutine, Literal
 
 from sqlalchemy import select
 
-from app.core.uow import UnitOfWork
+from app.infra.uow  import UnitOfWork
 from app.infra.models import vocab as _vocab_model
 from app.infra.models import grammar as _grammar_model
 from app.infra.models import mistake as _mistake_model

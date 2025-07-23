@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict, List
 
 from app.services.common.search import ResourceType, search
-from app.core.uow import UnitOfWork
+from app.infra.uow  import UnitOfWork
 
 
 async def search_resources(

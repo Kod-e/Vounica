@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.infra.schemas import RegisterRequest, LoginRequest, RefreshRequest, TokenResponse
-from app.core.uow import UnitOfWork, get_uow
+from app.infra.uow  import UnitOfWork, get_uow
 from app.core.db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.auth.auth_service import AuthService

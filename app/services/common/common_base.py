@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from app.core.uow import UnitOfWork
+from app.infra.uow  import UnitOfWork
 from app.core.db.base import BaseModel
 from app.core.db.repository import Repository
 from app.infra.vector.operations import (
