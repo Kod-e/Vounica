@@ -14,7 +14,8 @@ from pydantic import Field
 from app.services.question.common.spec import JudgeResult, QuestionSpec
 from app.services.question.common.registry import register_question_type
 from app.services.question.common.types import QuestionType
-# from app.llm.client import chat_completion
+from app.llm.client import chat_completion
+from app.infra.uow import UnitOfWork
 
 @register_question_type(QuestionType.CHOICE)
 class ChoiceQuestion(QuestionSpec):
@@ -47,7 +48,7 @@ class ChoiceQuestion(QuestionSpec):
         )
 
     # 生成错误原因
-    def generate_error_reason(self, answer: str) -> str:
+    def generate_error_reason(self, answer: str, uow: UnitOfWork) -> str:
         """Generate error reason for the given answer."""
         return "incorrect choice"
     

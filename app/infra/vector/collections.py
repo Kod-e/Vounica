@@ -11,13 +11,14 @@ class VectorCollection(str, Enum):
     """
     Enumerate all Qdrant collection names used in the project.
     """
-
     # Memory
     MEMORY_CONTENT = "memory_content"
     # Grammar
     GRAMMAR_USAGE = "grammar_usage"
+    GRAMMAR_NAME = "grammar_name"
     # Vocabulary
     VOCAB_USAGE = "vocab_usage"
+    VOCAB_NAME = "vocab_name"
 
     # Mistake
     MISTAKE_QUESTION = "mistake_question"
@@ -28,7 +29,7 @@ class VectorCollection(str, Enum):
     # Story
     STORY_CONTENT = "story_content"
     STORY_SUMMARY = "story_summary"
-
+    STORY_CATEGORY = "story_category"
 
 
 # Collection config mapping
@@ -44,9 +45,11 @@ MODEL_FIELD_TO_COLLECTION: Dict[Tuple[str, str], VectorCollection] = {
 
     # Grammar
     ("Grammar", "usage"): VectorCollection.GRAMMAR_USAGE,
-
+    ("Grammar", "name"): VectorCollection.GRAMMAR_NAME,
     # Vocab
     ("Vocab", "usage"): VectorCollection.VOCAB_USAGE,
+    ("Vocab", "name"): VectorCollection.VOCAB_NAME,
+    
     # Mistake
     ("Mistake", "question"): VectorCollection.MISTAKE_QUESTION,
     ("Mistake", "answer"): VectorCollection.MISTAKE_ANSWER,
@@ -56,5 +59,6 @@ MODEL_FIELD_TO_COLLECTION: Dict[Tuple[str, str], VectorCollection] = {
     # Story
     ("Story", "content"): VectorCollection.STORY_CONTENT,
     ("Story", "summary"): VectorCollection.STORY_SUMMARY,
+    ("Story", "category"): VectorCollection.STORY_CATEGORY,
 
 } 

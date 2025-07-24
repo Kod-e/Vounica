@@ -92,18 +92,20 @@ _SEARCH_SCHEMA = {
     }
     
     资源/字段/方法对照：
-    vocab.name → regex only
+    vocab.name → regex / vector
     vocab.usage → regex / vector
-    grammar.name → regex only
+    grammar.name → regex / vector
     grammar.usage → regex / vector
     memory.content → regex / vector
     story.content → regex / vector
     story.summary → regex / vector
-    story.category → regex only
+    story.category → regex / vector
     mistake.question → regex / vector
     mistake.answer → regex / vector
     mistake.correct_answer → regex / vector
     mistake.error_reason → regex / vector
+    
+    
     """,
     "parameters": {
         "type": "object",
@@ -125,14 +127,14 @@ _SEARCH_META: Dict[ResourceLiteral, Dict[str, Any]] = {
     "vocab": {
         "model": _vocab_model.Vocab,
         "fields": {
-            "name": {},  # regex only
+            "name": {"vector": True, "collection": VectorCollection.VOCAB_NAME},
             "usage": {"vector": True, "collection": VectorCollection.VOCAB_USAGE},
         },
     },
     "grammar": {
         "model": _grammar_model.Grammar,
         "fields": {
-            "name": {},
+            "name": {"vector": True, "collection": VectorCollection.GRAMMAR_NAME},
             "usage": {"vector": True, "collection": VectorCollection.GRAMMAR_USAGE},
         },
     },
@@ -147,7 +149,7 @@ _SEARCH_META: Dict[ResourceLiteral, Dict[str, Any]] = {
         "fields": {
             "content": {"vector": True, "collection": VectorCollection.STORY_CONTENT},
             "summary": {"vector": True, "collection": VectorCollection.STORY_SUMMARY},
-            "category": {},
+            "category": {"vector": True, "collection": VectorCollection.STORY_CATEGORY},
         },
     },
     "mistake": {
