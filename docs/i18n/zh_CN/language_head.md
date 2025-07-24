@@ -1,0 +1,4 @@
+考虑到, 很多时候记录的story, mistake, grammar之类的需要进行多语言区分
+因为考虑到一些时候向量查询是跨语言匹配语意的, 这会不可避免的把其他语言的错题查询到一起
+
+看起来目前在uow增加一个Target-Language和Accept-Language是最好的主意, 这里不使用X-Target-Language已经在RFC 6648建议不要使用了X-前缀了
