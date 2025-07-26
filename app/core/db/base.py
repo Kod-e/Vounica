@@ -1,4 +1,4 @@
-from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
+from sqlalchemy.orm import declarative_base, DeclarativeMeta
 from sqlalchemy import Column, DateTime
 from datetime import datetime
 from typing import AsyncGenerator

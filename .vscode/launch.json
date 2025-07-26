@@ -1,9 +1,16 @@
 {
     "version": "0.2.0",
     "configurations": [
-
         {
-            "name": "Debug Vounica API",
+            "name": "Python: 当前文件",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: FastAPI",
             "type": "debugpy",
             "request": "launch",
             "module": "uvicorn",
@@ -12,24 +19,65 @@
                 "--reload"
             ],
             "jinja": true,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"  // 设置为工作目录
-            },
-            "cwd": "${workspaceFolder}",            // 设置当前工作目录
-            "console": "integratedTerminal"
+            "justMyCode": true
         },
         {
-            "name": "Run All Tests",
+            "name": "Run Integration Tests",
             "type": "debugpy",
             "request": "launch",
-            "module": "scripts.run_tests",
-            "args": [],
+            "module": "pytest",
+            "args": [
+                "tests/integration",
+                "-v"
+            ],
             "justMyCode": false,
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
-            },
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            }
+        },
+        {
+            "name": "Run Integration Tests (Local)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests/integration",
+                "-v",
+                "--local"
+            ],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Run Current Test",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "${file}",
+                "-v"
+            ],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Run Current Test (Local)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "${file}",
+                "-v",
+                "--local"
+            ],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
         }
     ]
 }

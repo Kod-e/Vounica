@@ -1,49 +1,96 @@
+#!/usr/bin/env python
 """
-Run full pytest suite with optional arguments.
-
+Script to run integration tests for the vounica project.
 """
-from __future__ import annotations
-
+import os
 import sys
 import subprocess
-from pathlib import Path
+import argparse
 
-try:
-    from dotenv import load_dotenv
-except ImportError:  # pragma: no cover
-    load_dotenv = None  # type: ignore
+def parse_args():
+    """
+    Parse command line arguments.
+    """
+    parser = argparse.ArgumentParser(description="Run vounica integration tests")
+    parser.add_argument(
+        "--with-docker", action="store_true", default=False,
+        help="Start docker services for integration tests"
+    )
+    parser.add_argument(
+        "--unit-only", action="store_true", default=False,
+        help="Only run unit tests"
+    )
+    parser.add_argument(
+        "--integration-only", action="store_true", default=False,
+        help="Only run integration tests"
+    )
+    parser.add_argument(
+        "--coverage", action="store_true", default=False,
+        help="Run tests with coverage report"
+    )
+    return parser.parse_args()
 
+def setup_env():
+    """Setup test environment variables if not already set."""
+    # 检查测试环境变量文件是否存在
+    if os.path.exists("test.env"):
+        print("Loading test environment from test.env")
+        with open("test.env") as f:
+            for line in f:
+                if line.strip() and not line.strip().startswith('#'):
+                    key, value = line.strip().split('=', 1)
+                    if key not in os.environ:
+                        os.environ[key] = value
+                        print(f"Setting {key}={value}")
+    
+    # 确保基本测试环境变量存在
+    if "TEST_MODE" not in os.environ:
+        os.environ["TEST_MODE"] = "true"
+    
+    if "DATABASE_URL" not in os.environ:
+        os.environ["DATABASE_URL"] = "postgresql://postgres:postgres@localhost:15432/test_vounica"
 
-def main() -> None:
-    """Entry point for running pytest with optional extra args."""
-    project_root = Path(__file__).resolve().parents[1]
+def run_tests(args):
+    """
+    Run tests based on command line arguments.
+    """
+    # 设置环境变量
+    setup_env()
+    
+    # 构建命令
+    cmd = ["pytest"]
+    
+    # 添加Docker选项
+    if args.with_docker:
+        cmd.append("--with-docker")
+    
+    # 添加覆盖率选项
+    if args.coverage:
+        cmd.extend(["--cov=app", "--cov-report=term", "--cov-report=html"])
+    
+    # 选择测试类型
+    if args.unit_only:
+        cmd.append("tests/unit/")
+    elif args.integration_only:
+        cmd.append("tests/integration/")
+    else:
+        cmd.extend(["tests/unit/", "tests/integration/"])
+    
+    # 添加详细输出
+    cmd.append("-v")
+    
+    # 执行命令
+    print(f"Running command: {' '.join(cmd)}")
+    result = subprocess.run(cmd)
+    
+    return result.returncode
 
-    # 若安装了 python-dotenv，则加载根目录 .env
-    if load_dotenv is not None:
-        load_dotenv(dotenv_path=project_root / ".env", override=False)
-
-    user_args = sys.argv[1:]
-
-    # 若用户未指定 -s/--capture=no/-q，则默认加 -s 方便输出
-    if not any(arg in user_args for arg in ("-s", "--capture=no", "-q", "-qq")):
-        user_args = ["-s", *user_args]
-
-    pytest_args = ["pytest", *user_args]
-
-    # 延迟导入 pytest，避免生产环境强依赖
-    try:
-        import pytest
-    except ImportError as exc:
-        raise SystemExit("pytest is not installed") from exc
-
-    # 切换到项目根目录，保证路径一致
-    import os
-    os.chdir(project_root)
-
-    # 直接在当前进程运行 pytest，方便断点调试
-    exit_code = pytest.main(user_args)
-    sys.exit(exit_code)
-
+def main():
+    """
+    Main function to run tests.
+    """
+    args = parse_args()
+    return run_tests(args)
 
 if __name__ == "__main__":
-    main() 
+    sys.exit(main()) 

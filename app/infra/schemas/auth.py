@@ -19,6 +19,8 @@ class TokenResponse(BaseModel):
 class RegisterResponse(BaseModel):
     id: int
     email: EmailStr
+    access_token: str
+    refresh_token: str
 
 class RefreshResponse(BaseModel):
     access_token: str

@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # 关闭SQLAlchemy的连接池+
     await get_engine().dispose()
     qdrant_client.close()
-    redis_client.close()
+    await redis_client.aclose()
 
 # 创建FastAPI应用实例
 app = FastAPI(

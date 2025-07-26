@@ -33,7 +33,7 @@ class AuthService:
         )
         return user
 
-    async def login(self, db: AsyncSession, *, email: str, password: str):
+    async def login(self, db: AsyncSession, email: str, password: str):
         user = await self._user_repo.get_by_email(db, email)  # assume helper exists
         if user is None or not verify_password(password, user.password):
             raise InvalidCredentialsException()
