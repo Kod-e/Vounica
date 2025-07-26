@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar, Type, List, Optional, Any, Dict, Union
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, insert
+from sqlalchemy import select, update, delete, func
 from sqlalchemy.sql import Select
 from sqlalchemy.engine.result import ScalarResult
 
@@ -152,7 +152,6 @@ class Repository(Generic[T]):
         Returns:
             Total count of records
         """
-        from sqlalchemy import func
         query = select(func.count()).select_from(self.model)
         result = await db.execute(query)
         return result.scalar() or 0

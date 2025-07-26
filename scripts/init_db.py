@@ -8,11 +8,13 @@ from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.core.db import Base  # get_db 未使用，移除以避免循环依赖警告
 from app.infra.models import *
+
 # 加载环境变量
 load_dotenv()
 
 # 数据库连接 URL
 DATABASE_URL = os.getenv("DATABASE_URL", "mysql+aiomysql://user:password@localhost:3306/vounica")
+
 
 async def init_db():
     """

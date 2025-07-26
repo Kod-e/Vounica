@@ -8,18 +8,33 @@ import os
 
 load_dotenv()
 
-# 使用 ES256 (ECDSA) 进行签名 / 验证
-_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
-_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
-if not _PRIVATE_KEY or not _PUBLIC_KEY:
-    raise RuntimeError("JWT_PRIVATE_KEY / JWT_PUBLIC_KEY must be set in .env")
+# 检测是否在测试环境中
+IS_TEST = os.getenv("TEST_MODE", "false").lower() == "true"
 
-ALGORITHM = "ES256"
+# 为测试环境配置简单的密钥和算法
+TEST_SECRET_KEY = "test_secret_key_for_testing_public"
+
+# 获取JWT配置
+if IS_TEST:
+    # 测试环境使用HS256算法和简单密钥
+    _PRIVATE_KEY = TEST_SECRET_KEY
+    _PUBLIC_KEY = TEST_SECRET_KEY  # HS256使用相同密钥验证
+    ALGORITHM = "HS256"
+else:
+    # 生产环境使用ES256和PEM密钥
+    _PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
+    _PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
+    ALGORITHM = os.getenv("JWT_ALGORITHM", "ES256")
+
 EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "1440"))
+
+# 验证配置是否有效
+if not IS_TEST and (not _PRIVATE_KEY or not _PUBLIC_KEY):
+    raise RuntimeError("JWT_PRIVATE_KEY / JWT_PUBLIC_KEY must be set in .env")
 
 
 def create_access_token(user_id: int, *, expires_delta: timedelta | None = None) -> str:
-    """生成 ES256 JWT。
+    """生成 JWT。
 
     仅包含 sub / iat / exp 三个字段，保持最小化。
     """

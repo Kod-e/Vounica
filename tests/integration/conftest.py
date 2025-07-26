@@ -3,6 +3,8 @@ import os
 import time
 import pytest
 import socket
+import sys
+from pathlib import Path
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -25,6 +27,11 @@ TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:15432/test
 TEST_SYNC_DATABASE_URL = "postgresql://postgres:postgres@localhost:15432/test_vounica"
 TEST_REDIS_URL = "redis://localhost:16379/1"
 TEST_QDRANT_URL = "http://localhost:16333"
+
+# 测试环境JWT配置 - JWT在app/core/auth/jwt.py中直接处理
+TEST_JWT_ALGORITHM = "HS256"
+TEST_JWT_SECRET_KEY = "test_secret_key_for_testing_public"
+TEST_JWT_EXPIRE_MINUTES = "30"
 
 def is_port_open(host, port, timeout=1):
     """检查指定端口是否开放"""
@@ -119,11 +126,24 @@ def pytest_sessionstart(session):
     os.environ["REDIS_URL"] = TEST_REDIS_URL
     os.environ["QDRANT_URL"] = TEST_QDRANT_URL
     
+    # JWT相关环境变量在app/core/auth/jwt.py中直接处理，不再在此设置
+    
     try:
-        # 初始化同步引擎用于测试和表创建（这里仍需要同步引擎创建表）
+        # 初始化测试数据库，使用init_test_db.py脚本
         print("正在初始化测试数据库...")
-        engine = create_engine(TEST_SYNC_DATABASE_URL)
-        Base.metadata.create_all(bind=engine)
+        
+        # 获取项目根目录路径
+        project_root = Path(__file__).parent.parent.parent.absolute()
+        
+        # 运行init_test_db.py脚本来初始化测试数据库
+        subprocess.run(
+            [sys.executable, os.path.join(project_root, "scripts", "init_test_db.py"), "--drop-all"],
+            check=True,
+            env=dict(os.environ, **{
+                "TEST_DATABASE_URL": TEST_DATABASE_URL,
+            })
+        )
+        
         print("测试数据库初始化成功")
     except Exception as e:
         print(f"初始化测试数据库失败: {e}")
@@ -157,6 +177,8 @@ def setup_test_dependencies():
     os.environ["REDIS_URL"] = TEST_REDIS_URL
     os.environ["QDRANT_URL"] = TEST_QDRANT_URL
     
+    # JWT相关环境变量在app/core/auth/jwt.py中直接处理，不再在此设置
+    
     # 按照app.main.py中的方式初始化依赖
     try:
         # 1. 创建会话工厂
@@ -182,13 +204,13 @@ def setup_test_dependencies():
     print("Cleaning up test resources...")
 
 # 同步会话工厂，用于测试中的直接数据库操作（不通过API）
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def test_db_session_factory():
     """Create a SQLAlchemy session factory for testing."""
     engine = create_engine(TEST_SYNC_DATABASE_URL)
     return sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def test_db_session(test_db_session_factory):
     """
     Create a SQLAlchemy session for testing.
@@ -204,7 +226,7 @@ def test_db_session(test_db_session_factory):
         session.rollback()
         session.close()
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def app_client():
     """
     Create a FastAPI TestClient.

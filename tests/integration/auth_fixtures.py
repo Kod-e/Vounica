@@ -3,27 +3,31 @@ Authentication fixtures for integration tests.
 Provides fixtures for user creation, registration, and login.
 """
 import pytest
+import uuid
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.infra.models.user import User
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def test_user_data():
     """
     Test user data.
     
     这个fixture提供了测试用户的基本数据。
+    使用随机email避免重复注册问题。
     """
+    # 使用随机UUID生成唯一邮箱
+    random_suffix = str(uuid.uuid4())[:8]
     return {
         "name": "Test User",
-        "email": "testuser@example.com",
+        "email": f"testuser_{random_suffix}@example.com",
         "password": "password123"
     }
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def registered_user(app_client, test_user_data):
     """
     Register a test user through the API.
@@ -38,41 +42,15 @@ def registered_user(app_client, test_user_data):
     return response.json()
 
 
-@pytest.fixture(scope="module")
-def user_token(app_client, test_user_data, registered_user):
-    """
-    Get a user token by logging in.
-    
-    通过登录获取用户token。
-    使用已经注册的用户（从registered_user fixture）。
-    """
-    # 登录获取token
-    login_data = {
-        "email": test_user_data["email"],
-        "password": test_user_data["password"]
-    }
-    
-    # 登录获取token
-    response = app_client.post(
-        "/v1/auth/login",
-        json=login_data
-    )
-    
-    assert response.status_code == 200, f"Failed to login: {response.text}"
-    data = response.json()
-    assert "access_token" in data, "No access token in response"
-    return data
-
-
-@pytest.fixture(scope="module")
-def authenticated_user(test_db_session, user_token):
+@pytest.fixture(scope="session")
+def authenticated_user(test_db_session, registered_user):
     """
     Get the authenticated user from database.
     
     从数据库获取已认证的用户对象。
     """
-    user_id = user_token.get("user_id")
-    assert user_id, "No user_id in token response"
+    user_id = registered_user.get("id")
+    assert user_id, "No id in registration response"
     
     user = test_db_session.query(User).filter(User.id == user_id).first()
     assert user, f"User with ID {user_id} not found in database"
@@ -80,19 +58,20 @@ def authenticated_user(test_db_session, user_token):
     return user
 
 
-@pytest.fixture(scope="module")
-def authenticated_client(app_client, user_token):
+@pytest.fixture(scope="session")
+def authenticated_client(app_client, registered_user):
     """
     Get an authenticated client with auth headers.
     
     创建一个带有认证头的客户端，用于已认证的API请求。
     """
-    access_token = user_token.get("access_token")
-    assert access_token, "No access_token in token response"
+    access_token = registered_user.get("access_token")
+    assert access_token, "No access_token in registration response"
     
-    # 创建一个新的client，并添加认证头
-    app_client.headers.update({
+    # 克隆一个新的client而不是修改原始client
+    client = TestClient(app_client.app)
+    client.headers.update({
         "Authorization": f"Bearer {access_token}"
     })
     
-    return app_client 
+    return client 

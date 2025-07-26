@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from datetime import datetime, timedelta, timezone
+import uuid
 from app.core.db.base import BaseModel
 
 
@@ -17,8 +18,8 @@ class RefreshToken(BaseModel):
     @classmethod
     def create_token(cls, user_id: int, lifetime_minutes: int = 60 * 24 * 7) -> dict:
         """Return plain dict for repository create."""
-        expires = datetime.now(timezone.utc) + timedelta(minutes=lifetime_minutes)
-        import uuid
+        # 不使用timezone.utc，而是使用不带时区的datetime
+        expires = datetime.now() + timedelta(minutes=lifetime_minutes)
         return {
             "user_id": user_id,
             "token": str(uuid.uuid4()),

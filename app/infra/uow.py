@@ -1,37 +1,32 @@
-from __future__ import annotations
-from typing import Any, Dict, AsyncGenerator, TYPE_CHECKING
-import inspect
+"""
+单元工作模式 (Unit of Work) 简化资源管理和事务处理
 
-from fastapi import Depends, Header
+扩展了 SQLAlchemy 事务管理，支持跨数据库、向量数据库和缓存的一致性操作：
+- 支持多种资源同时维护（数据库连接、向量数据库、缓存等）
+- 自动提交/回滚管理，避免事务泄露
+- 简化为单一依赖注入点
+- 支持查询参数和通用头部处理
+"""
+
+import inspect
+from typing import Any, AsyncGenerator, Dict, Optional, TypeVar, Type
+from fastapi import Header, Depends
+import redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db.base import get_db
-from app.core.vector.session import VectorSession, get_vector_session
+from app.core.db import get_db
+from app.core.vector import get_vector_session
+from app.core.vector.session import VectorSession
 from app.core.redis import get_redis_client
-
-from app.infra.quota.bucket import QuotaBucket
-
-import redis.asyncio as redis
-
 from app.core.auth.jwt import verify_access_token
-from app.core.exceptions.auth.unauthorized import UnauthorizedException
 from app.core.exceptions.auth.invalid_token import InvalidTokenException
+from app.core.exceptions.auth.unauthorized import UnauthorizedException
+from app.infra.repo.user_repository import UserRepository
 
-if TYPE_CHECKING:
-    from app.infra.models.user import User
 
 class UnitOfWork:
-    """Forward commit / rollback / close 操作到所有注入的资源。"""
+    """Resource manager implementing unit-of-work pattern"""
 
-    # 类型
-    if TYPE_CHECKING:
-        db: AsyncSession
-        vector: VectorSession
-        redis: redis.Redis
-        quota: QuotaBucket
-        user: 'User'
-        accept_language: str | None
-        target_language: str | None
     def __init__(self, **resources: Any) -> None:
         # 将资源同时存入私有 dict，并挂到实例属性上，便于外部通过 uow.db 直接访问
         self._resources: Dict[str, Any] = {}
@@ -124,19 +119,55 @@ async def get_uow(
         raise UnauthorizedException("Malformed subject in token")
 
     # 把user_id转换为user
-    from app.infra.repo.user_repository import UserRepository
-    user_repository = UserRepository()
-    user : 'User' = await user_repository.get_by_id(db, user_id)
+    user_repo = UserRepository()
+    user = await user_repo.get_by_id(db, user_id)
     if user is None:
         raise UnauthorizedException("User not found")
-    # 将 user 注入到 uow，方便下游逻辑使用
-    # 初始化 quota bucket，并进行配额检查（不预扣）
-    quota_bucket = QuotaBucket(redis_client=redis_client, user_id=user.id)
 
-    uow = UnitOfWork(db=db, vector=vector, redis=redis_client, quota=quota_bucket, user=user, accept_language=accept_language, target_language=target_language)
+    # 创建UoW实例，包含所有必要的资源
+    uow = UnitOfWork(
+        db=db, 
+        vector=vector,
+        redis=redis_client,
+        # 当前认证用户
+        current_user=user,
+        # 请求头中的首选语言
+        accept_language=accept_language,
+        # 请求头中的目标语言
+        target_language=target_language,
+    )
+
     try:
         yield uow
-        await uow.commit()
+    except Exception:
+        # 确保异常情况下也回滚
+        await uow.rollback()
+        raise
+    finally:
+        # 无论如何都要关闭资源
+        await uow.close()
+
+
+# 简化版本，用于登录/注册等不需要认证的场景
+# 在实际使用中，似乎尚未被用到
+async def get_public_uow(
+    db: AsyncSession = Depends(get_db),
+    vector: VectorSession = Depends(get_vector_session),
+    redis_client: redis.Redis = Depends(get_redis_client),
+) -> AsyncGenerator[UnitOfWork, None]:
+    """
+    Aggregate db, vector for public endpoints that don't need authentication.
+    
+    認証(にんしょう)が不要(ふよう)なpublic endpointsのためのUoWを提供(ていきょう)します。
+    """
+    uow = UnitOfWork(
+        db=db,
+        vector=vector,
+        redis=redis_client,
+    )
+
+    try:
+        yield uow
     except Exception:
         await uow.rollback()
         raise

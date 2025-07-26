@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional
+from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infra.uow  import UnitOfWork
@@ -39,17 +40,18 @@ class AuthService:
             raise InvalidCredentialsException()
 
         access_token = create_access_token(user.id)
-        rt = self._rt_repo.model.create_token(user.id)
-        await self._rt_repo.create(db, rt.__dict__)
-        return access_token, rt.token
+        rt_data = self._rt_repo.model.create_token(user.id)
+        # rt_data已经是一个字典，不需要再调用__dict__
+        await self._rt_repo.create(db, rt_data)
+        return access_token, rt_data["token"]
 
     async def refresh(self, db: AsyncSession, *, refresh_token: str):
         rt = await self._rt_repo.get_by_token(db, refresh_token)  # assume helper
         if rt is None or rt.revoked:
             raise InvalidTokenException()
-        from datetime import datetime, timezone
 
-        if rt.expires_at < datetime.now(timezone.utc):
+        # 使用不带时区的datetime进行比较
+        if rt.expires_at < datetime.now():
             raise InvalidTokenException()
 
         access_token = create_access_token(rt.user_id)

@@ -5,6 +5,7 @@ These tests validate the environment configuration and database connectivity.
 import pytest
 from sqlalchemy import text
 from fastapi.testclient import TestClient
+from app.main import app
 
 
 def test_app_client(app_client):
@@ -22,8 +23,6 @@ def test_db_session(test_db_session):
 
 def test_dependencies_initialized():
     """Test that all required dependencies are initialized."""
-    from app.main import app
-    
     # 验证应用状态中的关键依赖
     assert hasattr(app.state, "async_session_maker"), "async_session_maker not initialized"
     assert hasattr(app.state, "qdrant_client"), "qdrant_client not initialized"

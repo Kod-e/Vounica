@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 import os
+import uvicorn
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from fastapi import FastAPI
@@ -13,6 +14,9 @@ from app.api.v1.router import router as v1_router
 from app.core.vector import make_qdrant_client
 from app.core.db import make_async_session_maker, get_engine
 from app.core.redis import make_redis_client
+
+# 加载环境变量
+load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -55,5 +59,4 @@ async def health_check():
     return {"status": "healthy"}
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True) 
