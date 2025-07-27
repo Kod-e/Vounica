@@ -13,6 +13,11 @@ from app.llm import chat_completion, LLMModel
 from app.services.question.common.registry import create_question
 from app.services.question.common.types import QuestionType
 from app.services.tools.search import search_resource
+from app.services.common.memory import MemoryService
+from app.services.common.mistake import MistakeService
+from app.services.common.story import StoryService
+from app.services.common.vocab import VocabService
+
 
 class QuestionAgent:
     """
@@ -30,6 +35,9 @@ class QuestionAgent:
         self.plan_results = {}
         self.action_results = []
         self.reflection_result = None
+        
+        # 存储用于给ai看的logs, 用于让Agent知道之前发生了什么
+        self.logs = []
         
     async def run(self, user_input: str) -> Dict[str, Any]:
         """
@@ -83,10 +91,13 @@ class QuestionAgent:
         """
         # 重置观察结果
         self.observation_results = []
-        
-        # 判断是否为新用户
-        is_new_user = await self._is_new_user()
         # 应该在构造之前, 获取用户的记忆, LLM的泛化能力可以很容易的确认用户是否是新用户
+        # 获取用户的记忆, 20条最重要的, 用于让LLM知道用户之前发生了什么
+        memories = await MemoryService(self.uow).get_user_memories(limit=20)
+        # 获取用户的记忆的category, 用于让LLM知道用户留下了什么样的记忆
+        memory_categories = await MemoryService(self.uow).get_user_memory_categories_with_number()
+        # 获取用户的最近的5道错题, 用于让LLM知道用户之前犯了什么错
+        mistakes = await MistakeService(self.uow).get_user_mistakes(limit=5)
         
         # 构建提示词
         observe_prompt = [
@@ -323,7 +334,6 @@ class QuestionAgent:
         return self.reflection_result.get("is_valid", False)
     
     # 辅助方法
-    
     async def _is_new_user(self) -> bool:
         """检查这是否是一个没有历史记录的新用户。"""
         # 检查用户是否有任何记录（词汇、语法、错题等）
