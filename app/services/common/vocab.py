@@ -11,6 +11,7 @@ class VocabService(BaseService[Vocab]):
 
     def __init__(self, uow: UnitOfWork):
         self._uow = uow
-        super().__init__(VocabRepository(db=uow.db))
+        self._repo : VocabRepository = VocabRepository(db=uow.db)
+        super().__init__(self._repo)
 
 __all__ = ["VocabService"] 

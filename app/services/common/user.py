@@ -12,6 +12,7 @@ class UserService(BaseService[User]):
     def __init__(self, db: AsyncSession):
         # UserService特殊，只接收db而非uow，因为它可能在未登录状态下使用
         self._db = db
-        super().__init__(UserRepository(db=db))
+        self._repo : UserRepository = UserRepository(db=db)
+        super().__init__(self._repo)
 
 __all__ = ["UserService"] 

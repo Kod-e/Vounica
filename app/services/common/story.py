@@ -11,6 +11,7 @@ class StoryService(BaseService[Story]):
 
     def __init__(self, uow: UnitOfWork):
         self._uow = uow
-        super().__init__(StoryRepository(db=uow.db))
+        self._repo : StoryRepository = StoryRepository(db=uow.db)
+        super().__init__(self._repo)
 
 __all__ = ["StoryService"] 

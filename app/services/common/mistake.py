@@ -14,6 +14,7 @@ class MistakeService(BaseService[Mistake]):
 
     def __init__(self, uow: UnitOfWork):
         self._uow = uow
-        super().__init__(MistakeRepository(db=uow.db))
+        self._repo : MistakeRepository = MistakeRepository(db=uow.db)
+        super().__init__(self._repo)
 
 __all__ = ["MistakeService"] 
