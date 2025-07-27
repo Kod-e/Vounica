@@ -9,7 +9,7 @@ from .types import ErrorType
 # Auth 401
 from .auth import AuthException, UnauthorizedException, InvalidTokenException, PermissionDeniedException
 # Resource 404
-from .common import NotFoundException, BadRequestException, ValidationException
+from .common import NotFoundException, BadRequestException, ValidationException, TokenQuotaExceededException
 from .resource import (
     UserNotFoundException,
     ResourceNotFoundException,
@@ -41,6 +41,7 @@ __all__ = [
     "GrammarNotFoundException",
     "MistakeNotFoundException",
     "MemoryNotFoundException",
+    "TokenQuotaExceededException",
     # server
     "InternalErrorException",
     "DatabaseException",

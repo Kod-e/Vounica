@@ -224,7 +224,7 @@ async def search_resource(
     # regex search
     if method == "regex":
         regex = f"%{query}%"
-        stmt = select(Model).where(Model.user_id == uow.user.id, column.ilike(regex)).limit(limit)
+        stmt = select(Model).where(Model.user_id == uow.current_user.id, column.ilike(regex)).limit(limit)
         res = await uow.db.execute(stmt)
         return [_to_dict(r) for r in res.scalars().all()]
 
@@ -234,7 +234,7 @@ async def search_resource(
     client = get_qdrant_client()
     
     # 获取qdrant的client
-    q_filter = {"must": [{"key": "user_id", "match": {"value": uow.user.id}}]}
+    q_filter = {"must": [{"key": "user_id", "match": {"value": uow.current_user.id}}]}
 
     # 进行向量查询
     points = client.search(

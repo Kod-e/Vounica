@@ -9,7 +9,7 @@
 """
 
 import inspect
-from typing import Any, AsyncGenerator, Dict, Optional, TypeVar, Type
+from typing import Any, AsyncGenerator, Dict, Optional, TypeVar, Type, TYPE_CHECKING
 from fastapi import Header, Depends
 import redis
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,11 +22,21 @@ from app.core.auth.jwt import verify_access_token
 from app.core.exceptions.auth.invalid_token import InvalidTokenException
 from app.core.exceptions.auth.unauthorized import UnauthorizedException
 from app.infra.repo.user_repository import UserRepository
+from app.infra.models import User
+from app.infra.quota import QuotaBucket
 
 
 class UnitOfWork:
     """Resource manager implementing unit-of-work pattern"""
 
+    db: AsyncSession
+    vector: VectorSession
+    redis: redis.Redis
+    current_user: "User"
+    accept_language: str
+    target_language: str
+    quota: QuotaBucket
+    
     def __init__(self, **resources: Any) -> None:
         # 将资源同时存入私有 dict，并挂到实例属性上，便于外部通过 uow.db 直接访问
         self._resources: Dict[str, Any] = {}
@@ -135,6 +145,8 @@ async def get_uow(
         accept_language=accept_language,
         # 请求头中的目标语言
         target_language=target_language,
+        # 用户配额
+        quota=QuotaBucket(redis_client, user),
     )
 
     try:
@@ -149,7 +161,6 @@ async def get_uow(
 
 
 # 简化版本，用于登录/注册等不需要认证的场景
-# 在实际使用中，似乎尚未被用到
 async def get_public_uow(
     db: AsyncSession = Depends(get_db),
     vector: VectorSession = Depends(get_vector_session),

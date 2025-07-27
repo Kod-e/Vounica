@@ -20,5 +20,6 @@ class ErrorType(str, Enum):
     VALIDATION_ERROR = "validation_error"
     DATABASE_ERROR = "database_error"
     INTERNAL_ERROR = "internal_error"
-    INVALID_CREDENTIALS = "invalid_credentials"
+    INVALID_CREDENTIALS = "invalid_credentials" 
     TOO_MANY_REQUESTS = "too_many_requests" 
+    TOKEN_QUOTA_EXCEEDED = "token_quota_exceeded"

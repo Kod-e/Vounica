@@ -9,7 +9,7 @@ from typing import Optional
 import redis.asyncio as redis
 from dotenv import load_dotenv
 
-from app.core.exceptions.common.too_many_requests import TooManyRequestsException
+from app.core.exceptions.common.token_quota_exceeded import TokenQuotaExceededException
 from app.infra.models.user import User
 
 load_dotenv()
@@ -45,7 +45,7 @@ class QuotaBucket:
         """Ensure quota has at least `need` tokens remaining."""
         remaining = await self._get_remaining(create_if_missing=True)
         if remaining < need:
-            raise TooManyRequestsException(
+            raise TokenQuotaExceededException(
                 message="Token quota exceeded",
                 detail={"remaining": remaining, "required": need},
             )

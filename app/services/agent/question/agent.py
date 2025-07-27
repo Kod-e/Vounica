@@ -6,17 +6,13 @@ from __future__ import annotations
 OPAR (观察、计划、行动、反思) 循环是一种问题生成的方法论，用于创建针对用户的个性化问题。
 """
 
-import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.infra.uow import UnitOfWork
-from app.llm.client import chat_completion
+from app.llm import chat_completion, LLMModel
 from app.services.tools.search import search_resource
 from app.services.question.common.registry import create_question
 from app.services.question.common.types import QuestionType
-
-# 创建日志记录器
-logger = logging.getLogger(__name__)
 
 
 class QuestionAgent:
@@ -26,9 +22,9 @@ class QuestionAgent:
     该类用于根据用户状态和输入生成个性化的语言学习题目。
     """
     
-    def __init__(self, uow: UnitOfWork):
+    def __init__(self, uow: UnitOfWork, model_type: LLMModel = LLMModel.STANDARD):
         self.uow = uow
-        self.user = uow.user
+        self.model_type = model_type
         
         # 存储OPAR循环的状态和结果
         self.observation_results = []
@@ -42,7 +38,6 @@ class QuestionAgent:
         
         该方法协调整个问题生成过程，包括观察、计划、行动和反思阶段。
         """
-        logger.info(f"Starting OPAR loop for user {self.user.id} with input: {user_input}")
         
         # 执行OPAR循环
         await self._observe(user_input)
@@ -55,7 +50,6 @@ class QuestionAgent:
         max_retries = 2
         
         while not is_valid and retries < max_retries:
-            logger.info(f"Reflection indicates issues, retrying OPAR. Retry {retries+1}/{max_retries}")
             
             # 根据反思结果决定从哪个阶段重新开始
             if self.reflection_result.get("stage_to_retry") == "observe":
@@ -120,7 +114,7 @@ class QuestionAgent:
         # 先放在这里呆会再写
         
         # 调用LLM进行观察分析
-        response = chat_completion(messages=observe_prompt)
+        response = chat_completion(messages=observe_prompt, uow=self.uow, model_type=self.model_type)
         analysis = response.choices[0].message.content
         
         # 解析LLM的回应，提取搜索词
@@ -146,7 +140,6 @@ class QuestionAgent:
                         "results": search_results
                     })
             except Exception as e:
-                logger.error(f"Search error for {resource_type}.{field}: {e}")
                 # 如果向量搜索失败，尝试正则搜索
                 try:
                     search_results = await search_resource(
@@ -165,10 +158,9 @@ class QuestionAgent:
                             "results": search_results
                         })
                 except Exception as e2:
-                    logger.error(f"Regex search also failed for {resource_type}.{field}: {e2}")
-    
+                    pass
     async def _plan(self) -> None:
-        """
+        """ 
         计划阶段：基于观察结果规划问题生成。
         
         根据观察阶段收集的信息，规划需要生成的问题类型、数量和难度。
@@ -218,7 +210,7 @@ class QuestionAgent:
         #应该在这里插入所有题目的描述
         
         # 调用LLM制定计划
-        response = chat_completion(messages=plan_prompt)
+        response = chat_completion(messages=plan_prompt, uow=self.uow, model_type=self.model_type)
         plan_text = response.choices[0].message.content
         
         # 解析LLM的计划
@@ -235,7 +227,6 @@ class QuestionAgent:
         self.action_results = []
         
         if not self.plan_results:
-            logger.warning("No plan available for act phase")
             return
         
         question_count = self.plan_results.get("question_count", 5)
@@ -273,7 +264,7 @@ class QuestionAgent:
             ]
             
             # 调用LLM生成题目
-            response = chat_completion(messages=act_prompt)
+            response = chat_completion(messages=act_prompt, uow=self.uow, model_type=self.model_type)
             question_data = response.choices[0].message.content
             
             # 解析生成的题目数据
@@ -291,7 +282,6 @@ class QuestionAgent:
             bool: 如果问题有效则返回True，如果需要修改则返回False
         """
         if not self.action_results:
-            logger.warning("No questions to reflect on")
             self.reflection_result = {
                 "is_valid": False,
                 "reason": "No questions were generated",
@@ -324,7 +314,7 @@ class QuestionAgent:
         ]
         
         # 调用LLM进行反思评估
-        response = chat_completion(messages=reflect_prompt)
+        response = chat_completion(messages=reflect_prompt, uow=self.uow, model_type=self.model_type)
         reflection = response.choices[0].message.content
         
         # 解析反思结果
@@ -361,7 +351,6 @@ class QuestionAgent:
             # 如果没有任何记录，则视为新用户
             return not (memory_results or mistake_results)
         except Exception as e:
-            logger.error(f"Error checking if user is new: {e}")
             # 默认情况下，假设是新用户
             return True
     
@@ -456,7 +445,6 @@ class QuestionAgent:
                 "raw_data": question_data  # 保存原始数据，便于调试
             }
         except Exception as e:
-            logger.error(f"Error parsing question data: {e}")
             return None
     
     def _parse_reflection(self, reflection: str) -> Dict[str, Any]:
