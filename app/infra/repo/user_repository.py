@@ -9,16 +9,17 @@ class UserRepository(Repository[User]):
     これは User model用(よう)の repository 基本(きほん) classです。
     """
 
-    def __init__(self):
-        # 初始化时仅传入模型类，Session 由具体调用方法时注入
+    def __init__(self, db: AsyncSession):
+        # 初始化时接收db参数
         super().__init__(User)
+        self.db = db
 
-    async def get_by_email(self, db: AsyncSession, email: str):
+    async def get_by_email(self, email: str):
         stmt = select(self.model).where(self.model.email == email)
-        result = await db.execute(stmt)
+        result = await self.db.execute(stmt)
         return result.scalars().first()
 
-    async def exists_by_email(self, db: AsyncSession, email: str) -> bool:
+    async def exists_by_email(self, email: str) -> bool:
         stmt = select(self.model.id).where(self.model.email == email)
-        result = await db.execute(stmt)
+        result = await self.db.execute(stmt)
         return result.scalar() is not None 

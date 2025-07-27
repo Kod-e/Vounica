@@ -33,6 +33,7 @@ class UnitOfWork:
     vector: VectorSession
     redis: redis.Redis
     current_user: "User"
+    current_user_id: int
     accept_language: str
     target_language: str
     quota: QuotaBucket
@@ -147,6 +148,8 @@ async def get_uow(
         target_language=target_language,
         # 用户配额
         quota=QuotaBucket(redis_client, user),
+        # 当前用户ID
+        current_user_id=user_id,
     )
 
     try:

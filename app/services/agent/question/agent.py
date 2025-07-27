@@ -10,10 +10,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from app.infra.uow import UnitOfWork
 from app.llm import chat_completion, LLMModel
-from app.services.tools.search import search_resource
 from app.services.question.common.registry import create_question
 from app.services.question.common.types import QuestionType
-
+from app.services.tools.search import search_resource
 
 class QuestionAgent:
     """
@@ -87,6 +86,7 @@ class QuestionAgent:
         
         # 判断是否为新用户
         is_new_user = await self._is_new_user()
+        # 应该在构造之前, 获取用户的记忆, LLM的泛化能力可以很容易的确认用户是否是新用户
         
         # 构建提示词
         observe_prompt = [
