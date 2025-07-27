@@ -17,6 +17,16 @@
             }
         },
         {
+            "name": "Run Unit Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests/unit",
+                "-v"
+            ],
+        },
+        {
             "name": "Run Integration Tests (Local)",
             "type": "debugpy",
             "request": "launch",
