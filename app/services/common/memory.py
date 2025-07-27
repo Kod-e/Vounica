@@ -1,6 +1,7 @@
 """Memory service wrapper."""
 
-from typing import List, Dict
+import datetime
+from typing import Any, List, Dict
 
 from app.services.common.common_base import BaseService
 from app.infra.models.memory import Memory
@@ -28,6 +29,17 @@ class MemoryService(BaseService[Memory]):
             offset=offset,
             language=self._uow.target_language
         )
+    # 获取用户最重要的50条记忆, 并且返回一个list string, 用于给AI看
+    async def get_user_memories_list(self, limit: int = 50,offset: int = 0) -> List[Dict[str, Any]]:
+        """Get the user's most important memories."""
+        # 利用MemoryRepository获取用户最重要的几条记忆
+        memories = await self.get_user_memories(limit=limit,offset=offset)
+        return [{
+            "content": memory.content,
+            "category": memory.category,
+            "priority": memory.priority,
+            "created_at": memory.updated_at.isoformat()
+        } for memory in memories]
     # 获取用户的所有记忆的category
     async def get_user_memory_categories(self) -> List[str]:
         """Get the user's all memory categories."""

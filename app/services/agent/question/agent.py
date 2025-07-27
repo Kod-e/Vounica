@@ -6,13 +6,14 @@ from __future__ import annotations
 OPAR (观察、计划、行动、反思) 循环是一种问题生成的方法论，用于创建针对用户的个性化问题。
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
+import json
 
 from app.infra.uow import UnitOfWork
 from app.llm import chat_completion, LLMModel
 from app.services.question.common.registry import create_question
 from app.services.question.common.types import QuestionType
-from app.services.tools.search import search_resource
+from app.services.tools.search import search_resource, _SEARCH_SCHEMA
 from app.services.common.memory import MemoryService
 from app.services.common.mistake import MistakeService
 from app.services.common.story import StoryService
@@ -93,7 +94,7 @@ class QuestionAgent:
         self.observation_results = []
         # 应该在构造之前, 获取用户的记忆, LLM的泛化能力可以很容易的确认用户是否是新用户
         # 获取用户的记忆, 20条最重要的, 用于让LLM知道用户之前发生了什么
-        memories = await MemoryService(self.uow).get_user_memories(limit=20)
+        memories = await MemoryService(self.uow).get_user_memories_list(limit=20)
         # 获取用户的记忆的category, 用于让LLM知道用户留下了什么样的记忆
         memory_categories = await MemoryService(self.uow).get_user_memory_categories_with_number()
         # 获取用户的最近的5道错题, 用于让LLM知道用户之前犯了什么错
@@ -101,64 +102,128 @@ class QuestionAgent:
         
         # 构建提示词
         observe_prompt = [
-            {"role": "system", "content": """
-                你是一个语言学习平台的智能观察代理。
-                你的任务是分析用户请求并确定什么样的问题类型最适合当前场景。
+            {"role": "system", "content": f"""
+你是一个语言学习平台的智能观察代理。, 用户正在学习{self.uow.target_language}语言(ISO 639-1 标准)
+你的任务是分析当前请求下, 用户最需要什么, 并且在数据库中搜索相关的资源, 然后补全练习题需要的信息
 
-                需要考虑以下几点：
-                1. 这是否是一个需要评估测试的新用户？
-                2. 用户对哪些语言学习主题感兴趣？
-                3. 应该搜索哪些资源（词汇、语法等）来准备相关问题？
-                4. 用户当前的水平和学习目标是什么？
+需要考虑以下几点：
+1. 用户当前的水平和学习目标是什么
+2. 应该怎么出练习题才能让用户感兴趣, 想要学会语言最重要的是和生活与爱好相关的契机
+3. 你应该知道用户喜欢哪些东西, 并且这些内容需要对出题的内容有帮助
+4. 你应该知道用户当前的水平和学习目标是什么, 并且根据这些信息, 给出一些练习题, 让用户自己选择
 
-                根据用户的请求，确定关键搜索词以查找相关的学习资源。
-                你可以搜索：词汇（vocab）、语法（grammar）、错题（mistakes）、故事（stories）和记忆（memories）。
+根据用户的请求，使用search_resource函数主动搜索相关的学习资源
+你可以搜索：词汇（vocab）、语法（grammar）、错题（mistakes）、故事（stories）和记忆（memories）。
+请在回复前尝试搜索相关资源，以获取更准确的上下文信息。
+
+请注意, 你是一个AI, 你不能直接告诉用户应该怎么学习, 你只能根据用户的情况, 给出一些建议, 并且给出一些练习题, 让用户自己选择
                             """},
-                            {"role": "user", "content": f"""
-                用户请求：{user_input}
-                是否新用户：{is_new_user}
-
-                分析这个请求并建议搜索查询以查找相关的学习资源。
+            {"role": "user", "content": f"""
+下面附带了一些AI对用户的画像, 全部都是由AI主动记录的
+关于这个用户当前语言的最重要的最近的20条记忆, 如果不足20条会使用其他语言补齐：{memories}
+用户记忆的category和数量：{memory_categories}
+关于这个用户当前语言的最近的5道错题：{mistakes}
+            """},
+            {"role": "user", "content": f"""
+用户请求：{user_input}
+分析这个请求并主动搜索相关学习资源。可使用search_resource函数来查找与用户需求相关的资源。
             """}
         ]
-        # 应该在这里插入function call(数据库), 并且注入最重要的20条Memory
-        # 先放在这里呆会再写
+        
+        # 定义函数处理函数调用响应
+        async def handle_function_calls(response_message):
+            function_calls = []
+            
+            # 检查是否有函数调用
+            if hasattr(response_message, 'function_call') and response_message.function_call:
+                # 单个函数调用
+                function_call = response_message.function_call
+                if function_call.name == 'search_resource':
+                    try:
+                        args = json.loads(function_call.arguments)
+                        results = await search_resource(
+                            self.uow,
+                            resource=args.get('resource'),
+                            field=args.get('field'),
+                            query=args.get('query'),
+                            method=args.get('method', 'regex'),
+                            limit=args.get('limit', 20)
+                        )
+                        function_calls.append({
+                            'name': function_call.name,
+                            'args': args,
+                            'results': results
+                        })
+                    except Exception as e:
+                        function_calls.append({
+                            'name': function_call.name,
+                            'args': json.loads(function_call.arguments),
+                            'error': str(e)
+                        })
+            
+            # 检查是否有多个函数调用
+            if hasattr(response_message, 'tool_calls') and response_message.tool_calls:
+                for tool_call in response_message.tool_calls:
+                    if tool_call.function.name == 'search_resource':
+                        try:
+                            args = json.loads(tool_call.function.arguments)
+                            results = await search_resource(
+                                self.uow,
+                                resource=args.get('resource'),
+                                field=args.get('field'),
+                                query=args.get('query'),
+                                method=args.get('method', 'regex'),
+                                limit=args.get('limit', 20)
+                            )
+                            function_calls.append({
+                                'name': tool_call.function.name,
+                                'args': args,
+                                'results': results
+                            })
+                        except Exception as e:
+                            function_calls.append({
+                                'name': tool_call.function.name,
+                                'args': json.loads(tool_call.function.arguments),
+                                'error': str(e)
+                            })
+            
+            return function_calls
         
         # 调用LLM进行观察分析
-        response = chat_completion(messages=observe_prompt, uow=self.uow, model_type=self.model_type)
-        analysis = response.choices[0].message.content
+        response = chat_completion(
+            messages=observe_prompt, 
+            uow=self.uow, 
+            model_type=self.model_type,
+            functions=[_SEARCH_SCHEMA]
+        )
         
-        # 解析LLM的回应，提取搜索词
-        # 实际实现中可能需要更复杂的解析逻辑
-        search_terms = self._extract_search_terms(analysis)
+        # 处理函数调用
+        function_calls = await handle_function_calls(response.choices[0].message)
         
-        # 执行搜索，获取相关资源
-        for resource_type, field, query in search_terms:
-            try:
-                search_results = await search_resource(
-                    self.uow,
-                    resource=resource_type,
-                    field=field,
-                    query=query,
-                    method="vector",  # 优先使用向量搜索
-                    limit=5
-                )
-                
-                if search_results:
-                    self.observation_results.append({
-                        "resource_type": resource_type,
-                        "query": query,
-                        "results": search_results
-                    })
-            except Exception as e:
-                # 如果向量搜索失败，尝试正则搜索
+        # 如果有函数调用结果，则添加到观察结果中
+        for call in function_calls:
+            if 'results' in call and call['results']:
+                self.observation_results.append({
+                    "resource_type": call['args'].get('resource'),
+                    "query": call['args'].get('query'),
+                    "results": call['results']
+                })
+        
+        # 如果没有通过函数调用获取到结果，则解析LLM的文本回应
+        if not self.observation_results:
+            analysis = response.choices[0].message.content
+            # 解析LLM的回应，提取搜索词
+            search_terms = self._extract_search_terms(analysis)
+            
+            # 执行搜索，获取相关资源
+            for resource_type, field, query in search_terms:
                 try:
                     search_results = await search_resource(
                         self.uow,
                         resource=resource_type,
                         field=field,
                         query=query,
-                        method="regex",
+                        method="vector",  # 优先使用向量搜索
                         limit=5
                     )
                     
@@ -168,8 +233,26 @@ class QuestionAgent:
                             "query": query,
                             "results": search_results
                         })
-                except Exception as e2:
-                    pass
+                except Exception as e:
+                    # 如果向量搜索失败，尝试正则搜索
+                    try:
+                        search_results = await search_resource(
+                            self.uow,
+                            resource=resource_type,
+                            field=field,
+                            query=query,
+                            method="regex",
+                            limit=5
+                        )
+                        
+                        if search_results:
+                            self.observation_results.append({
+                                "resource_type": resource_type,
+                                "query": query,
+                                "results": search_results
+                            })
+                    except Exception as e2:
+                        pass
     async def _plan(self) -> None:
         """ 
         计划阶段：基于观察结果规划问题生成。
