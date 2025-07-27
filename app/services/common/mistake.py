@@ -21,7 +21,7 @@ class MistakeService(BaseService[Mistake]):
     async def get_user_mistakes(self, limit: int = 5,offset: int = 0) -> List[Mistake]:
         """Get the user's recent mistakes."""
         return await self._repo.get_user_mistakes(
-            user_id=self._uow.current_user_id,
+            user_id=self._uow.current_user.id,
             language=self._uow.target_language,
             limit=limit,
             offset=offset

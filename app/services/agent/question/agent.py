@@ -131,37 +131,10 @@ class QuestionAgent:
         ]
         
         # 定义函数处理函数调用响应
-        async def handle_function_calls(response_message):
-            function_calls = []
+        async def handle_tool_calls(response_message):
+            tool_calls = []
             
             # 检查是否有函数调用
-            if hasattr(response_message, 'function_call') and response_message.function_call:
-                # 单个函数调用
-                function_call = response_message.function_call
-                if function_call.name == 'search_resource':
-                    try:
-                        args = json.loads(function_call.arguments)
-                        results = await search_resource(
-                            self.uow,
-                            resource=args.get('resource'),
-                            field=args.get('field'),
-                            query=args.get('query'),
-                            method=args.get('method', 'regex'),
-                            limit=args.get('limit', 20)
-                        )
-                        function_calls.append({
-                            'name': function_call.name,
-                            'args': args,
-                            'results': results
-                        })
-                    except Exception as e:
-                        function_calls.append({
-                            'name': function_call.name,
-                            'args': json.loads(function_call.arguments),
-                            'error': str(e)
-                        })
-            
-            # 检查是否有多个函数调用
             if hasattr(response_message, 'tool_calls') and response_message.tool_calls:
                 for tool_call in response_message.tool_calls:
                     if tool_call.function.name == 'search_resource':
@@ -175,84 +148,40 @@ class QuestionAgent:
                                 method=args.get('method', 'regex'),
                                 limit=args.get('limit', 20)
                             )
-                            function_calls.append({
+                            tool_calls.append({
                                 'name': tool_call.function.name,
                                 'args': args,
                                 'results': results
                             })
                         except Exception as e:
-                            function_calls.append({
+                            tool_calls.append({
                                 'name': tool_call.function.name,
                                 'args': json.loads(tool_call.function.arguments),
                                 'error': str(e)
                             })
-            
-            return function_calls
+            return tool_calls
         
         # 调用LLM进行观察分析
         response = chat_completion(
             messages=observe_prompt, 
             uow=self.uow, 
             model_type=self.model_type,
-            functions=[_SEARCH_SCHEMA]
+            tools=[_SEARCH_SCHEMA],
+            tool_choice="auto"
         )
         
         # 处理函数调用
-        function_calls = await handle_function_calls(response.choices[0].message)
+        tool_calls = await handle_tool_calls(response.choices[0].message)
         
         # 如果有函数调用结果，则添加到观察结果中
-        for call in function_calls:
+        for call in tool_calls:
             if 'results' in call and call['results']:
                 self.observation_results.append({
                     "resource_type": call['args'].get('resource'),
                     "query": call['args'].get('query'),
                     "results": call['results']
                 })
-        
-        # 如果没有通过函数调用获取到结果，则解析LLM的文本回应
-        if not self.observation_results:
-            analysis = response.choices[0].message.content
-            # 解析LLM的回应，提取搜索词
-            search_terms = self._extract_search_terms(analysis)
-            
-            # 执行搜索，获取相关资源
-            for resource_type, field, query in search_terms:
-                try:
-                    search_results = await search_resource(
-                        self.uow,
-                        resource=resource_type,
-                        field=field,
-                        query=query,
-                        method="vector",  # 优先使用向量搜索
-                        limit=5
-                    )
-                    
-                    if search_results:
-                        self.observation_results.append({
-                            "resource_type": resource_type,
-                            "query": query,
-                            "results": search_results
-                        })
-                except Exception as e:
-                    # 如果向量搜索失败，尝试正则搜索
-                    try:
-                        search_results = await search_resource(
-                            self.uow,
-                            resource=resource_type,
-                            field=field,
-                            query=query,
-                            method="regex",
-                            limit=5
-                        )
-                        
-                        if search_results:
-                            self.observation_results.append({
-                                "resource_type": resource_type,
-                                "query": query,
-                                "results": search_results
-                            })
-                    except Exception as e2:
-                        pass
+        #
     async def _plan(self) -> None:
         """ 
         计划阶段：基于观察结果规划问题生成。
@@ -446,37 +375,7 @@ class QuestionAgent:
         except Exception as e:
             # 默认情况下，假设是新用户
             return True
-    
-    def _extract_search_terms(self, analysis: str) -> List[Tuple[str, str, str]]:
-        """从LLM分析中提取搜索词。"""
-        # 这个函数需要解析LLM输出的文本，提取搜索词
-        # 实际实现中可能会使用更复杂的解析逻辑或让LLM直接输出结构化数据
-        
-        # 简单示例实现，实际项目中需要更复杂的解析
-        search_terms = []
-        
-        # 假设LLM会输出类似 "Search: {resource_type}.{field}:{query}" 格式的内容
-        lines = analysis.split("\n")
-        for line in lines:
-            if "Search:" in line:
-                parts = line.split("Search:")[1].strip().split(":")
-                if len(parts) >= 2:
-                    resource_field = parts[0].strip()
-                    query = parts[1].strip()
-                    
-                    if "." in resource_field:
-                        resource_type, field = resource_field.split(".")
-                        search_terms.append((resource_type, field, query))
-        
-        # 如果没有找到搜索词，添加一些默认的搜索
-        if not search_terms:
-            search_terms = [
-                ("vocab", "name", "basic"),
-                ("grammar", "name", "basic"),
-                ("memory", "content", "learning")
-            ]
-        
-        return search_terms
+
     
     def _parse_plan(self, plan_text: str) -> Dict[str, Any]:
         """解析LLM的计划输出。"""

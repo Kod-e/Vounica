@@ -24,7 +24,7 @@ class MemoryService(BaseService[Memory]):
         """Get the user's most important memories."""
         # 利用MemoryRepository获取用户最重要的几条记忆
         return await self._repo.get_user_memories(
-            user_id=self._uow.current_user_id, 
+            user_id=self._uow.current_user.id, 
             limit=limit,
             offset=offset,
             language=self._uow.target_language
@@ -45,16 +45,14 @@ class MemoryService(BaseService[Memory]):
         """Get the user's all memory categories."""
         # 利用MemoryRepository获取用户所有的记忆的category
         return await self._repo.get_user_memory_categories(
-            user_id=self._uow.current_user_id,
-            language=self._uow.target_language
+            user_id=self._uow.current_user.id
         )
     # 获取用户的所有记忆的category, 并且带上number, 方便AI理解,  返回结构是str:number
     async def get_user_memory_categories_with_number(self) -> Dict[str, int]:
         """Get the user's all memory categories with number."""
         # 利用MemoryRepository获取用户所有的记忆的category
         categories = await self._repo.get_category_counts(
-            user_id=self._uow.current_user_id,
-            language=self._uow.target_language
+            user_id=self._uow.current_user.id
         )
         return categories
 

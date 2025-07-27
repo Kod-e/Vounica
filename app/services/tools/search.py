@@ -34,9 +34,14 @@ ResourceLiteral = Literal[
     "memory",
 ]
 _SEARCH_SCHEMA = {
+    "type": "function",
+    "function": {
     "name": "search_resource",
     "description": """ 
     检索用户在Vounica中记录的资源
+    如果你使用regex查询, regex应该是一个正则表达式, 用于匹配资源的内容
+    如果你使用vector查询, vector应该是一个字符串, 用于语意匹配资源, 注意vector时多语言的
+    
     Vocab
     可以检索name和usage两个字段, 其中usage通过LLM生成, 表示了这个usage的使用场景
     return: 
@@ -55,7 +60,6 @@ _SEARCH_SCHEMA = {
         "usage": "语法的使用场景",
         "status": "语法被正确使用的概率, 从0-1“
     }
-    
     
     Memory
     Content: 记忆内容, 记忆内容需要可以被string化, 只能由LLM主动生成添加, 这里代表了你自己对这个用户的记忆
@@ -91,19 +95,19 @@ _SEARCH_SCHEMA = {
         "error_reason": "错误原因"
     }
     
-    资源/字段/方法对照：
-    vocab.name → regex / vector
-    vocab.usage → regex / vector
-    grammar.name → regex / vector
-    grammar.usage → regex / vector
-    memory.content → regex / vector
-    story.content → regex / vector
-    story.summary → regex / vector
-    story.category → regex / vector
-    mistake.question → regex / vector
-    mistake.answer → regex / vector
-    mistake.correct_answer → regex / vector
-    mistake.error_reason → regex / vector
+    支持的资源
+    vocab.name 
+    vocab.usage
+    grammar.name
+    grammar.usage
+    memory.content
+    story.content
+    story.summary
+    story.category
+    mistake.question
+    mistake.answer
+    mistake.correct_answer
+    mistake.error_reason
     
     
     """,
@@ -120,6 +124,7 @@ _SEARCH_SCHEMA = {
             "limit": {"type": "integer", "default": 20},
         },
         "required": ["resource", "field", "query"],
+        },
     },
 }
 
