@@ -9,7 +9,7 @@ OPAR (观察、计划、行动、反思) 循环是一种问题生成的方法论
 from typing import Any, Dict, List, Optional, Tuple, cast
 import json
 
-from app.infra.uow import UnitOfWork
+from app.infra.context import uow_ctx
 from app.llm import chat_completion, LLMModel
 from app.services.question.common.registry import create_question
 from app.services.question.common.types import QuestionType
@@ -31,10 +31,10 @@ class QuestionAgent:
     该类用于根据用户状态和输入生成个性化的语言学习题目。
     """
     
-    def __init__(self, uow: UnitOfWork):
-        self.uow = uow
+    def __init__(self):
+        self.uow = uow_ctx.get()
         # 获取tools
-        self.tools = make_tools(uow=uow)
+        self.tools = make_tools()
         # 创建checkpointer
         self.checkpointer = InMemorySaver()
         # 实例化 LLM

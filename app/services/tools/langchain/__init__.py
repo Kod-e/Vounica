@@ -5,7 +5,7 @@ from typing import List
 
 
 
-def make_tools(uow: UnitOfWork) -> List[StructuredTool]:
+def make_tools() -> List[StructuredTool]:
     return [
-        make_search_resource_tool(uow=uow)
+        make_search_resource_tool()
     ]

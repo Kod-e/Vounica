@@ -18,7 +18,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.language_models import LanguageModelInput
 from app.llm.client import chat_completion
 from app.llm.models import LLMModel
-from app.infra.uow import UnitOfWork
+from app.infra.context import uow_ctx
 
 @register_question_type(QuestionType.CHOICE)
 class ChoiceQuestion(QuestionSpec):
@@ -67,18 +67,18 @@ Correct Answer:
     # 生成错误原因
     async def generate_error_reason(self, answer: str) -> str:
         """调用 LLM 生成错误原因。"""
+        uow = uow_ctx.get()
         response = await chat_completion(
             input=[
                     SystemMessage(content=f"""
 You are the best language learning platform's intelligent judge AI,
 you need to generate the user's error reason in a very short way,
-use the question's language({self.uow.target_language}) to generate the error reason.
+use the question's language({uow.target_language}) to generate the error reason.
 """),
                     HumanMessage(content=self.prompt() + f"""
                     The user's answer is: {answer}
                     """)
                 ],
-            uow=self.uow,
             model_type=LLMModel.STANDARD,
         )
         return response.content

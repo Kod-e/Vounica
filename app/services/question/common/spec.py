@@ -11,7 +11,7 @@ from pydantic import BaseModel,Field, ConfigDict
 
 from app.services.question.common.types import QuestionType
 from app.infra.models import Mistake
-from app.infra.uow import UnitOfWork
+from app.infra.context import uow_ctx
 # 评判结果
 class JudgeResult(BaseModel):
     """
@@ -34,8 +34,6 @@ class QuestionSpec(BaseModel, ABC):
     """
 
     question_type: QuestionType
-    # uow在model_dump中会被忽略
-    uow: UnitOfWork = Field(default=None, exclude=True)
 
     model_config = ConfigDict(
         from_attributes=True,   # 取代 orm_mode
@@ -71,11 +69,12 @@ class QuestionSpec(BaseModel, ABC):
         judge_result: JudgeResult,
     ) -> Mistake:
         """Convert wrong answer information into Mistake table payload."""
+        uow = uow_ctx.get()
         return Mistake(
-            user_id=self.uow.current_user_id,
+            user_id=uow.current_user_id,
             question=judge_result.question,
             question_type=self.question_type,
-            language_type=self.uow.target_language,
+            language_type=uow.target_language,
             answer=judge_result.answer,
             correct_answer=judge_result.correct_answer,
             error_reason=judge_result.error_reason,
@@ -83,7 +82,7 @@ class QuestionSpec(BaseModel, ABC):
         )
     # 从mistake中还原题目
     @classmethod
-    def from_mistake(cls, uow: UnitOfWork, mistake: Mistake) -> "QuestionSpec":
+    def from_mistake(cls, mistake: Mistake) -> "QuestionSpec":
         """Create question instance from Mistake table payload."""
         # 确定mistake的类型
         question_type = mistake.question_type
@@ -93,7 +92,6 @@ class QuestionSpec(BaseModel, ABC):
         if question_cls is None:
             raise ValueError(f"Question type {question_type} not registered")
         question =  question_cls.model_validate(mistake.question_json)
-        question.uow = uow
         return question
 
     def __str__(self) -> str:

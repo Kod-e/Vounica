@@ -32,6 +32,7 @@ from app.infra.quota.bucket import QuotaBucket
 from app.core.db.base import Base
 from app.core.vector.session import VectorSession
 from app.llm.models import LLMModel
+from app.infra.context import uow_ctx
 
 # 用于存储所有内存数据的全局变量
 MEMORY_STORAGE = {}
@@ -255,7 +256,7 @@ async def setup_story_data(async_db_session, test_user):
     return stories
 
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function", autouse=True)
 async def test_uow(async_db_session, redis_client, mock_vector_session, test_user, 
                  setup_user_data, setup_vocab_data, setup_grammar_data, 
                  setup_memory_data, setup_mistake_data, setup_story_data):
@@ -278,8 +279,11 @@ async def test_uow(async_db_session, redis_client, mock_vector_session, test_use
         target_language="ja",
         quota=quota_bucket
     )
-    
-    return uow
+    token = uow_ctx.set(uow)
+    try:
+        yield uow
+    finally:
+        uow_ctx.reset(token)
 
 
 @pytest_asyncio.fixture(scope="function")
