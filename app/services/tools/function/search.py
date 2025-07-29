@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Callable, Coroutine, Literal
 
 from sqlalchemy import select
 
-from app.infra.uow  import UnitOfWork
+from app.infra.context import uow_ctx
 from app.infra.models import vocab as _vocab_model
 from app.infra.models import grammar as _grammar_model
 from app.infra.models import mistake as _mistake_model
@@ -92,7 +92,6 @@ def _to_dict(obj) -> Dict[str, Any]:  # noqa: ANN001
 # ------------------------------------------------------------------
 
 async def search_resource(
-    uow: UnitOfWork,
     resource: ResourceLiteral,
     field: str,
     query: str,
@@ -108,6 +107,7 @@ async def search_resource(
         is_vector:  "regex" (ILIKE) or "vector".
         limit:   Max rows.
     """
+    uow = uow_ctx.get()
     # 检查是否是一个合法的查询
     # check if the resource is a valid query
     

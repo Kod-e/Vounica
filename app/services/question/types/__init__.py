@@ -1,3 +1,4 @@
-"""Concrete question type implementations."""
+from app.services.question.types.choice import ChoiceQuestion
+from app.services.question.types.match import MatchQuestion
 
-from app.services.question.types.choice import ChoiceQuestion  # noqa: F401 
+__all__ = ["ChoiceQuestion", "MatchQuestion"]

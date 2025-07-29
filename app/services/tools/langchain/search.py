@@ -2,8 +2,6 @@ from ..function import search_resource
 from langchain_core.tools import StructuredTool
 from functools import partial
 from pydantic import BaseModel, Field
-# 引用uow
-from app.infra.uow import UnitOfWork
 
 
 # 搜索参数
@@ -15,10 +13,10 @@ class SearchArgs(BaseModel):
     limit:    int = Field(20, description="查询数量")
 
 # 制作函数, 注入应该注入的内容
-def make_search_resource_tool(uow: UnitOfWork) -> StructuredTool:
+def make_search_resource_tool() -> StructuredTool:
     return StructuredTool.from_function(
         name="search_resource",
-        coroutine=partial(search_resource, uow=uow),
+        coroutine=search_resource,
         description=(
             """
 检索用户在Vounica中记录的资源

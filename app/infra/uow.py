@@ -24,7 +24,8 @@ from app.core.exceptions.auth.unauthorized import UnauthorizedException
 from app.infra.repo.user_repository import UserRepository
 from app.infra.models import User
 from app.infra.quota import QuotaBucket
-
+from contextvars import Token
+from .context import uow_ctx
 
 class UnitOfWork:
     """Resource manager implementing unit-of-work pattern"""
@@ -151,7 +152,8 @@ async def get_uow(
         # 当前用户ID
         current_user_id=user_id,
     )
-
+    
+    token = uow_ctx.set(uow)
     try:
         yield uow
     except Exception:
@@ -160,6 +162,7 @@ async def get_uow(
         raise
     finally:
         # 无论如何都要关闭资源
+        uow_ctx.reset(token)
         await uow.close()
 
 
