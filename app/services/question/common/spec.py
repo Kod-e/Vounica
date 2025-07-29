@@ -10,8 +10,8 @@ from typing import Any, Dict, Optional
 from pydantic import BaseModel
 
 from app.services.question.common.types import QuestionType
-
-
+from app.infra.models import Mistake
+from app.infra.uow import UnitOfWork
 # 评判结果
 class JudgeResult(BaseModel):
     """
@@ -19,14 +19,14 @@ class JudgeResult(BaseModel):
     """
 
     correct: bool
-
     # 关于题目的基本信息
     question: str
     answer: str
     correct_answer: str = None
     error_reason: str = None
+    
 
-
+    
 # 题目规范
 class QuestionSpec(BaseModel, ABC):
     """Abstract base class that every question type must inherit.
@@ -34,8 +34,7 @@ class QuestionSpec(BaseModel, ABC):
     """
 
     question_type: QuestionType
-    #ISO 639-1 code, 用于多语区分
-    language_type: str
+    uow: UnitOfWork
 
     class Config:
         use_enum_values = True
@@ -49,38 +48,37 @@ class QuestionSpec(BaseModel, ABC):
         """Return ai-readable prompt describing the question.
         返回面向 AI 的题目描述 Prompt。
         """
-
+        
     @abstractmethod
-    def judge(self, answer: str) -> JudgeResult:
+    def judge(self, answer: Any) -> JudgeResult:
         """Judge the given answer and return a JudgeResult object.
         判断用户答案, 返回评判结果。
         """
-    
+    # 生成用户的回答
+
     # 生成error_reason
     @abstractmethod
-    def generate_error_reason(self, answer: str) -> str:
+    def generate_error_reason(self, answer: Any) -> str:
         """Generate error reason for the given answer.
         生成错误原因。
         """
 
-    # 生成mistake_dict
-    def to_mistake_dict(
+    # 生成mistake
+    def to_mistake(
         self,
-        *,
-        user_id: int,
         judge_result: JudgeResult,
-    ) -> Dict[str, Any]:
-        """Convert wrong answer information into Mistake table payload.
-        """
-        return {
-            "user_id": user_id,
-            "question": judge_result.question,
-            "question_type": self.question_type.value,
-            "language": self.language_type,
-            "answer": judge_result.answer,
-            "correct_answer": judge_result.correct_answer,
-            "error_reason": judge_result.error_reason,
-        }
+    ) -> Mistake:
+        """Convert wrong answer information into Mistake table payload."""
+        the_type = self.question_type
+        return Mistake(
+            user_id=self.uow.current_user_id,
+            question=judge_result.question,
+            question_type=self.question_type,
+            language_type=self.uow.target_language,
+            answer=judge_result.answer,
+            correct_answer=judge_result.correct_answer,
+            error_reason=judge_result.error_reason,
+        )
 
     @classmethod
     @abstractmethod

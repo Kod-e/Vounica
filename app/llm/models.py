@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # 模型ID配置
-OPENAI_MODEL_LOW = os.getenv("OPENAI_MODEL_LOW", "gpt-4o-mini")
+OPENAI_MODEL_LOW = os.getenv("OPENAI_MODEL_LOW", "gpt-4.1")
 OPENAI_MODEL_STADARD = os.getenv("OPENAI_MODEL_STADARD", "o4-mini")
 OPENAI_MODEL_HIGH = os.getenv("OPENAI_MODEL_HIGH", "o3")
 OPENAI_EMBED_MODEL = os.getenv("OPENAI_EMBED_MODEL", "text-embedding-3-small")

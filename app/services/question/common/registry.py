@@ -10,11 +10,10 @@ from typing import Dict, Type
 from app.services.question.common.types import QuestionType
 
 from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from app.services.question.common.spec import QuestionSpec
+from app.services.question.common.spec import QuestionSpec
 
-# 延迟导入以避免循环
-_QUESTION_REGISTRY: Dict[QuestionType, Type["QuestionSpec"]] = {}
+
+_QUESTION_REGISTRY: Dict[QuestionType, Type[QuestionSpec]] = {}
 
 
 def register_question_type(q_type: QuestionType):
