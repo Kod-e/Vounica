@@ -74,6 +74,18 @@
             }
         },
         {
+            "name": "Python: LangChain Agent Demo",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/demo_langchain_agent.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "TEST_MODE": "true"
+            }
+        },
+        {
             "name": "Python: Current File",
             "type": "debugpy",
             "request": "launch",
