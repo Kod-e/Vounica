@@ -1,5 +1,5 @@
 # 错题集记录时, 记录整个题目的string内容, 并且让GPT生成错在哪里的评价
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
 from app.core.db.base import BaseModel
 
@@ -31,6 +31,9 @@ class Mistake(BaseModel):
     
     # 错误原因, 错误原因应该由LLM根据Prompt生成
     error_reason = Column(Text)
+    
+    # 题目的json, 可以用于还原或者存储题目,序列化
+    question_json = Column(JSON)
     
     def __repr__(self):
         return f"<Mistake {self.id}>"

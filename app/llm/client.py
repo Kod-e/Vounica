@@ -26,31 +26,31 @@ class OpenAIClient:
     """OpenAI API客户端封装"""
     # 聊天补全接口
     @staticmethod
-    def chat(input: LanguageModelInput, uow: UnitOfWork, model_type: LLMModel = LLMModel.STANDARD, **kwargs) -> BaseMessage:
+    async def chat(input: LanguageModelInput, uow: UnitOfWork, model_type: LLMModel = LLMModel.STANDARD, **kwargs) -> BaseMessage:
         """
         调用聊天补全API并返回原始响应
         """
         # 检查用户token余额是否大于0
-        uow.quota.check()
+        await uow.quota.check()
         # 调用API并返回结果, 并计算token使用量
         response: BaseMessage = MODEL_MAP[model_type].invoke(input, **kwargs)
         # 消费token
-        uow.quota.consume(int(response.response_metadata['token_usage']['total_tokens']) * model_type.price)
+        await uow.quota.consume(int(response.response_metadata['token_usage']['total_tokens']) * model_type.price)
         # 返回结果
         return response
     
     #消费接口
     @staticmethod
-    def consume(response: BaseMessage, uow: UnitOfWork, model_type: LLMModel = LLMModel.STANDARD, **kwargs) -> None:
+    async def consume(response: BaseMessage, uow: UnitOfWork, model_type: LLMModel = LLMModel.STANDARD, **kwargs) -> None:
         """
         消费token
         """
         # 消费token
-        uow.quota.consume(int(response.response_metadata['token_usage']['total_tokens']) * model_type.price)
+        await uow.quota.consume(int(response.response_metadata['token_usage']['total_tokens']) * model_type.price)
 
     # 文本向量化接口
     @staticmethod
-    def embed(text: str, uow: UnitOfWork, model_type: LLMModel = LLMModel.EMBED, **kwargs) -> List[float]:
+    async def embed(text: str, uow: UnitOfWork, model_type: LLMModel = LLMModel.EMBED, **kwargs) -> List[float]:
         """
         将文本转换为向量表示
         
@@ -61,13 +61,13 @@ class OpenAIClient:
             **kwargs: 额外参数
         """
         # 检查用户token余额是否大于0
-        uow.quota.check()
+        await uow.quota.check()
         # 确定使用的嵌入模型
         model = model_type.model_name
         # 调用嵌入API并返回向量
         resp: CreateEmbeddingResponse = OPENAI_NAVITE_CLIENT.embeddings.create(model=model, input=text, **kwargs)
         # 消费token
-        uow.quota.consume(resp.usage.total_tokens * model_type.price)
+        await uow.quota.consume(resp.usage.total_tokens * model_type.price)
         # 返回结果
         return resp.data[0].embedding
 

@@ -1,13 +1,10 @@
 """
-Choice question implementation based on QuestionSpec.
-
-選択(せんたく)問題(もんだい)クラス。
-选择题实现。
+Match question implementation based on QuestionSpec.
 """
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import Field
 
@@ -19,39 +16,45 @@ from langchain_core.language_models import LanguageModelInput
 from app.llm.client import chat_completion
 from app.llm.models import LLMModel
 from app.infra.uow import UnitOfWork
+import json
 
-@register_question_type(QuestionType.CHOICE)
-class ChoiceQuestion(QuestionSpec):
-    """Multiple-choice question (single correct answer)."""
+@register_question_type(QuestionType.MATCH)
+class MatchQuestion(QuestionSpec):
+    """Match question (match language to language, and match the correct answer)."""
     
     # 题干及答案相关字段 (Pydantic 模型字段)
-    stem: str
-    options: List[str]
-    correct_answer: str
+    left_options: List[str] = Field(...)
+    right_options: List[str] = Field(...)
+    # 正确答案
+    correct_answer: List[Tuple[str, str]] = Field(...)
     # 用户答案
-    answer: Optional[str] = None
+    answer: Optional[List[Tuple[str, str]]] = None
+    # 题目类型
     question_type: QuestionType = Field(
-       default=QuestionType.CHOICE
+       default=QuestionType.MATCH
     )
+    
     # 描述题目
     def prompt(self) -> str:
         """Return the question stem as prompt."""
         question_prompt = f"""
-Choice Question:
-{self.stem}
-Options:
-{self.options}
+Match Question:
+Left Options:
+{self.left_options}
+Right Options:
+{self.right_options}
 Correct Answer:
 {self.correct_answer}
+
         """
         return question_prompt
 
     # 判断答案
-    async def judge(self, answer: str) -> JudgeResult:
+    async def judge(self, answer: List[Tuple[str, str]]) -> JudgeResult:
         """Judge user answer against the correct answer.
         判断答案时，仅在错误情况下调用 LLM 生成 error_reason。
         """
-        is_correct = answer.strip() == self.correct_answer.strip()
+        is_correct = answer == self.correct_answer
 
         error_reason: str | None = None
         if not is_correct:
@@ -59,13 +62,13 @@ Correct Answer:
 
         return JudgeResult(
             correct=is_correct,
-            question=f"{self.stem} Select -> {self.options}",
-            answer=answer,
-            correct_answer=self.correct_answer,
+            question=f"{self.left_options} Match -> {self.right_options}",
+            answer=f"{answer}",
+            correct_answer=f"{self.correct_answer}",
             error_reason=error_reason,
         )
     # 生成错误原因
-    async def generate_error_reason(self, answer: str) -> str:
+    async def generate_error_reason(self, answer: List[Tuple[str, str]]) -> str:
         """调用 LLM 生成错误原因。"""
         response = await chat_completion(
             input=[

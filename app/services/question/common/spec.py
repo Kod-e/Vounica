@@ -7,7 +7,7 @@ Define abstract Question specification and evaluation result.
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel,Field, ConfigDict
 
 from app.services.question.common.types import QuestionType
 from app.infra.models import Mistake
@@ -34,13 +34,15 @@ class QuestionSpec(BaseModel, ABC):
     """
 
     question_type: QuestionType
-    uow: UnitOfWork
+    # uow在model_dump中会被忽略
+    uow: UnitOfWork = Field(default=None, exclude=True)
 
-    class Config:
-        use_enum_values = True
-        orm_mode = True
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(
+        from_attributes=True,   # 取代 orm_mode
+        validate_by_name=True,  # 取代 allow_population_by_field_name
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+    )
 
     # 通过abstractmethod, 强制子类实现
     @abstractmethod
@@ -69,7 +71,6 @@ class QuestionSpec(BaseModel, ABC):
         judge_result: JudgeResult,
     ) -> Mistake:
         """Convert wrong answer information into Mistake table payload."""
-        the_type = self.question_type
         return Mistake(
             user_id=self.uow.current_user_id,
             question=judge_result.question,
@@ -78,15 +79,22 @@ class QuestionSpec(BaseModel, ABC):
             answer=judge_result.answer,
             correct_answer=judge_result.correct_answer,
             error_reason=judge_result.error_reason,
+            question_json=self.model_dump(),
         )
-
+    # 从mistake中还原题目
     @classmethod
-    @abstractmethod
-    def from_json(cls, data: Dict[str, Any]) -> "QuestionSpec":  # noqa: D401
-        """Create question instance from JSON dict.
-        工厂方法, 从 JSON 数据生成题目实例。
-        """
-
+    def from_mistake(cls, uow: UnitOfWork, mistake: Mistake) -> "QuestionSpec":
+        """Create question instance from Mistake table payload."""
+        # 确定mistake的类型
+        question_type = mistake.question_type
+        # 延迟导入以避免循环
+        from app.services.question.common.registry import _QUESTION_REGISTRY
+        question_cls = _QUESTION_REGISTRY.get(question_type)
+        if question_cls is None:
+            raise ValueError(f"Question type {question_type} not registered")
+        question =  question_cls.model_validate(mistake.question_json)
+        question.uow = uow
+        return question
 
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} type={self.question_type}>" 

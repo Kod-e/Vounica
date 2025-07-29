@@ -85,7 +85,7 @@ async def redis_client():
     client = fakeredis.aioredis.FakeRedis()
     yield client
     await client.flushall()
-    await client.close()
+    await client.aclose()
 
 
 @pytest.fixture(scope="function")

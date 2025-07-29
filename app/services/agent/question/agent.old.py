@@ -128,7 +128,7 @@ class QuestionAgent:
             """}
         ]
         # 调用LLM进行观察分析
-        response = chat_completion(
+        response = await chat_completion(
             messages=observe_prompt, 
             uow=self.uow, 
             model_type=self.model_type,
@@ -202,7 +202,7 @@ class QuestionAgent:
         #应该在这里插入所有题目的描述
         
         # 调用LLM制定计划
-        response = chat_completion(messages=plan_prompt, uow=self.uow, model_type=self.model_type)
+        response = await chat_completion(messages=plan_prompt, uow=self.uow, model_type=self.model_type)
         plan_text = response.choices[0].message.content
         
         # 解析LLM的计划
@@ -256,7 +256,7 @@ class QuestionAgent:
             ]
             
             # 调用LLM生成题目
-            response = chat_completion(messages=act_prompt, uow=self.uow, model_type=self.model_type)
+            response = await chat_completion(messages=act_prompt, uow=self.uow, model_type=self.model_type)
             question_data = response.choices[0].message.content
             
             # 解析生成的题目数据
@@ -306,7 +306,7 @@ class QuestionAgent:
         ]
         
         # 调用LLM进行反思评估
-        response = chat_completion(messages=reflect_prompt, uow=self.uow, model_type=self.model_type)
+        response = await chat_completion(messages=reflect_prompt, uow=self.uow, model_type=self.model_type)
         reflection = response.choices[0].message.content
         
         # 解析反思结果
