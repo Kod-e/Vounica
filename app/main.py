@@ -4,7 +4,7 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -42,21 +42,27 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     qdrant_client.close()
     await redis_client.aclose()
 
-# 创建FastAPI应用实例
-app = FastAPI(
-    title="Vounica API",
-    description="Vounica API",
-    version="0.1.0",
-    lifespan=lifespan,
-)
-
-# 注册路由
-app.include_router(v1_router, prefix="/v1")
-
 # 健康检查端点
-@app.get("/health")
+health_router = APIRouter()
+
+@health_router.get("/health")
 async def health_check():
     return {"status": "healthy"}
 
+def create_app() -> FastAPI:
+    # 创建FastAPI应用实例
+    app = FastAPI(
+        title="Vounica API",
+        description="Vounica API",
+        version="0.1.0",
+        lifespan=lifespan,
+    )
+
+    # 注册路由
+    app.include_router(v1_router, prefix="/v1")
+    app.include_router(health_router, prefix="/health")
+    return app
+
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True) 
+    app = create_app()
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True) 

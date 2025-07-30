@@ -1,33 +1,35 @@
 from pydantic import BaseModel, EmailStr
 
+class RegisterSchema(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+
 class LoginSchema(BaseModel):
-    """
-    Login request schema.
-    
-    ログインリクエストスキーマ。
-    """
     email: EmailStr
     password: str
 
 class TokenSchema(BaseModel):
-    """
-    Token response schema.
-    
-    トークンレスポンススキーマ。
-    """
     access_token: str
     refresh_token: str
 
-class RefreshTokenSchema(BaseModel):
-    """
-    Refresh token request schema.
-    
-    リフレッシュトークンリクエストスキーマ。
-    """
+class RegisterResponseSchema(BaseModel):
+    id: int
+    email: str
+    access_token: str
     refresh_token: str
 
+class RefreshSchema(BaseModel):
+    refresh_token: str
+
+class RefreshResponseSchema(BaseModel):
+    access_token: str
+
 __all__ = [
+    "RegisterSchema",
     "LoginSchema",
     "TokenSchema",
-    "RefreshTokenSchema",
+    "RegisterResponseSchema",
+    "RefreshSchema",
+    "RefreshResponseSchema",
 ]

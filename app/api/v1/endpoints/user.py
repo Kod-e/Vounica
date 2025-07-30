@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.infra.schemas import RegisterRequest, LoginRequest, RefreshRequest, TokenResponse, RegisterResponse, RefreshResponse
+from app.infra.schemas import RegisterSchema, LoginSchema, RefreshSchema, TokenSchema, RegisterResponseSchema, RefreshResponseSchema
 from app.infra.uow import UnitOfWork, get_uow
 from app.core.db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,9 +14,9 @@ async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
     return AuthService(db=db)
 
 
-@router.post("/register", response_model=RegisterResponse)
+@router.post("/register", response_model=RegisterResponseSchema)
 async def register(
-    body: RegisterRequest, 
+    body: RegisterSchema, 
     db: AsyncSession = Depends(get_db),
     auth_service: AuthService = Depends(get_auth_service)
 ):
@@ -25,34 +25,34 @@ async def register(
         # 注册后直接登录，使用相同的密码
         access_token, refresh = await auth_service.login(db, user.email, body.password)
         # 使用201状态码, 表示资源创建成功
-        return RegisterResponse(id=user.id, email=user.email, access_token=access_token, refresh_token=refresh)
+        return RegisterResponseSchema(id=user.id, email=user.email, access_token=access_token, refresh_token=refresh)
     except AppException as exc:
         raise HTTPException(status_code=exc.code, detail=exc.to_dict())
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenSchema)
 async def login(
-    body: LoginRequest, 
+    body: LoginSchema, 
     db: AsyncSession = Depends(get_db),
     auth_service: AuthService = Depends(get_auth_service)
 ):
     try:
         access_token, refresh = await auth_service.login(db, body.email, body.password)
         # 使用200状态码, 表示请求成功
-        return TokenResponse(access_token=access_token, refresh_token=refresh)
+        return TokenSchema(access_token=access_token, refresh_token=refresh)
     except AppException as exc:
         raise HTTPException(status_code=exc.code, detail=exc.to_dict())
 
 
-@router.post("/refresh", response_model=RefreshResponse)
+@router.post("/refresh", response_model=RefreshResponseSchema)
 async def refresh(
-    body: RefreshRequest, 
+    body: RefreshSchema, 
     db: AsyncSession = Depends(get_db),
     auth_service: AuthService = Depends(get_auth_service)
 ):
     try:
         access_token = await auth_service.refresh(db, refresh_token=body.refresh_token)
         # 使用200状态码, 表示请求成功
-        return RefreshResponse(access_token=access_token)
+        return RefreshResponseSchema(access_token=access_token)
     except AppException as exc:
         raise HTTPException(status_code=exc.code, detail=exc.to_dict()) 

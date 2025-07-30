@@ -33,10 +33,9 @@ class AuthService:
 
     async def register(self, db: AsyncSession, *, name: str, email: str, password: str):
         self._init_repos(db)
-        if await self._user_repo.exists_by_email(db, email):  # assume helper exists
+        if await self._user_repo.exists_by_email(email):  # 移除db参数
             raise BadRequestException(message="Email already registered")
         user = await self._user_repo.create(
-            db,
             {
                 "name": name,
                 "email": email,
@@ -47,19 +46,19 @@ class AuthService:
 
     async def login(self, db: AsyncSession, email: str, password: str):
         self._init_repos(db)
-        user = await self._user_repo.get_by_email(db, email)  # assume helper exists
+        user = await self._user_repo.get_by_email(email)  # 移除db参数
         if user is None or not verify_password(password, user.password):
             raise InvalidCredentialsException()
 
         access_token = create_access_token(user.id)
         rt_data = self._rt_repo.model.create_token(user.id)
         # rt_data已经是一个字典，不需要再调用__dict__
-        await self._rt_repo.create(db, rt_data)
+        await self._rt_repo.create(rt_data)
         return access_token, rt_data["token"]
 
     async def refresh(self, db: AsyncSession, *, refresh_token: str):
         self._init_repos(db)
-        rt = await self._rt_repo.get_by_token(db, refresh_token)  # assume helper
+        rt = await self._rt_repo.get_by_token(refresh_token)  # 移除db参数
         if rt is None or rt.revoked:
             raise InvalidTokenException()
 

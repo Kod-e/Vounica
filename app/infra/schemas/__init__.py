@@ -3,7 +3,7 @@
 Schema パッケージの外部(がいぶ)向(む)け export。
 """
 
-from .auth import LoginSchema, TokenSchema, RefreshTokenSchema # noqa: F401
+from .auth import LoginSchema, TokenSchema, RefreshSchema, RegisterSchema, RegisterResponseSchema, RefreshResponseSchema # noqa: F401
 from .user import UserCreateSchema, UserUpdateSchema, UserSchema # noqa: F401
 from .memory import (
     MemoryCreateSchema,
@@ -35,7 +35,10 @@ from .story import (
 __all__ = [
     "LoginSchema",
     "TokenSchema",
-    "RefreshTokenSchema",
+    "RefreshSchema",
+    "RegisterSchema",
+    "RegisterResponseSchema",
+    "RefreshResponseSchema",
     "UserCreateSchema",
     "UserUpdateSchema",
     "UserSchema",

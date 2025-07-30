@@ -9,8 +9,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
-
-from app.main import app
+from httpx import AsyncClient,ASGITransport
+from app.main import create_app
+from fastapi import FastAPI
 from app.core.db.base import Base
 from app.core.vector.provider import make_qdrant_client
 from app.core.db.provider import make_async_session_maker
@@ -32,6 +33,8 @@ TEST_QDRANT_URL = "http://localhost:16333"
 TEST_JWT_ALGORITHM = "HS256"
 TEST_JWT_SECRET_KEY = "test_secret_key_for_testing_public"
 TEST_JWT_EXPIRE_MINUTES = "30"
+
+
 
 def is_port_open(host, port, timeout=1):
     """检查指定端口是否开放"""
@@ -162,9 +165,11 @@ def pytest_sessionfinish(session, exitstatus):
         except Exception as e:
             print(f"停止Docker服务失败: {e}")
 
-# 初始化应用依赖，模拟app.main.py中的lifespan函数
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_dependencies():
+
+@pytest_asyncio.fixture
+async def fastapi_app() -> FastAPI:
+    app = create_app()
+    # 初始化应用依赖，模拟app.main.py中的lifespan函数
     """
     Initialize all dependencies before testing, similar to app.main.py lifespan.
     这会按照app.main.py中的方式初始化所有依赖，保证测试环境与实际应用环境一致。
@@ -198,7 +203,7 @@ def setup_test_dependencies():
         print(f"Failed to initialize dependencies: {e}")
         raise
     
-    yield
+    yield app
     
     # 测试结束后清理资源
     print("Cleaning up test resources...")
@@ -226,16 +231,12 @@ def test_db_session(test_db_session_factory):
         session.rollback()
         session.close()
 
-@pytest.fixture(scope="session")
-def app_client():
-    """
-    Create a FastAPI TestClient.
-    
-    这个TestClient会使用应用自身的依赖注入机制，
-    正如一个真实的HTTP客户端那样工作。
-    """
-    # 确保依赖已初始化
-    assert hasattr(app.state, "async_session_maker"), "Async session maker not initialized"
-    
-    with TestClient(app) as client:
-        yield client
+
+
+
+@pytest_asyncio.fixture
+async def async_client(fastapi_app):
+    transport = ASGITransport(app=fastapi_app)
+    async with AsyncClient(transport=transport,
+                           base_url="http://test") as c:
+        yield c

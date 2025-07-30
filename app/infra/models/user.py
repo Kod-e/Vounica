@@ -1,6 +1,10 @@
+from typing import TYPE_CHECKING
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.core.db.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.infra.models.memory import Memory
 
 # 从.env中获取默认token配额
 from dotenv import load_dotenv
@@ -30,6 +34,9 @@ class User(BaseModel):
     token_quota = Column(Integer, default=TOKEN_QUOTA)
     
     password = Column(String(256))
+    
+    # 用户的记忆列表
+    memories = relationship("Memory", back_populates="user", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<User {self.name}>"

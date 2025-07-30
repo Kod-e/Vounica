@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Body, Query
-from app.infra.schemas import MemorySchema, MemoryCreateSchema, MemoryUpdateSchema
+from typing import List, Dict
+from app.infra.schemas import MemorySchema, MemoryCreateSchema, MemoryUpdateSchema, MemorySchemaListAdapter
 from app.infra.uow import UnitOfWork, get_uow
 from app.services.common.memory import MemoryService
-from typing import List, Dict
 
 router = APIRouter(prefix="/memory", tags=["memory"])
 
@@ -49,7 +49,8 @@ async def get_memories(
     offset: int = 0
 ):
     memories = await memory_service.get_user_memories(limit, offset)
-    return [MemorySchema.model_validate(m) for m in memories]
+    # 使用TypeAdapter进行高效验证
+    return MemorySchemaListAdapter.validate_python(memories)
 
 # 获取所有的记忆的category的string
 @router.get("/categories", response_model=List[str])
@@ -69,7 +70,8 @@ async def get_memory_by_category(
     offset: int = 0
 ):
     memories = await memory_service.get_memory_by_category(category, limit, offset)
-    return [MemorySchema.model_validate(m) for m in memories]
+    # 使用TypeAdapter进行高效验证
+    return MemorySchemaListAdapter.validate_python(memories)
 
 # 获取用户的记忆的category的string, 并且带上number
 @router.get("/categories/number", response_model=Dict[str, int])

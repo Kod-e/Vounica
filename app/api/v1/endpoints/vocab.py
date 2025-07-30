@@ -1,23 +1,22 @@
 from fastapi import APIRouter, Depends, Body, Query
+from typing import List
 from app.infra.schemas import VocabSchema, VocabCreateSchema, VocabSchemaListAdapter
 from app.infra.uow import UnitOfWork, get_uow
 from app.services.common.vocab import VocabService
-from typing import List
 
 router = APIRouter(prefix="/vocab", tags=["vocab"])
 
-# 服务依赖
 async def get_vocab_service() -> VocabService:
     return VocabService()
 
-# 创建新的vocab
+# 创建新的vocab记录
 @router.post("/create", response_model=VocabSchema)
 async def create_vocab(
     uow: UnitOfWork = Depends(get_uow),
     vocab_service: VocabService = Depends(get_vocab_service),
     vocab: VocabCreateSchema = Body(...)
 ):
-    vocab_obj = await vocab_service.create(vocab.model_dump())
+    vocab_obj = await vocab_service.create(vocab)
     return VocabSchema.model_validate(vocab_obj)
 
 # 删除vocab
@@ -37,16 +36,17 @@ async def update_vocab(
     vocab_service: VocabService = Depends(get_vocab_service),
     vocab: VocabSchema = Body(...)
 ):
-    vocab_obj = await vocab_service.update(vocab.id, vocab.model_dump())
+    vocab_obj = await vocab_service.update(vocab)
     return VocabSchema.model_validate(vocab_obj)
 
 # 获取vocab列表
-@router.get("/page", response_model=VocabSchemaListAdapter)
+@router.get("/page", response_model=List[VocabSchema])
 async def get_vocabs(
     uow: UnitOfWork = Depends(get_uow),
     vocab_service: VocabService = Depends(get_vocab_service),
     limit: int = 50,
     offset: int = 0
 ):
-    vocabs = await vocab_service.list(skip=offset, limit=limit)
+    vocabs = await vocab_service.list(limit, offset)
+    # 使用TypeAdapter进行高效验证，但FastAPI要求response_model为标准类型
     return VocabSchemaListAdapter.validate_python(vocabs) 

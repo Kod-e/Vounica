@@ -131,8 +131,8 @@ async def get_uow(
         raise UnauthorizedException("Malformed subject in token")
 
     # 把user_id转换为user
-    user_repo = UserRepository()
-    user = await user_repo.get_by_id(db, user_id)
+    user_repo = UserRepository(db=db)
+    user = await user_repo.get_by_id(user_id)
     if user is None:
         raise UnauthorizedException("User not found")
 

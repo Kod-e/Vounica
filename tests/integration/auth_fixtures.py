@@ -3,7 +3,9 @@ Authentication fixtures for integration tests.
 Provides fixtures for user creation, registration, and login.
 """
 import pytest
+import pytest_asyncio
 import uuid
+from httpx import AsyncClient,ASGITransport
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -27,14 +29,14 @@ def test_user_data():
     }
 
 
-@pytest.fixture(scope="session")
-def registered_user(app_client, test_user_data):
+@pytest_asyncio.fixture
+async def registered_user(async_client, test_user_data):
     """
     Register a test user through the API.
     
     通过API注册一个测试用户，返回注册响应。
     """
-    response = app_client.post(
+    response = await async_client.post(
         "/v1/auth/register",
         json=test_user_data
     )
@@ -42,8 +44,8 @@ def registered_user(app_client, test_user_data):
     return response.json()
 
 
-@pytest.fixture(scope="session")
-def authenticated_user(test_db_session, registered_user):
+@pytest_asyncio.fixture
+async def authenticated_user(test_db_session, registered_user):
     """
     Get the authenticated user from database.
     
@@ -58,8 +60,8 @@ def authenticated_user(test_db_session, registered_user):
     return user
 
 
-@pytest.fixture(scope="session")
-def authenticated_client(app_client, registered_user):
+@pytest_asyncio.fixture
+async def authenticated_client(async_client, registered_user):
     """
     Get an authenticated client with auth headers.
     
@@ -69,9 +71,13 @@ def authenticated_client(app_client, registered_user):
     assert access_token, "No access_token in registration response"
     
     # 克隆一个新的client而不是修改原始client
-    client = TestClient(app_client.app)
+    client = TestClient(async_client.app)
     client.headers.update({
         "Authorization": f"Bearer {access_token}"
     })
     
     return client 
+@pytest_asyncio.fixture
+async def authenticated_async_client(async_client, registered_user):
+    async_client.headers["Authorization"] = f"Bearer {registered_user['access_token']}"
+    yield async_client 

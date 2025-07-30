@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Body, Query
+from typing import List
 from app.infra.schemas import GrammarSchema, GrammarCreateSchema, GrammarSchemaListAdapter
 from app.infra.uow import UnitOfWork, get_uow
 from app.services.common import BaseService
 from app.infra.models.grammar import Grammar
 from app.infra.context import uow_ctx
 from app.infra.repo.grammar_repository import GrammarRepository
-from typing import List
 
 router = APIRouter(prefix="/grammar", tags=["grammar"])
 
@@ -46,7 +46,7 @@ async def update_grammar(
     return GrammarSchema.model_validate(grammar_obj)
 
 # 获取grammar列表
-@router.get("/page", response_model=GrammarSchemaListAdapter)
+@router.get("/page", response_model=List[GrammarSchema])
 async def get_grammars(
     uow: UnitOfWork = Depends(get_uow),
     grammar_service: BaseService = Depends(get_grammar_service),
@@ -54,4 +54,5 @@ async def get_grammars(
     offset: int = 0
 ):
     grammars = await grammar_service.list(skip=offset, limit=limit)
+    # 使用TypeAdapter进行高效验证，但FastAPI要求response_model为标准类型
     return GrammarSchemaListAdapter.validate_python(grammars) 
