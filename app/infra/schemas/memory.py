@@ -15,6 +15,7 @@ class Memory(BaseModel):
     content: str = Field(..., description="The content of the memory.")
     category: str = Field(..., description="The category of the memory.")
     priority: int = Field(..., description="The priority of the memory.")
+    language: str = Field(..., description="The language of the memory.")
     created_at: datetime = Field(..., description="The created time of the memory.")
     updated_at: datetime = Field(..., description="The updated time of the memory.")
 

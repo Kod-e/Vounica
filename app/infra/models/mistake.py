@@ -20,8 +20,8 @@ class Mistake(BaseModel):
     # 题目类型, 题目的类型可以使用string来表示
     question_type = Column(String(32))
     
-    # 题目的需要练习的语言类型, 可以使用string来表示
-    language_type = Column(String(32))
+    # 题目的语言, ISO 639-1 code，例如 "en", "ja", "zh"
+    language = Column(String(8))
 
     #回答内容, 每个题目的回答都应该可以被string化, 并且可以被LLM生成评价
     answer = Column(Text)

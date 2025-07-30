@@ -25,7 +25,7 @@ class Memory(BaseModel):
     category = Column(String(32))
 
     # 记忆的语言, ISO 639-1 code，例如 "en", "ja", "zh"
-    language = Column(String(8), default="zh")
+    language = Column(String(8))
 
     # 优先级, 数值越高越先被注入 GPT 上下文
     priority = Column(Integer, default=0)

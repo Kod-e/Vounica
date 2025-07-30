@@ -28,3 +28,7 @@ class Vocab(BaseModel):
     last_review_at = Column(DateTime)
     next_review_at = Column(DateTime)
     easiness_factor = Column(Float, default=2.5)
+    
+    
+    # 语言, ISO 639-1 code，例如 "en", "ja", "zh"
+    language = Column(String(8))

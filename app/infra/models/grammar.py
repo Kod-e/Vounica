@@ -39,3 +39,6 @@ class Grammar(BaseModel):
 
     # SM-2 easiness factor，默认 2.5
     easiness_factor = Column(Float, default=2.5)
+    
+    # 语言, ISO 639-1 code，例如 "en", "ja", "zh"
+    language = Column(String(8))
