@@ -14,12 +14,12 @@ class UserRepository(Repository[User]):
         super().__init__(User)
         self.db = db
 
-    async def get_by_email(self, email: str):
+    async def get_by_email(self, db: AsyncSession, email: str):
         stmt = select(self.model).where(self.model.email == email)
-        result = await self.db.execute(stmt)
+        result = await db.execute(stmt)
         return result.scalars().first()
 
-    async def exists_by_email(self, email: str) -> bool:
+    async def exists_by_email(self, db: AsyncSession, email: str) -> bool:
         stmt = select(self.model.id).where(self.model.email == email)
-        result = await self.db.execute(stmt)
+        result = await db.execute(stmt)
         return result.scalar() is not None 

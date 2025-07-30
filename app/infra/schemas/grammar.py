@@ -2,7 +2,7 @@
 from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from core.exceptions import NotFoundException
+from app.core.exceptions import NotFoundException
 from pydantic import TypeAdapter
 
 if TYPE_CHECKING:

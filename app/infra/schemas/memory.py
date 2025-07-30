@@ -2,7 +2,7 @@
 from typing import TYPE_CHECKING, List, Dict
 from pydantic import BaseModel, Field, ConfigDict, TypeAdapter
 from datetime import datetime
-from core.exceptions import NotFoundException
+from app.core.exceptions import NotFoundException
 if TYPE_CHECKING:
     from app.infra.models.memory import Memory as ORM_Memory
 

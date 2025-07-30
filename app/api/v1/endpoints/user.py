@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.infra.schemas import RegisterRequest, LoginRequest, RefreshRequest, TokenResponse , RegisterResponse, RefreshResponse
-from app.infra.uow  import UnitOfWork, get_uow
+from app.infra.schemas import RegisterRequest, LoginRequest, RefreshRequest, TokenResponse, RegisterResponse, RefreshResponse
+from app.infra.uow import UnitOfWork, get_uow
 from app.core.db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.auth.auth_service import AuthService
@@ -9,11 +9,17 @@ from app.core.exceptions.base import BaseException as AppException
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-auth_service = AuthService()
+# 依赖函数，创建AuthService
+async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
+    return AuthService(db=db)
 
 
 @router.post("/register", response_model=RegisterResponse)
-async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
+async def register(
+    body: RegisterRequest, 
+    db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service)
+):
     try:
         user = await auth_service.register(db, name=body.name, email=body.email, password=body.password)
         # 注册后直接登录，使用相同的密码
@@ -25,7 +31,11 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(
+    body: LoginRequest, 
+    db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service)
+):
     try:
         access_token, refresh = await auth_service.login(db, body.email, body.password)
         # 使用200状态码, 表示请求成功
@@ -35,7 +45,11 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/refresh", response_model=RefreshResponse)
-async def refresh(body: RefreshRequest, db: AsyncSession = Depends(get_db)):
+async def refresh(
+    body: RefreshRequest, 
+    db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service)
+):
     try:
         access_token = await auth_service.refresh(db, refresh_token=body.refresh_token)
         # 使用200状态码, 表示请求成功

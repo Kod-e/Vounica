@@ -17,11 +17,22 @@ from app.core.exceptions.common.bad_request import BadRequestException  # assume
 class AuthService:
     """Registration, login, refresh token logic."""
 
-    def __init__(self):
-        self._user_repo = UserRepository()
-        self._rt_repo = RefreshTokenRepository()
+    def __init__(self, db=None):
+        # 如果直接提供了db则使用它，否则在每个方法中使用传入的db
+        self._db = db
+        # 我们将在使用的时候初始化repositories
+        self._user_repo = None
+        self._rt_repo = None
+
+    def _init_repos(self, db):
+        # 延迟初始化repositories
+        if self._user_repo is None:
+            self._user_repo = UserRepository(db=db)
+        if self._rt_repo is None:
+            self._rt_repo = RefreshTokenRepository(db=db)
 
     async def register(self, db: AsyncSession, *, name: str, email: str, password: str):
+        self._init_repos(db)
         if await self._user_repo.exists_by_email(db, email):  # assume helper exists
             raise BadRequestException(message="Email already registered")
         user = await self._user_repo.create(
@@ -35,6 +46,7 @@ class AuthService:
         return user
 
     async def login(self, db: AsyncSession, email: str, password: str):
+        self._init_repos(db)
         user = await self._user_repo.get_by_email(db, email)  # assume helper exists
         if user is None or not verify_password(password, user.password):
             raise InvalidCredentialsException()
@@ -46,6 +58,7 @@ class AuthService:
         return access_token, rt_data["token"]
 
     async def refresh(self, db: AsyncSession, *, refresh_token: str):
+        self._init_repos(db)
         rt = await self._rt_repo.get_by_token(db, refresh_token)  # assume helper
         if rt is None or rt.revoked:
             raise InvalidTokenException()

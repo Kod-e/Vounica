@@ -8,9 +8,9 @@ class RefreshTokenRepository(Repository[RefreshToken]):
         super().__init__(RefreshToken)
         self.db = db
 
-    async def get_by_token(self, token: str):
+    async def get_by_token(self, db: AsyncSession, token: str):
         stmt = select(self.model).where(self.model.token == token)
-        result = await self.db.execute(stmt)
+        result = await db.execute(stmt)
         return result.scalars().first()
 
 __all__ = ["RefreshTokenRepository"] 
