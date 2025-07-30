@@ -19,7 +19,7 @@ from app.services.common.story import StoryService
 from app.services.common.vocab import VocabService
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import InMemorySaver
-from app.services.tools.langchain import make_tools
+from app.services.tools.langchain import make_search_resource_tool, QuestionStack, LoopTool
 from langchain_openai import ChatOpenAI
 import logging, langchain
 langchain.debug = True
@@ -33,19 +33,10 @@ class QuestionAgent:
     
     def __init__(self):
         self.uow = uow_ctx.get()
-        # 获取tools
-        self.tools = make_tools()
         # 创建checkpointer
         self.checkpointer = InMemorySaver()
         # 实例化 LLM
         self.model = ChatOpenAI(model="gpt-4.1")
-        # 创建Agent
-        self.agent = create_react_agent(
-            model=self.model,
-            tools=self.tools,
-            checkpointer=self.checkpointer
-        )
-        
     async def run(self, user_input: str) -> Dict[str, Any]:
         """
         运行完整的 OPAR 循环并根据用户输入生成问题。
@@ -54,7 +45,8 @@ class QuestionAgent:
         """
         
         # 执行OPAR循环
-        await self._observe(user_input)
+        observe_result =  await self._observe(user_input)
+        await self._generate_question(observe_result)
     
     async def _observe(self, user_input: str) -> None:
         """
@@ -62,10 +54,20 @@ class QuestionAgent:
         
         分析用户输入，识别用户可能的需求，并在数据库中搜索相关资源。
         """
-        while True:
+        # 创建Agent
+        loop_tool = LoopTool(max_loop_num=5)
+        observe_agent = create_react_agent(
+            model=self.model,
+            tools=[
+                make_search_resource_tool(),
+                *loop_tool.tool_call,
+            ],
+            checkpointer=self.checkpointer
+        )
+        while loop_tool.is_loop:
             # 6. 运行 Agent - 第一个问题
             config = {"configurable": {"thread_id": "1"}}
-            response = await self.agent.ainvoke(
+            response = await observe_agent.ainvoke(
                 {"messages": [
                     {"role": "system", "content": f"""
                     你是一个语言学习平台的智能观察代理。, 用户正在学习{self.uow.target_language}语言(ISO 639-1 标准)
@@ -76,14 +78,53 @@ class QuestionAgent:
                     1. 用户当前的水平和学习目标是什么
                     2. 你应该知道用户喜欢哪些东西, 想要学会语言最重要的是和生活与爱好相关的契机
                     3. 你应该知道用户可能会在什么地方发生错误, 应该怎么去检索这些错误记录, 应该检索哪些错误相关的内容
+                    
+                    如果你觉得已经检索完成, 请调用stop_loop工具
                     """},
                     {"role": "user", "content": user_input},
+                    {"role": "user", "content": loop_tool.get_loop_prompt()},
                 ]},
                 config
             )
             last_message = response["messages"][-1]
-            if last_message.content == "done":
-                break
-            else:
-                print(last_message.content)
+            print(last_message.content)
+            loop_tool.loop()
         return last_message.content
+    
+    # 生成问题
+    async def _generate_question(self, user_input: str) -> None:
+        """
+        生成问题
+        """
+        #创建agent
+        question_stack = QuestionStack()
+        loop_tool = LoopTool(max_loop_num=5)
+        generate_agent = create_react_agent(
+            model=self.model,
+            tools=[
+                # 添加question_stack的工具
+                *question_stack.get_tools(),
+                *loop_tool.tool_call,
+            ],
+            checkpointer=self.checkpointer
+        )
+        while loop_tool.is_loop:
+            # 6. 运行 Agent - 第一个问题
+            config = {"configurable": {"thread_id": "1"}}
+            response = await generate_agent.ainvoke(
+                {"messages": [
+                    {"role": "system", "content": f"""
+                     你需要根据要求生成10个左右的题目
+                     如果你觉得已经生成的不错了, 请调用stop_loop工具
+                     
+                     {user_input}
+                     """},
+                    {"role": "user", "content": question_stack.get_questions_prompt()}
+                ]},
+                config
+            )
+            last_message = response["messages"][-1]
+            print(last_message.content)
+            loop_tool.loop()
+            
+        print(question_stack.get_questions_prompt())

@@ -13,7 +13,7 @@ from app.services.agent.question.agent import QuestionAgent
 async def test_agent_initialization():
     """测试QuestionAgent可以正确初始化"""
     agent = QuestionAgent()
-    # await agent.run("帮我看看有什么需要练习的")
+    await agent.run("我想要练习一些会在海边旅行中可能用到的句子")
     # # 验证agent已正确初始化
     # assert agent is not None
     # assert agent.uow == test_uow

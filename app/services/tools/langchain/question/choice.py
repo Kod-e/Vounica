@@ -3,7 +3,6 @@ from typing import List
 from langchain_core.tools import StructuredTool
 from functools import partial
 from pydantic import BaseModel, Field
-from app.infra.context import uow_ctx
 from app.services.question.common.spec import QuestionSpec
 
 # 搜索参数
@@ -18,8 +17,7 @@ def add_choice_question(
     options: List[str], 
     correct_answer: str
 ) -> str:
-    uow = uow_ctx.get()
-    question = ChoiceQuestion(uow=uow, stem=stem, options=options, correct_answer=correct_answer)
+    question = ChoiceQuestion(stem=stem, options=options, correct_answer=correct_answer)
     stack.append(question)
     message = f"ChoiceQuestion added, size={len(stack)}"
     return message
@@ -30,10 +28,10 @@ def build_add_choice_tool(stack: List[QuestionSpec]) -> StructuredTool:
         coroutine=partial(add_choice_question, stack=stack),
         description=(
             """
-创建一个选择题
-stem: 题干
-options: 选项列表(4个)
-correct_answer: 正确答案
+Add a choice question to the stack.
+stem: Question stem
+options: Options list(4)
+correct_answer: Correct answer
             """
         ),
         args_schema=QuestionArgs,

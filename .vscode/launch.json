@@ -27,20 +27,15 @@
             ],
         },
         {
-            "name": "Run Integration Tests (Local)",
+            "name": "Run Question Agent Test",
             "type": "debugpy",
             "request": "launch",
             "module": "pytest",
             "args": [
-                "tests/integration",
+                "tests/unit/agent/question",
                 "-v",
-                "--local"
+                "-s"
             ],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}",
-                "TEST_MODE": "true"
-            }
         },
         {
             "name": "Run Current Test",
@@ -50,22 +45,6 @@
             "args": [
                 "${file}",
                 "-v"
-            ],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}",
-                "TEST_MODE": "true"
-            }
-        },
-        {
-            "name": "Run Current Test (Local)",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": [
-                "${file}",
-                "-v",
-                "--local"
             ],
             "justMyCode": false,
             "env": {

@@ -17,3 +17,8 @@ class QuestionStack():
     def get_tools(self) -> List[StructuredTool]:
         from app.services.tools.langchain.question import gather_tools
         return gather_tools(self)
+    
+    
+    # 获取目前所有的问题的prompt
+    def get_questions_prompt(self) -> str:
+        return "\n".join([question.prompt() for question in self.questions])
