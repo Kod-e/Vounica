@@ -1,8 +1,10 @@
 # 记录用户语法的习得状态
+from typing import TYPE_CHECKING
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Text
 from sqlalchemy.orm import relationship
 from app.core.db.base import BaseModel
-
+if TYPE_CHECKING:
+    from app.infra.models.user import User
 
 # 记忆表, 记录GPT对用户最近状态的描述
 class Memory(BaseModel):
@@ -27,3 +29,6 @@ class Memory(BaseModel):
 
     # 优先级, 数值越高越先被注入 GPT 上下文
     priority = Column(Integer, default=0)
+    
+    # 用户
+    user = relationship("User", back_populates="memories")
