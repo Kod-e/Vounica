@@ -20,11 +20,11 @@ def make_search_resource_tool() -> StructuredTool:
         description=(
             """
 检索用户在Vounica中记录的资源
-Vocab: 用户单词的习得状态
-Grammar 用户语法的习得状态
-Memory 你对用户的记忆, 这个Memory只能通过LLM填写
-Story 用户自己记录的关于自己的故事和笔记
-Mistake 用户的错题本
+vocab: 用户单词的习得状态
+grammar: 用户语法的习得状态
+memory: 你对用户的记忆, 这个Memory只能通过LLM填写
+story: 用户自己记录的关于自己的故事和笔记
+mistake: 用户的错题本
 支持的资源
 vocab.name 单词名称
 vocab.usage 单词使用场景, 由LLM生成
