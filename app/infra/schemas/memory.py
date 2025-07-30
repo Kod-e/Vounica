@@ -1,5 +1,5 @@
 # Memory Schema
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Dict
 from pydantic import BaseModel, Field, ConfigDict, TypeAdapter
 from datetime import datetime
 from core.exceptions import NotFoundException
@@ -15,6 +15,11 @@ class MemoryCreateSchema(BaseModel):
     category: str = Field(..., description="The category of the memory.")
     priority: int = Field(..., description="The priority of the memory.")
     language: str = Field(..., description="The language of the memory.")
+    
+class MemoryUpdateSchema(BaseModel):
+    id: int = Field(..., description="The ID of the memory.")
+    content: str = Field(..., description="The content of the memory.")
+    priority: int = Field(..., description="The priority of the memory.")
     
 class MemorySchema(MemoryCreateSchema):
     """
@@ -43,7 +48,7 @@ class MemorySchema(MemoryCreateSchema):
             raise NotFoundException(message="Memory not found")
         return memory
     
-    
+
 # Memory的Response Schema
 MemorySchemaListAdapter = TypeAdapter(list[MemorySchema])
 

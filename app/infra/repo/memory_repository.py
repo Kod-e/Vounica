@@ -72,3 +72,10 @@ class MemoryRepository(Repository[Memory], MemoryRepositoryProtocol):
         ).group_by(Memory.category)
         result = await self.db.execute(query)
         return {row.category: row.count for row in result}
+    
+    # 从Category中获取记忆list
+    async def get_memory_by_category(self, user_id: int, category: str, limit: int = 50, offset: int = 0) -> List[Memory]:
+        """Get the user's memories by category."""
+        query = select(Memory).where(Memory.user_id == user_id, Memory.category == category).offset(offset).limit(limit)
+        result = await self.db.execute(query)
+        return result.scalars().all()

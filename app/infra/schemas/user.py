@@ -4,7 +4,7 @@ from datetime import datetime
 if TYPE_CHECKING:
     from app.infra.models.user import User as ORM_User
 
-class User(BaseModel):
+class UserSchema(BaseModel):
     """
     The User schema by Pydantic.
     """

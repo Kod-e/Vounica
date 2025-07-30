@@ -8,7 +8,7 @@ from app.infra.models.memory import Memory
 from app.infra.models.user import User
 from app.infra.context import uow_ctx
 from app.infra.repo.memory_repository import MemoryRepository 
-
+from app.infra.schemas import MemoryCreateSchema, MemoryUpdateSchema
 
 class MemoryService(BaseService[Memory]):
     """Service for Memory entity."""
@@ -18,7 +18,26 @@ class MemoryService(BaseService[Memory]):
         repo = MemoryRepository(db=self._uow.db)
         self._repo: MemoryRepository = repo
         super().__init__(repo)
-        
+    # 通过API创建新的记忆
+    async def create_memory(self, memory: MemoryCreateSchema) -> Memory:
+        """Create a new memory."""
+        return await self._repo.create(self._uow.db, memory.model_dump())
+    
+        # 删除一个记忆
+    async def delete_memory(self, memory_id: int) -> Memory:
+        """Delete a memory."""
+        return await self._repo.delete(self._uow.db, memory_id)
+    
+    # 更新一个记忆
+    async def update_memory(self,memory: MemoryUpdateSchema) -> Memory:
+        """Update a memory."""
+        return await self._repo.update(self._uow.db, memory.id, memory.model_dump())
+    
+    # 获取一个记忆
+    async def get_memory(self, memory_id: int) -> Memory:
+        """Get a memory."""
+        return await self._repo.get_by_id(self._uow.db, memory_id)
+    
     # 获取用户最重要的50条记忆, 不超过太多, 防止token消耗和focus丢失, 增加翻页功能
     async def get_user_memories(self, limit: int = 50,offset: int = 0) -> List[Memory]:
         """Get the user's most important memories."""
@@ -29,7 +48,7 @@ class MemoryService(BaseService[Memory]):
             offset=offset,
             language=self._uow.target_language
         )
-    # 获取用户最重要的50条记忆, 并且返回一个list string, 用于给AI看
+    # 获取用户最重要的50条记忆, 并且返回一个list dict, 用于给AI看
     async def get_user_memories_list(self, limit: int = 50,offset: int = 0) -> List[Dict[str, Any]]:
         """Get the user's most important memories."""
         # 利用MemoryRepository获取用户最重要的几条记忆
@@ -40,6 +59,7 @@ class MemoryService(BaseService[Memory]):
             "priority": memory.priority,
             "created_at": memory.updated_at.isoformat()
         } for memory in memories]
+        
     # 获取用户的所有记忆的category
     async def get_user_memory_categories(self) -> List[str]:
         """Get the user's all memory categories."""
@@ -47,6 +67,7 @@ class MemoryService(BaseService[Memory]):
         return await self._repo.get_user_memory_categories(
             user_id=self._uow.current_user.id
         )
+        
     # 获取用户的所有记忆的category, 并且带上number, 方便AI理解,  返回结构是str:number
     async def get_user_memory_categories_with_number(self) -> Dict[str, int]:
         """Get the user's all memory categories with number."""
@@ -55,5 +76,16 @@ class MemoryService(BaseService[Memory]):
             user_id=self._uow.current_user.id
         )
         return categories
+    
+    # 从Category中获取记忆list
+    async def get_memory_by_category(self, category: str, limit: int = 50, offset: int = 0) -> List[Memory]:
+        """Get the user's memories by category."""
+        return await self._repo.get_memory_by_category(
+            user_id=self._uow.current_user.id,
+            category=category,
+            limit=limit,
+            offset=offset
+        )
+
 
 __all__ = ["MemoryService"] 
