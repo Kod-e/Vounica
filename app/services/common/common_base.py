@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
+from app.infra.context import uow_ctx
 from app.infra.uow  import UnitOfWork
 from app.core.db.base import BaseModel
 from app.core.db.repository import Repository
@@ -28,40 +29,41 @@ class BaseService(Generic[T]):  # pylint: disable=too-few-public-methods
 
     def __init__(self, repository: Repository[T]):
         self._repo: Repository[T] = repository
+        self._uow = uow_ctx.get()
 
     # ------------------------------------------------------------------
     # Read operations
     # ------------------------------------------------------------------
 
-    async def get(self, uow: UnitOfWork, id_: Any) -> Optional[T]:
-        return await self._repo.get_by_id(uow.db, id_)
+    async def get(self, id_: Any) -> Optional[T]:
+        return await self._repo.get_by_id(self._uow.db, id_)
 
-    async def list(self, uow: UnitOfWork, *, skip: int = 0, limit: int = 100) -> List[T]:
-        return await self._repo.get_all(uow.db, skip=skip, limit=limit)
+    async def list(self, *, skip: int = 0, limit: int = 100) -> List[T]:
+        return await self._repo.get_all(self._uow.db, skip=skip, limit=limit)
 
     # ------------------------------------------------------------------
     # Write operations
     # ------------------------------------------------------------------
 
-    async def create(self, uow: UnitOfWork, data: Dict[str, Any]) -> T:  # type: ignore[type-var]
-        instance: T = await self._repo.create(uow.db, data)
-        queue_vector_from_instance(instance, uow.vector)
+    async def create(self, data: Dict[str, Any]) -> T:  # type: ignore[type-var]
+        instance: T = await self._repo.create(self._uow.db, data)
+        queue_vector_from_instance(instance, self._uow.vector)
         return instance
 
-    async def update(self, uow: UnitOfWork, id_: Any, data: Dict[str, Any]) -> Optional[T]:
-        instance = await self._repo.update(uow.db, id_, data)
+    async def update(self, id_: Any, data: Dict[str, Any]) -> Optional[T]:
+        instance = await self._repo.update(self._uow.db, id_, data)
         if instance is not None:
-            queue_vector_from_instance(instance, uow.vector)
+            queue_vector_from_instance(instance, self._uow.vector)
         return instance
 
-    async def delete(self, uow: UnitOfWork, id_: Any) -> Optional[T]:
+    async def delete(self, id_: Any) -> Optional[T]:
         # 先获取实例, 用于删除对应向量
-        instance = await self._repo.get_by_id(uow.db, id_)
+        instance = await self._repo.get_by_id(self._uow.db, id_)
         if instance is None:
             return None
 
         # 删除向量
-        queue_vector_delete_for_instance(instance, uow.vector)
+        queue_vector_delete_for_instance(instance, self._uow.vector)
         # 删除数据库记录
-        deleted = await self._repo.delete(uow.db, id_)
+        deleted = await self._repo.delete(self._uow.db, id_)
         return deleted 

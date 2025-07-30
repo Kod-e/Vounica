@@ -4,11 +4,6 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Callable, Coroutine, Literal
-
-from sqlalchemy import select
-
-from app.infra.uow import UnitOfWork
 
 SEND_CONSOLE_SCHEMA = {
     "type": "function",
@@ -25,6 +20,6 @@ SEND_CONSOLE_SCHEMA = {
     },
 }
 
-async def send_console(uow: UnitOfWork, message: str) -> None:
+async def send_console(message: str) -> None:
     """Send a message to the console"""
     print(message)

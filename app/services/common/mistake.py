@@ -6,15 +6,15 @@ Mistakeモデル用 CRUD + ベクター同期 Service
 from app.services.common.common_base import BaseService
 from app.infra.models.mistake import Mistake
 from app.infra.repo.mistake_repository import MistakeRepository
-from app.infra.uow import UnitOfWork
+from app.infra.context import uow_ctx
 from typing import List
 
 class MistakeService(BaseService[Mistake]):
     """Service for Mistake entity."""
 
-    def __init__(self, uow: UnitOfWork):
-        self._uow = uow
-        self._repo : MistakeRepository = MistakeRepository(db=uow.db)
+    def __init__(self):
+        self._uow = uow_ctx.get()
+        self._repo : MistakeRepository = MistakeRepository(db=self._uow.db)
         super().__init__(self._repo)
 
     # 获取用户最近的5道错题, 用于让LLM知道用户之前犯了什么错

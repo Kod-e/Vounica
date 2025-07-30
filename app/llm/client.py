@@ -58,7 +58,6 @@ class OpenAIClient:
         
         参数:
             text: 需要向量化的文本
-            uow: 用于令牌追踪的工作单元
             model_type: 模型类型枚举
             **kwargs: 额外参数
         """

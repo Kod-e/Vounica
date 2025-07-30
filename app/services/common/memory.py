@@ -6,16 +6,16 @@ from typing import Any, List, Dict
 from app.services.common.common_base import BaseService
 from app.infra.models.memory import Memory
 from app.infra.models.user import User
-from app.infra.uow import UnitOfWork
+from app.infra.context import uow_ctx
 from app.infra.repo.memory_repository import MemoryRepository 
 
 
 class MemoryService(BaseService[Memory]):
     """Service for Memory entity."""
 
-    def __init__(self, uow: UnitOfWork):
-        self._uow = uow
-        repo = MemoryRepository(db=uow.db)
+    def __init__(self,):
+        self._uow = uow_ctx.get()
+        repo = MemoryRepository(db=self._uow.db)
         self._repo: MemoryRepository = repo
         super().__init__(repo)
         
