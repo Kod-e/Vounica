@@ -1,12 +1,22 @@
 # Memory Schema
-from typing import TYPE_CHECKING
-from pydantic import BaseModel, Field, ConfigDict
+from typing import TYPE_CHECKING, List
+from pydantic import BaseModel, Field, ConfigDict, TypeAdapter
 from datetime import datetime
 from core.exceptions import NotFoundException
 if TYPE_CHECKING:
     from app.infra.models.memory import Memory as ORM_Memory
 
-class Memory(BaseModel):
+
+class MemoryCreateSchema(BaseModel):
+    """
+    The Memory create schema by Pydantic.
+    """
+    content: str = Field(..., description="The content of the memory.")
+    category: str = Field(..., description="The category of the memory.")
+    priority: int = Field(..., description="The priority of the memory.")
+    language: str = Field(..., description="The language of the memory.")
+    
+class MemorySchema(MemoryCreateSchema):
     """
     The Memory schema by Pydantic.
     """
@@ -32,3 +42,8 @@ class Memory(BaseModel):
         if user is None or user.id != memory.user_id or memory is None:
             raise NotFoundException(message="Memory not found")
         return memory
+    
+    
+# Memory的Response Schema
+MemorySchemaListAdapter = TypeAdapter(list[MemorySchema])
+
