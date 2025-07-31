@@ -37,6 +37,8 @@ class QuestionAgent:
         self.checkpointer = InMemorySaver()
         # 实例化 LLM
         self.model = ChatOpenAI(model="gpt-4.1")
+        # 题目
+        self.question_stack = QuestionStack()
     async def run(self, user_input: str) -> Dict[str, Any]:
         """
         运行完整的 OPAR 循环并根据用户输入生成问题。
@@ -97,13 +99,12 @@ class QuestionAgent:
         生成问题
         """
         #创建agent
-        question_stack = QuestionStack()
         loop_tool = LoopTool(max_loop_num=5)
         generate_agent = create_react_agent(
             model=self.model,
             tools=[
                 # 添加question_stack的工具
-                *question_stack.get_tools(),
+                *self.question_stack.get_tools(),
                 *loop_tool.tool_call,
             ],
             checkpointer=self.checkpointer
@@ -119,7 +120,7 @@ class QuestionAgent:
                      
                      {user_input}
                      """},
-                    {"role": "user", "content": question_stack.get_questions_prompt()}
+                    {"role": "user", "content": self.question_stack.get_questions_prompt()}
                 ]},
                 config
             )
@@ -127,4 +128,4 @@ class QuestionAgent:
             print(last_message.content)
             loop_tool.loop()
             
-        print(question_stack.get_questions_prompt())
+        print(self.question_stack.get_questions_prompt())

@@ -1,4 +1,9 @@
 from app.services.question.types.choice import ChoiceQuestion
 from app.services.question.types.match import MatchQuestion
+from typing import Union
+from pydantic import TypeAdapter
 
-__all__ = ["ChoiceQuestion", "MatchQuestion"]
+
+QuestionUnion = Union[ChoiceQuestion, MatchQuestion]
+QuestionAdapter = TypeAdapter(QuestionUnion)
+__all__ = ["ChoiceQuestion", "MatchQuestion", "QuestionUnion"]
