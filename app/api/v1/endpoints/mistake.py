@@ -16,7 +16,7 @@ async def create_mistake(
     mistake_service: MistakeService = Depends(get_mistake_service),
     mistake: MistakeCreateSchema = Body(...)
 ):
-    mistake = await mistake_service.create(mistake)
+    mistake = await mistake_service.create(mistake.model_dump())
     return MistakeSchema.model_validate(mistake)
 
 
@@ -37,7 +37,7 @@ async def update_mistake(
     mistake_service: MistakeService = Depends(get_mistake_service),
     mistake: MistakeSchema = Body(...)
 ):
-    mistake = await mistake_service.update(mistake)
+    mistake = await mistake_service.update(mistake.model_dump())
     return MistakeSchema.model_validate(mistake)
 
 # 获取用户错题的页面
@@ -48,7 +48,7 @@ async def get_mistakes(
     limit: int = 50,
     offset: int = 0
 ):
-    mistakes = await mistake_service.get_user_mistakes(limit, offset)
+    mistakes = await mistake_service.get_user_mistakes(offset=offset, limit=limit)
     # 使用TypeAdapter进行高效验证，但FastAPI要求response_model为标准类型
     return MistakeSchemaListAdapter.validate_python(mistakes)
 

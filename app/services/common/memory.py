@@ -18,25 +18,6 @@ class MemoryService(BaseService[Memory]):
         repo = MemoryRepository(db=self._uow.db)
         self._repo: MemoryRepository = repo
         super().__init__(repo)
-    # 通过API创建新的记忆
-    async def create_memory(self, memory: MemoryCreateSchema) -> Memory:
-        """Create a new memory."""
-        return await self._repo.create(self._uow.db, memory.model_dump())
-    
-        # 删除一个记忆
-    async def delete_memory(self, memory_id: int) -> Memory:
-        """Delete a memory."""
-        return await self._repo.delete(self._uow.db, memory_id)
-    
-    # 更新一个记忆
-    async def update_memory(self,memory: MemoryUpdateSchema) -> Memory:
-        """Update a memory."""
-        return await self._repo.update(self._uow.db, memory.id, memory.model_dump())
-    
-    # 获取一个记忆
-    async def get_memory(self, memory_id: int) -> Memory:
-        """Get a memory."""
-        return await self._repo.get_by_id(self._uow.db, memory_id)
     
     # 获取用户最重要的50条记忆, 不超过太多, 防止token消耗和focus丢失, 增加翻页功能
     async def get_user_memories(self, limit: int = 50,offset: int = 0) -> List[Memory]:

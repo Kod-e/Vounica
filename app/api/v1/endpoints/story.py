@@ -16,7 +16,7 @@ async def create_story(
     story_service: StoryService = Depends(get_story_service),
     story: StoryCreateSchema = Body(...)
 ):
-    story_obj = await story_service.create(story)
+    story_obj = await story_service.create(story.model_dump())
     return StorySchema.model_validate(story_obj)
 
 # 删除story
@@ -36,7 +36,7 @@ async def update_story(
     story_service: StoryService = Depends(get_story_service),
     story: StorySchema = Body(...)
 ):
-    story_obj = await story_service.update(story)
+    story_obj = await story_service.update(story.model_dump())
     return StorySchema.model_validate(story_obj)
 
 # 获取story列表
@@ -45,8 +45,9 @@ async def get_stories(
     uow: UnitOfWork = Depends(get_uow),
     story_service: StoryService = Depends(get_story_service),
     limit: int = 50,
-    offset: int = 0
+    offset: int = 0,
+    only_target_language: bool = False
 ):
-    stories = await story_service.list(limit, offset)
+    stories = await story_service.get_user_stories(offset=offset, limit=limit, only_target_language=only_target_language)
     # 使用TypeAdapter进行高效验证，但FastAPI要求response_model为标准类型
     return StorySchemaListAdapter.validate_python(stories) 

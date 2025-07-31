@@ -16,7 +16,7 @@ async def create_vocab(
     vocab_service: VocabService = Depends(get_vocab_service),
     vocab: VocabCreateSchema = Body(...)
 ):
-    vocab_obj = await vocab_service.create(vocab)
+    vocab_obj = await vocab_service.create(vocab.model_dump())
     return VocabSchema.model_validate(vocab_obj)
 
 # 删除vocab
@@ -36,7 +36,7 @@ async def update_vocab(
     vocab_service: VocabService = Depends(get_vocab_service),
     vocab: VocabSchema = Body(...)
 ):
-    vocab_obj = await vocab_service.update(vocab)
+    vocab_obj = await vocab_service.update(vocab.model_dump())
     return VocabSchema.model_validate(vocab_obj)
 
 # 获取vocab列表
@@ -47,6 +47,6 @@ async def get_vocabs(
     limit: int = 50,
     offset: int = 0
 ):
-    vocabs = await vocab_service.list(limit, offset)
+    vocabs = await vocab_service.get_user_vocabs(offset=offset, limit=limit)
     # 使用TypeAdapter进行高效验证，但FastAPI要求response_model为标准类型
     return VocabSchemaListAdapter.validate_python(vocabs) 

@@ -16,7 +16,7 @@ async def create_memory(
     memory_service: MemoryService = Depends(get_memory_service),
     memory: MemoryCreateSchema = Body(...)
 ):
-    memory = await memory_service.create_memory(memory)
+    memory = await memory_service.create(memory.model_dump())
     return MemorySchema.model_validate(memory)
 
 
@@ -27,7 +27,7 @@ async def delete_memory(
     memory_service: MemoryService = Depends(get_memory_service),
     memory_id: int = Query(...)
 ):
-    memory = await memory_service.delete_memory(memory_id)
+    memory = await memory_service.delete(memory_id)
     return MemorySchema.model_validate(memory)
 
 # 更新一个记忆
@@ -37,7 +37,7 @@ async def update_memory(
     memory_service: MemoryService = Depends(get_memory_service),
     memory: MemoryUpdateSchema = Body(...)
 ):
-    memory = await memory_service.update_memory(memory)
+    memory = await memory_service.update(memory.model_dump())
     return MemorySchema.model_validate(memory)
 
 # 获取用户记忆的页面

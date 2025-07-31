@@ -38,7 +38,7 @@ class BaseService(Generic[T]):  # pylint: disable=too-few-public-methods
     async def get(self, id_: Any) -> Optional[T]:
         return await self._repo.get_by_id(self._uow.db, id_)
 
-    async def list(self, *, offset: int = 0, limit: int = 100) -> List[T]:
+    async def list(self, offset: int = 0, limit: int = 100) -> List[T]:
         return await self._repo.get_all(self._uow.db, offset=offset, limit=limit)
 
     # ------------------------------------------------------------------
