@@ -14,7 +14,7 @@ from app.core.db.base import BaseModel
 from app.core.db.repository import Repository
 from app.infra.vector.operations import (
     queue_vector_from_instance,
-    queue_vector_delete_for_instance,
+    queue_vector_delete_for_instance
 )
 
 # 类型参数: 受 BaseModel 约束
@@ -38,20 +38,24 @@ class BaseService(Generic[T]):  # pylint: disable=too-few-public-methods
     async def get(self, id_: Any) -> Optional[T]:
         return await self._repo.get_by_id(self._uow.db, id_)
 
-    async def list(self, *, skip: int = 0, limit: int = 100) -> List[T]:
-        return await self._repo.get_all(self._uow.db, skip=skip, limit=limit)
+    async def list(self, *, offset: int = 0, limit: int = 100) -> List[T]:
+        return await self._repo.get_all(self._uow.db, offset=offset, limit=limit)
 
     # ------------------------------------------------------------------
     # Write operations
     # ------------------------------------------------------------------
 
     async def create(self, data: Dict[str, Any]) -> T:  # type: ignore[type-var]
+        # 修复user_id不在create方法中的问题
+        if "user_id" not in data:
+            data["user_id"] = self._uow.current_user_id
         instance: T = await self._repo.create(self._uow.db, data)
         queue_vector_from_instance(instance, self._uow.vector)
         return instance
 
-    async def update(self, id_: Any, data: Dict[str, Any]) -> Optional[T]:
-        instance = await self._repo.update(self._uow.db, id_, data)
+    async def update(self, data: Dict[str, Any]) -> Optional[T]:
+        _id = data.pop("id")
+        instance = await self._repo.update(self._uow.db, _id, data)
         if instance is not None:
             queue_vector_from_instance(instance, self._uow.vector)
         return instance

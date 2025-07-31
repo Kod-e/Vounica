@@ -48,6 +48,14 @@ class GrammarSchema(GrammarCreateSchema):
         if user is None or grammar.user_id != user.id:
             raise NotFoundException(message="Grammar not found")
         return grammar
-
+# 更新用 schema
+class GrammarUpdateSchema(BaseModel):
+    """
+    The Grammar update schema by Pydantic.
+    """
+    id: int = Field(..., description="The ID of the grammar.")
+    name: str | None = Field(default=None, description="The name of the grammar.")
+    usage: str | None = Field(default=None, description="The usage of the grammar.")
+    status: float | None = Field(default=None, description="The status of the grammar.")
 # 列表批量转换适配器
 GrammarSchemaListAdapter = TypeAdapter(list[GrammarSchema])

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Body, Query
 from typing import List
-from app.infra.schemas import GrammarSchema, GrammarCreateSchema, GrammarSchemaListAdapter
+from app.infra.schemas import GrammarSchema, GrammarCreateSchema, GrammarSchemaListAdapter, GrammarUpdateSchema
 from app.infra.uow import UnitOfWork, get_uow
 from app.services.common import BaseService
 from app.infra.models.grammar import Grammar
@@ -40,9 +40,9 @@ async def delete_grammar(
 async def update_grammar(
     uow: UnitOfWork = Depends(get_uow),
     grammar_service: BaseService = Depends(get_grammar_service),
-    grammar: GrammarSchema = Body(...)
+    grammar: GrammarUpdateSchema = Body(...)
 ):
-    grammar_obj = await grammar_service.update(grammar.id, grammar.model_dump())
+    grammar_obj = await grammar_service.update(grammar.model_dump())
     return GrammarSchema.model_validate(grammar_obj)
 
 # 获取grammar列表
@@ -53,6 +53,6 @@ async def get_grammars(
     limit: int = 50,
     offset: int = 0
 ):
-    grammars = await grammar_service.list(skip=offset, limit=limit)
+    grammars = await grammar_service.list(offset=offset, limit=limit)
     # 使用TypeAdapter进行高效验证，但FastAPI要求response_model为标准类型
     return GrammarSchemaListAdapter.validate_python(grammars) 

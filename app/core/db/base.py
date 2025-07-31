@@ -1,6 +1,6 @@
 from sqlalchemy.orm import declarative_base, DeclarativeMeta
 from sqlalchemy import Column, DateTime
-from datetime import datetime
+from datetime import datetime,timezone
 from typing import AsyncGenerator
 # 为了避免在模块导入阶段固定 async_session_maker 的引用，
 # 避免出现 FastAPI lifespan 更新后 core 内仍然是 None 的问题，
@@ -21,8 +21,8 @@ class BaseModel(Base):
     updated_at: 更新日時
     """
     __abstract__ = True
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = Column(DateTime, default=datetime.now())
+    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
     
 # 每次调用时动态获取 app.main.async_session_maker，保证其已在 lifespan 中初始化。
 

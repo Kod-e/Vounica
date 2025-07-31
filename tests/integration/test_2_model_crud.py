@@ -1,22 +1,73 @@
 
 import pytest
-from app.infra.schemas import GrammarCreateSchema
-# @pytest.fixture(scope="module")
-# def grammar_data():
-#     # 测试用Grammar数据
-#     return {
-#         "name": "the name of grammar",
-#         "usage": "the usage of grammar",
-#         "status": 0.75,
-#         "language": "ja"
-#     }
+import pytest_asyncio
+from app.infra.schemas import GrammarCreateSchema, GrammarUpdateSchema
 
-@pytest.mark.order(1)
+@pytest.mark.order(5)
+@pytest.mark.asyncio
 async def test_grammar_crud(authenticated_async_client):
-
-    response = await authenticated_async_client.post("/v1/grammar/create", json=GrammarCreateSchema(name="the name of grammar", usage="the usage of grammar", status=0.75, language="ja").model_dump())
-    response.status_code == 200, f"Failed to access health endpoint: {response.text}"
+    # 第1步：创建Grammar
+    response = await authenticated_async_client.post(
+        "/v1/grammar/create",
+        json=GrammarCreateSchema(
+            name="the name of grammar",
+            usage="the usage of grammar",
+            status=0.75,
+            language="ja"
+        ).model_dump()
+    )
+    assert response.status_code == 200, f"Failed to create grammar: {response.text}"
+    created_data = response.json()
+    
+    # 验证返回数据
+    assert "id" in created_data, "No id in response"
+    assert created_data["name"] == "the name of grammar"
+    assert created_data["usage"] == "the usage of grammar"
+    assert created_data["status"] == 0.75
+    assert created_data["language"] == "ja"
+    assert "created_at" in created_data
+    assert "updated_at" in created_data
+    
+    # 保存ID用于后续操作
+    grammar_id = created_data["id"]
+    
+    # 第2步：获取Grammar列表 (不验证长度，因为可能存在权限过滤)
+    response = await authenticated_async_client.get("/v1/grammar/page?limit=10&offset=0")
+    assert response.status_code == 200, f"Failed to get grammar list: {response.text}"
     data = response.json()
+    
+    # 验证返回的是列表
+    assert isinstance(data, list), "Response is not a list"
+    # 注意：列表可能为空，这取决于权限过滤，所以不验证长度
+    
+    # 第3步：更新Grammar
+    response = await authenticated_async_client.post(
+        "/v1/grammar/update",
+        json=GrammarUpdateSchema(
+            id=grammar_id,
+            status=0.85,
+            usage="updated usage of grammar",
+            name=created_data["name"]
+        ).model_dump()
+    )
+    assert response.status_code == 200, f"Failed to update grammar: {response.text}"
+    data = response.json()
+    
+    # 验证数据已更新
+    assert data["id"] == grammar_id
+    assert data["status"] == 0.85
+    assert data["usage"] == "updated usage of grammar"
+    
+    # 第4步：删除Grammar
+    response = await authenticated_async_client.delete(
+        f"/v1/grammar/delete?grammar_id={grammar_id}"
+    )
+    assert response.status_code == 200, f"Failed to delete grammar: {response.text}"
+    data = response.json()
+    
+    # 验证返回的是被删除的记录
+    assert data["id"] == grammar_id
+
 
 # def test_grammar_create(authenticated_client, grammar_data):
 #     # 测试创建Grammar记录

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime,timezone
 from typing import Any, Dict, Sequence
 
 from app.core.vector.embeddings import get_embedding
@@ -24,22 +24,22 @@ def ensure_collections_exist() -> None:
 
 
 # 构建Qdrant point
-def _build_point(vector: Sequence[float], payload_extra: Dict[str, Any]) -> Dict[str, Any]:
+def _build_point(vector: Sequence[float], payload_extra: Dict[str, Any], origin_id: int) -> Dict[str, Any]:
     """Internal helper to build a Qdrant point dict."""
     base_payload = VectorPayload(
-        user_id=payload_extra.pop("user_id"),
-        created_at=int(datetime.utcnow().timestamp()),
+        user_id=payload_extra["user_id"],
+        created_at=int(datetime.now().timestamp()),
     ).model_dump(mode="json")
     # 合并additional payload data
     payload = base_payload | payload_extra  # type: ignore[operator]
     return {
-        "id": str(uuid.uuid4()),
+        "id": origin_id,
         "vector": vector,
         "payload": payload,
     }
 
 
-# 将ORM实例中的可向量化字段进行向量化
+# 将ORM实例中的可向量化字段进行向量化x
 def queue_vector_from_instance(
     instance: Any,
     session: VectorSession,
@@ -67,20 +67,20 @@ def queue_vector_from_instance(
 
         # 获取embedding(OpenAI API)
         vector = get_embedding(str(text_value))
-
+        origin_id = getattr(instance, "id", None)
+        if origin_id is None:
+            raise ValueError("origin_id is None")
         # 构建payload和point
         payload_extra = {
             "user_id": getattr(instance, "user_id", 0),  # 如果user_id不存在, 则使用0
             "model": model_name,
             "field": field_name,
-            "origin_id": getattr(instance, "id", None),
+            "origin_id": origin_id,
         }
-        point = _build_point(vector, payload_extra)
+        point = _build_point(vector, payload_extra, origin_id)
 
         # 将point添加到vector session中
         session.add_point(collection.value, point)
-
-
 # --------------------------------------------------------------
 # 删除操作: 从 Qdrant 中删除与 ORM 实例关联的全部向量
 # --------------------------------------------------------------
@@ -104,11 +104,4 @@ def queue_vector_delete_for_instance(
         if mapped_model != model_name:
             continue
 
-        # Qdrant filter dict: match origin_id
-        filter_dict = {
-            "must": [
-                {"key": "origin_id", "match": {"value": origin_id}},
-            ]
-        }
-
-        session.delete_by_filter(collection.value, filter_dict) 
+        session.delete_by_ids(collection.value, [origin_id]) 

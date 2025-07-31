@@ -144,6 +144,8 @@ def pytest_sessionstart(session):
             check=True,
             env=dict(os.environ, **{
                 "TEST_DATABASE_URL": TEST_DATABASE_URL,
+                "TEST_REDIS_URL": TEST_REDIS_URL,
+                "TEST_QDRANT_URL": TEST_QDRANT_URL,
             })
         )
         

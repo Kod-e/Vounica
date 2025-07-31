@@ -28,6 +28,8 @@ from app.infra.models.memory import Memory
 from app.infra.models.mistake import Mistake
 from app.infra.models.refresh_token import RefreshToken
 from app.infra.models.story import Story
+from app.infra.vector.collections import COLLECTIONS_CONFIG
+from app.core.vector.provider import make_qdrant_client
 # 或者可以直接导入所有模型
 # from app.infra.models import *
 
@@ -35,7 +37,8 @@ from app.infra.models.story import Story
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:15432/test_vounica"
 # 用于同步操作（如创建表）的URL
 TEST_SYNC_DATABASE_URL = "postgresql://postgres:postgres@localhost:15432/test_vounica"
-
+# 测试向量数据库连接 URL
+TEST_QDRANT_URL = "http://localhost:16333"
 
 async def init_test_db():
     """
@@ -72,6 +75,18 @@ async def init_test_db():
     # 清理连接池
     await engine.dispose()
     
+    # 初始化collections
+    os.environ["QDRANT_URL"] = TEST_QDRANT_URL
+    qdrant_client = make_qdrant_client()
+    for collection, params in COLLECTIONS_CONFIG.items():
+        if not qdrant_client.collection_exists(collection):
+            qdrant_client.create_collection(
+                collection_name=collection.value,
+                vectors_config=params
+            )
+        else:
+            print(f"Collection {collection} already exists!")
+            
     print("Test database initialized successfully!")
 
 
@@ -95,6 +110,15 @@ async def drop_test_db():
     
     # 清理连接池
     await engine.dispose()
+    
+    # 删除collections
+    qdrant_client = make_qdrant_client()
+    os.environ["QDRANT_URL"] = TEST_QDRANT_URL
+    for collection in COLLECTIONS_CONFIG.keys():
+        if qdrant_client.collection_exists(collection.value):
+            qdrant_client.delete_collection(collection.value)
+        else:
+            print(f"Collection {collection} not found!")
     
     print("All tables dropped successfully!")
 

@@ -4,13 +4,13 @@ from sqlalchemy import text
 from typing import List, Optional
 
 from app.core.db import get_db
-from app.api.v1.endpoints.user import router as auth_router
+from app.api.v1.endpoints.auth import router as auth_router
 from app.api.v1.endpoints.memory import router as memory_router
 from app.api.v1.endpoints.grammar import router as grammar_router
 from app.api.v1.endpoints.mistake import router as mistake_router
 from app.api.v1.endpoints.story import router as story_router
 from app.api.v1.endpoints.vocab import router as vocab_router
-
+from app.api.v1.endpoints.user import router as user_router
 # 创建路由实例
 router = APIRouter(tags=["v1"])
 
@@ -45,3 +45,4 @@ router.include_router(grammar_router)
 router.include_router(mistake_router)
 router.include_router(story_router)
 router.include_router(vocab_router)
+router.include_router(user_router)

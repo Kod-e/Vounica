@@ -10,6 +10,7 @@ from .story import StoryService  # noqa: F401
 from .user import UserService  # noqa: F401
 from .vocab import VocabService  # noqa: F401
 
+
 __all__ = [
     "BaseService",
     "GrammarService",

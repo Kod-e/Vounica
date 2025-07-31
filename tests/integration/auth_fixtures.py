@@ -12,13 +12,14 @@ from sqlalchemy.orm import Session
 from app.infra.models.user import User
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def test_user_data():
     """
     Test user data.
     
     这个fixture提供了测试用户的基本数据。
     使用随机email避免重复注册问题。
+    修改scope为function，确保每次测试都生成新的邮箱。
     """
     # 使用随机UUID生成唯一邮箱
     random_suffix = str(uuid.uuid4())[:8]

@@ -20,6 +20,7 @@ from .grammar import (
     GrammarCreateSchema,
     GrammarSchema,
     GrammarSchemaListAdapter,
+    GrammarUpdateSchema,
 ) # noqa: F401
 from .mistake import (
     MistakeCreateSchema,

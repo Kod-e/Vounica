@@ -47,7 +47,7 @@ class Repository(Generic[T]):
         result = await db.execute(query)
         return result.scalars().first()
     
-    async def get_all(self, db: AsyncSession, skip: int = 0, limit: int = 100) -> List[T]:
+    async def get_all(self, db: AsyncSession, offset: int = 0, limit: int = 100) -> List[T]:
         """
         Retrieve a list of records with optional pagination.
 
@@ -55,13 +55,13 @@ class Repository(Generic[T]):
 
         Args:
             db: Async database session
-            skip: Number of records to skip (offset)
+            offset: Number of records to offset
             limit: Maximum number of records to return
 
         Returns:
             A list of entities
         """
-        query = select(self.model).offset(skip).limit(limit)
+        query = select(self.model).offset(offset).limit(limit)
         result = await db.execute(query)
         return list(result.scalars().all())
     

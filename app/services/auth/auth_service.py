@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional
-from datetime import datetime
+from datetime import datetime,timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infra.uow  import UnitOfWork

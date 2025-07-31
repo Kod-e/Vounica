@@ -58,8 +58,22 @@ class UnitOfWork:
 
     async def close(self) -> None:
         """Iterate through resources and close if possible."""
-        # 收尾清理，释放连接 / 句柄
-        await self._broadcast("close")
+        methods = [
+            'aclose',
+            'close'
+        ]
+        # 检测self._resources中是否存在
+        for resource in self._resources.values():
+            for method in methods:
+                # 如果不存在对应方法，则跳过
+                if not hasattr(resource, method):
+                    continue
+                # 如果存在对应方法，检测是否为异步方法，如果是则await，否则直接调用
+                if inspect.iscoroutinefunction(getattr(resource, method)) or method == "aclose":
+                    await getattr(resource, method)()
+                    break
+                else:
+                    getattr(resource, method)()
 
     # Async context manager helpers
 
@@ -156,7 +170,9 @@ async def get_uow(
     token = uow_ctx.set(uow)
     try:
         yield uow
-    except Exception:
+        await uow.commit()
+    except Exception as e:
+        print(e)
         # 确保异常情况下也回滚
         await uow.rollback()
         raise
@@ -185,6 +201,7 @@ async def get_public_uow(
 
     try:
         yield uow
+        await uow.commit()
     except Exception:
         await uow.rollback()
         raise

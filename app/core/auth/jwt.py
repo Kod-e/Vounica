@@ -38,7 +38,7 @@ def create_access_token(user_id: int, *, expires_delta: timedelta | None = None)
 
     仅包含 sub / iat / exp 三个字段，保持最小化。
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now()
     expire = now + (expires_delta or timedelta(minutes=EXPIRE_MINUTES))
     payload: Dict[str, Any] = {
         "sub": str(user_id),

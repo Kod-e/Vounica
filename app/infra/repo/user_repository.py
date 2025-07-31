@@ -31,7 +31,6 @@ class UserRepository(Repository[User]):
         return result.scalar() is not None
         
     async def create(self, obj_in: Dict[str, Any]) -> User:
-        """覆盖基类方法，使用self.db而不是参数db"""
         db_obj = self.model(**obj_in)
         self.db.add(db_obj)
         await self.db.flush()
