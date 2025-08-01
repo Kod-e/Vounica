@@ -27,7 +27,7 @@ class QuestionAgent:
     该类用于根据用户状态和输入生成个性化的语言学习题目。
     """
     
-    def __init__(self, uow: UnitOfWork, model_type: LLMModel = LLMModel.STANDARD):
+    def __init__(self, uow: UnitOfWork, model_type: LLMModel = LLMModel.STANDARD.value["name"]):
         self.uow = uow
         self.model_type = model_type
         
