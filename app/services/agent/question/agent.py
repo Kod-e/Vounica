@@ -9,6 +9,7 @@ OPAR (观察、计划、行动、反思) 循环是一种问题生成的方法论
 from typing import Any, Dict, List, Optional, Tuple, cast
 import json
 
+from app.services.agent.core.core import CoreAgent
 from app.infra.context import uow_ctx
 from app.llm import chat_completion, LLMModel
 from app.services.question.base.registry import create_question
@@ -24,7 +25,7 @@ from langchain_openai import ChatOpenAI
 import logging, langchain
 langchain.debug = True
 logging.basicConfig(level=logging.INFO)
-class QuestionAgent:
+class QuestionAgent(CoreAgent):
     """
     使用 OPAR (观察、计划、行动、反思) 循环的问题生成代理。
     
@@ -32,13 +33,11 @@ class QuestionAgent:
     """
     
     def __init__(self):
-        self.uow = uow_ctx.get()
-        # 创建checkpointer
-        self.checkpointer = InMemorySaver()
-        # 实例化 LLM
-        self.model = ChatOpenAI(model="gpt-4.1")
+        super().__init__()
         # 题目
         self.question_stack = QuestionStack()
+        
+    # 实现run方法
     async def run(self, user_input: str) -> Dict[str, Any]:
         """
         运行完整的 OPAR 循环并根据用户输入生成问题。
