@@ -15,10 +15,10 @@ class AgentMessageData(BaseModel):
     emoji: str
     message: str
 
-class AgentMessage(AgentEvent):
+class AgentMessageEvent(AgentEvent):
     type: AgentEventType = AgentEventType.MESSAGE
     data: AgentMessageData
 
-class AgentResult(AgentEvent):
+class AgentResultEvent(AgentEvent):
     type: AgentEventType = AgentEventType.RESULT
     data: BaseModel

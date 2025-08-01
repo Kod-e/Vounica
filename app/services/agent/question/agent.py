@@ -12,12 +12,7 @@ import json
 from app.services.agent.core.core import CoreAgent
 from app.infra.context import uow_ctx
 from app.llm import chat_completion, LLMModel
-from app.services.question.base.registry import create_question
-from app.services.question.base.types import QuestionType
-from app.services.common.memory import MemoryService
-from app.services.common.mistake import MistakeService
-from app.services.common.story import StoryService
-from app.services.common.vocab import VocabService
+from app.services.question.types import QuestionUnion
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from app.services.tools.langchain import make_search_resource_tool, QuestionStack, LoopTool
@@ -25,6 +20,9 @@ from langchain_openai import ChatOpenAI
 import logging, langchain
 langchain.debug = True
 logging.basicConfig(level=logging.INFO)
+from app.services.agent.core.schema import AgentEventType, AgentMessageEvent, AgentMessageData
+from app.services.agent.question.schema import QuestionAgentResult
+
 class QuestionAgent(CoreAgent):
     """
     使用 OPAR (观察、计划、行动、反思) 循环的问题生成代理。
@@ -38,7 +36,7 @@ class QuestionAgent(CoreAgent):
         self.question_stack = QuestionStack()
         
     # 实现run方法
-    async def run(self, user_input: str) -> Dict[str, Any]:
+    async def run(self, user_input: str) -> List[QuestionUnion]:
         """
         运行完整的 OPAR 循环并根据用户输入生成问题。
         
@@ -47,7 +45,10 @@ class QuestionAgent(CoreAgent):
         
         # 执行OPAR循环
         observe_result =  await self._observe(user_input)
-        await self._generate_question(observe_result)
+        questions = await self._generate_question(observe_result)
+        self.finish(QuestionAgentResult(data=questions))
+        return questions
+        
     
     async def _observe(self, user_input: str) -> None:
         """
@@ -81,6 +82,7 @@ class QuestionAgent(CoreAgent):
                     3. 你应该知道用户可能会在什么地方发生错误, 应该怎么去检索这些错误记录, 应该检索哪些错误相关的内容
                     
                     如果你觉得已经检索完成, 请调用stop_loop工具
+                    并且返回你对用户在这个场景下的用户画像
                     """},
                     {"role": "user", "content": user_input},
                     {"role": "user", "content": loop_tool.get_loop_prompt()},
@@ -89,11 +91,20 @@ class QuestionAgent(CoreAgent):
             )
             last_message = response["messages"][-1]
             print(last_message.content)
+            self.message(
+                AgentMessageEvent(
+                    type=AgentEventType.MESSAGE,
+                    data=AgentMessageData(
+                        emoji="🔍",
+                        message=last_message.content
+                    )
+                )
+            )
             loop_tool.loop()
         return last_message.content
     
     # 生成问题
-    async def _generate_question(self, user_input: str) -> None:
+    async def _generate_question(self, user_input: str) -> List[QuestionUnion]:
         """
         生成问题
         """
@@ -114,17 +125,25 @@ class QuestionAgent(CoreAgent):
             response = await generate_agent.ainvoke(
                 {"messages": [
                     {"role": "system", "content": f"""
-                     你需要根据要求生成10个左右的题目
-                     如果你觉得已经生成的不错了, 请调用stop_loop工具
-                     
                      {user_input}
+                     你需要根据要求生成7个左右的题目
+                     如果你觉得已经生成的不错了, 请调用stop_loop工具
                      """},
+                    
                     {"role": "user", "content": self.question_stack.get_questions_prompt()}
                 ]},
                 config
             )
             last_message = response["messages"][-1]
-            print(last_message.content)
+            self.message(
+                AgentMessageEvent(
+                    type=AgentEventType.MESSAGE,
+                    data=AgentMessageData(
+                        emoji="�",
+                        message=last_message.content
+                    )
+                )
+            )
             loop_tool.loop()
-            
-        print(self.question_stack.get_questions_prompt())
+        
+        return self.question_stack.questions

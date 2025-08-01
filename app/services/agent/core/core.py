@@ -4,7 +4,7 @@ import json, asyncio
 from pydantic import BaseModel
 from app.infra.context import uow_ctx
 from app.llm import chat_completion, LLMModel
-from app.services.agent.core.schema import AgentEventType, AgentEvent, AgentMessage, AgentResult
+from app.services.agent.core.schema import AgentEventType, AgentEvent, AgentMessageEvent, AgentResultEvent
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from app.services.tools.langchain import make_search_resource_tool, QuestionStack, LoopTool
@@ -40,11 +40,11 @@ class CoreAgent:
     
     # finish方法, 调用后会发出带result的AgentEvent
     def finish(self, data: BaseModel):
-        self._message_queue.put_nowait(AgentResult(data=data))
+        self._message_queue.put_nowait(AgentResultEvent(data=data))
         
     # message方法, 调用后会发出带message的AgentEvent
     def message(self, data: BaseModel):
-        self._message_queue.put_nowait(AgentMessage(data=data))
+        self._message_queue.put_nowait(AgentMessageEvent(data=data))
     
     # 持续向外部stream消息, 每个消息必须是一个AgentEvent对象, 并且可以被直接放到FastAPI的StreamingResponse中
     async def run_stream(self, *args):
