@@ -3,7 +3,7 @@ from typing import List, Tuple
 from langchain_core.tools import StructuredTool
 from functools import partial
 from pydantic import BaseModel, Field
-from app.services.question.common.spec import QuestionSpec
+from app.services.question.base.spec import QuestionSpec
 
 # 搜索参数
 class QuestionArgs(BaseModel):

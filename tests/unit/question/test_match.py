@@ -7,8 +7,8 @@ import pytest_asyncio
 from unittest.mock import patch, MagicMock, AsyncMock
 
 from app.services.question.types.match import MatchQuestion
-from app.services.question.common.types import QuestionType
-from app.services.question.common.spec import QuestionSpec
+from app.services.question.base.types import QuestionType
+from app.services.question.base.spec import QuestionSpec
 
 @pytest.mark.asyncio
 async def test_question_model(test_uow):

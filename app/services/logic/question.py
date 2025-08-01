@@ -1,5 +1,5 @@
 from app.services.question.types import QuestionUnion
-from app.services.question.common.spec import QuestionSpec, JudgeResult
+from app.services.question.base.spec import QuestionSpec, JudgeResult
 from app.services.common.mistake import MistakeService
 from app.infra.context import uow_ctx
 

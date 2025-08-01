@@ -11,8 +11,8 @@ import json
 
 from app.infra.uow import UnitOfWork
 from app.llm import chat_completion, LLMModel
-from app.services.question.common.registry import create_question
-from app.services.question.common.types import QuestionType
+from app.services.question.base.registry import create_question
+from app.services.question.base.types import QuestionType
 from app.services.tools import handle_tool_calls, SEARCH_SCHEMA, SEND_CONSOLE_SCHEMA
 from app.services.common.memory import MemoryService
 from app.services.common.mistake import MistakeService

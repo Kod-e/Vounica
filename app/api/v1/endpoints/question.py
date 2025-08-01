@@ -3,7 +3,7 @@ from app.services.agent.question.agent import QuestionAgent
 from app.services.question.types import QuestionUnion, QuestionAdapter
 from typing import List
 from app.services.logic.question import QuestionHandler
-from app.services.question.common.spec import JudgeResult
+from app.services.question.base.spec import JudgeResult
 from app.infra.context import uow_ctx
 
 router = APIRouter(prefix="/question", tags=["question"])

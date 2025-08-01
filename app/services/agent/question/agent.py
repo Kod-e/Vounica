@@ -11,8 +11,8 @@ import json
 
 from app.infra.context import uow_ctx
 from app.llm import chat_completion, LLMModel
-from app.services.question.common.registry import create_question
-from app.services.question.common.types import QuestionType
+from app.services.question.base.registry import create_question
+from app.services.question.base.types import QuestionType
 from app.services.common.memory import MemoryService
 from app.services.common.mistake import MistakeService
 from app.services.common.story import StoryService

@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 
 from pydantic import BaseModel,Field, ConfigDict
 
-from app.services.question.common.types import QuestionType
+from app.services.question.base.types import QuestionType
 from app.infra.models import Mistake
 from app.infra.context import uow_ctx
 # 评判结果
@@ -87,7 +87,7 @@ class QuestionSpec(BaseModel, ABC):
         # 确定mistake的类型
         question_type = mistake.question_type
         # 延迟导入以避免循环
-        from app.services.question.common.registry import _QUESTION_REGISTRY
+        from app.services.question.base.registry import _QUESTION_REGISTRY
         question_cls = _QUESTION_REGISTRY.get(question_type)
         if question_cls is None:
             raise ValueError(f"Question type {question_type} not registered")

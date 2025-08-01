@@ -7,10 +7,10 @@ from __future__ import annotations
 
 from typing import Dict, Type
 
-from app.services.question.common.types import QuestionType
+from app.services.question.base.types import QuestionType
 
 from typing import TYPE_CHECKING
-from app.services.question.common.spec import QuestionSpec
+from app.services.question.base.spec import QuestionSpec
 
 
 _QUESTION_REGISTRY: Dict[QuestionType, Type[QuestionSpec]] = {}

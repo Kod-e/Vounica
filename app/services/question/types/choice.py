@@ -11,9 +11,9 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import Field
 
-from app.services.question.common.spec import JudgeResult, QuestionSpec
-from app.services.question.common.registry import register_question_type
-from app.services.question.common.types import QuestionType
+from app.services.question.base.spec import JudgeResult, QuestionSpec
+from app.services.question.base.registry import register_question_type
+from app.services.question.base.types import QuestionType
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.language_models import LanguageModelInput
 from app.llm.client import chat_completion

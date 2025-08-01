@@ -5,7 +5,7 @@ from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
 from app.infra.context import uow_ctx
-from app.services.question.common.spec import QuestionSpec
+from app.services.question.base.spec import QuestionSpec
 
 class QuestionStack():
     
