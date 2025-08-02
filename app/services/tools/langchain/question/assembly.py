@@ -22,7 +22,7 @@ def add_assembly_question(
     message = f"AssemblyQuestion added, size={len(stack)}"
     return message
 # 制作函数, 注入应该注入的内容
-def build_add_assembly_tool(stack: List[QuestionSpec]) -> StructuredTool:
+def build_tools(stack: List[QuestionSpec]) -> StructuredTool:
     return StructuredTool.from_function(
         name="add_assembly_question",
         coroutine=partial(add_assembly_question, stack=stack),

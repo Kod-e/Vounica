@@ -25,6 +25,7 @@ class CoreAgent:
         
         # 消息队列
         self._message_queue: asyncio.Queue = asyncio.Queue()
+        self._loop = asyncio.get_running_loop()
 
 
 
@@ -44,7 +45,8 @@ class CoreAgent:
         
     # message方法, 调用后会发出带message的AgentEvent
     def message(self, data: BaseModel):
-        self._message_queue.put_nowait(AgentMessageEvent(data=data))
+        event = AgentMessageEvent(type=AgentEventType.MESSAGE, data=data)
+        self._loop.call_soon_threadsafe(self._message_queue.put_nowait, event)
     
     # 持续向外部stream消息, 每个消息必须是一个AgentEvent对象, 并且可以被直接放到FastAPI的StreamingResponse中
     async def run_stream(self, *args):
@@ -53,7 +55,7 @@ class CoreAgent:
         while True:
             message: AgentEvent = await self._message_queue.get()
             # 发送信息
-            yield json.dumps(message.model_dump(), ensure_ascii=False)
+            yield message
             if message.type == AgentEventType.RESULT:
                 break
         # 确保AgentTask完成

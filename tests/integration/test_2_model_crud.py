@@ -13,7 +13,7 @@ from app.infra.schemas import (
     VocabSchema,
 )
 
-@pytest.mark.order(1)
+@pytest.mark.order(4)
 @pytest.mark.asyncio
 async def test_grammar_crud(authenticated_async_client):
     # 第1步：创建Grammar
@@ -78,7 +78,7 @@ async def test_grammar_crud(authenticated_async_client):
     # 验证返回的是被删除的记录
     assert data["id"] == grammar_id
 
-@pytest.mark.order(2)
+@pytest.mark.order(4)
 @pytest.mark.asyncio
 async def test_memory_crud(authenticated_async_client):
     # Step 1: Create Memory
@@ -130,7 +130,7 @@ async def test_memory_crud(authenticated_async_client):
     data = response.json()
     assert data["id"] == memory_id
 
-@pytest.mark.order(3)
+@pytest.mark.order(4)
 @pytest.mark.asyncio
 async def test_mistake_crud(authenticated_async_client):
     # Step 1: Create Mistake
@@ -218,7 +218,7 @@ async def test_story_crud(authenticated_async_client):
     data = response.json()
     assert data["id"] == story_id
 
-@pytest.mark.order(5)
+@pytest.mark.order(4)
 @pytest.mark.asyncio
 async def test_vocab_crud(authenticated_async_client):
     # Step 1: Create Vocab

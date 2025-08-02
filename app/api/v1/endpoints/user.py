@@ -9,12 +9,13 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 
 # 依赖函数，创建AuthService
-async def get_user_service(uow: UnitOfWork = Depends(get_uow)) -> UserService:
+async def get_user_service() -> UserService:
     return UserService()
 
 
 @router.get("/me", response_model=UserSchema)
 async def get_current_user(
+    uow: UnitOfWork = Depends(get_uow),
     user_service: UserService = Depends(get_user_service)
 ):
     user = await user_service.get_current_user()

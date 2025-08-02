@@ -9,10 +9,12 @@
 """
 
 import inspect
+from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Dict, Optional, TypeVar, Type, TYPE_CHECKING
 from fastapi import Header, Depends
 import redis
 from sqlalchemy.ext.asyncio import AsyncSession
+from contextlib import suppress
 
 from app.core.db import get_db
 from app.core.vector import get_vector_session
@@ -106,7 +108,6 @@ class UnitOfWork:
 
 
 # FastAPI dependency helper
-
 async def get_uow(
     authorization: str | None = Header(default=None, alias="Authorization"),
     accept_language: str | None = Header(default=None, alias="Accept-Language"),
@@ -172,7 +173,8 @@ async def get_uow(
         yield uow
         await uow.commit()
     except Exception as e:
-        print(e)
+        strerror = str(e)
+        print(strerror)
         # 确保异常情况下也回滚
         await uow.rollback()
         raise
@@ -180,30 +182,3 @@ async def get_uow(
         # 无论如何都要关闭资源
         uow_ctx.reset(token)
         await uow.close()
-
-
-# 简化版本，用于登录/注册等不需要认证的场景
-async def get_public_uow(
-    db: AsyncSession = Depends(get_db),
-    vector: VectorSession = Depends(get_vector_session),
-    redis_client: redis.Redis = Depends(get_redis_client),
-) -> AsyncGenerator[UnitOfWork, None]:
-    """
-    Aggregate db, vector for public endpoints that don't need authentication.
-    
-    認証(にんしょう)が不要(ふよう)なpublic endpointsのためのUoWを提供(ていきょう)します。
-    """
-    uow = UnitOfWork(
-        db=db,
-        vector=vector,
-        redis=redis_client,
-    )
-
-    try:
-        yield uow
-        await uow.commit()
-    except Exception:
-        await uow.rollback()
-        raise
-    finally:
-        await uow.close() 

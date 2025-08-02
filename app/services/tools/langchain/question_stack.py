@@ -5,13 +5,13 @@ from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
 from app.infra.context import uow_ctx
-from app.services.question.base.spec import QuestionSpec
+from app.services.question.types import QuestionUnion
 
 class QuestionStack():
     
     def __init__(self):
         self.uow = uow_ctx.get()
-        self.questions : List[QuestionSpec] = []
+        self.questions : List[QuestionUnion] = []
         
         
     def get_tools(self) -> List[StructuredTool]:

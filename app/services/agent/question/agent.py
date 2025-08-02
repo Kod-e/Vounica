@@ -22,7 +22,11 @@ langchain.debug = True
 logging.basicConfig(level=logging.INFO)
 from app.services.agent.core.schema import AgentEventType, AgentMessageEvent, AgentMessageData
 from app.services.agent.question.schema import QuestionAgentResult
-
+from app.services.common.memory import MemoryService
+from app.services.common.grammar import GrammarService
+from app.services.common.story import StoryService
+from app.services.common.mistake import MistakeService
+from app.services.common.vocab import VocabService
 class QuestionAgent(CoreAgent):
     """
     使用 OPAR (观察、计划、行动、反思) 循环的问题生成代理。
@@ -34,6 +38,15 @@ class QuestionAgent(CoreAgent):
         super().__init__()
         # 题目
         self.question_stack = QuestionStack()
+        self.memory_service = MemoryService()
+        self.grammar_service = GrammarService()
+        self.story_service = StoryService()
+        self.mistake_service = MistakeService()
+        self.vocab_service = VocabService()
+        
+        self.user_input = ""
+        self.observe_result = ""
+        
         
     # 实现run方法
     async def run(self, user_input: str) -> List[QuestionUnion]:
@@ -44,8 +57,9 @@ class QuestionAgent(CoreAgent):
         """
         
         # 执行OPAR循环
-        observe_result =  await self._observe(user_input)
-        questions = await self._generate_question(observe_result)
+        self.user_input = user_input
+        self.observe_result =  await self._observe(user_input)
+        questions = await self._generate_question()
         self.finish(QuestionAgentResult(data=questions))
         return questions
         
@@ -56,94 +70,82 @@ class QuestionAgent(CoreAgent):
         
         分析用户输入，识别用户可能的需求，并在数据库中搜索相关资源。
         """
+        self.message(AgentMessageData(
+                emoji="🔍",
+                message=user_input
+            )
+        )
         # 创建Agent
-        loop_tool = LoopTool(max_loop_num=5)
         observe_agent = create_react_agent(
             model=self.model,
             tools=[
-                make_search_resource_tool(),
-                *loop_tool.tool_call,
+                make_search_resource_tool()
             ],
             checkpointer=self.checkpointer
         )
-        while loop_tool.is_loop:
-            # 6. 运行 Agent - 第一个问题
-            config = {"configurable": {"thread_id": "1"}}
-            response = await observe_agent.ainvoke(
-                {"messages": [
-                    {"role": "system", "content": f"""
-                    你是一个语言学习平台的智能观察代理。, 用户正在学习{self.uow.target_language}语言(ISO 639-1 标准)
-                    你的任务是分析当前请求下, 你需要搜索哪些信息才能完成在这个问题下用户的画像
-                    并且在数据库进行检索, 当检索完成后, 返回“done”这个string
+        # 6. 运行 Agent - 第一个问题
+        config = {"configurable": {"thread_id": "1"}}
+        response = await observe_agent.ainvoke(
+            {"messages": [
+                {"role": "system", "content": f"""
+                你是一个语言学习平台的智能观察代理。, 用户正在学习{self.uow.target_language}语言(ISO 639-1 标准)
+                你的任务是分析在当前请求下的用户画像, 如果没有找到当前的画像, 你可以回答没找到, 但是不要进行编造
 
-                    需要考虑以下几点：
-                    1. 用户当前的水平和学习目标是什么
-                    2. 你应该知道用户喜欢哪些东西, 想要学会语言最重要的是和生活与爱好相关的契机
-                    3. 你应该知道用户可能会在什么地方发生错误, 应该怎么去检索这些错误记录, 应该检索哪些错误相关的内容
-                    
-                    如果你觉得已经检索完成, 请调用stop_loop工具
-                    并且返回你对用户在这个场景下的用户画像
-                    """},
-                    {"role": "user", "content": user_input},
-                    {"role": "user", "content": loop_tool.get_loop_prompt()},
-                ]},
-                config
-            )
-            last_message = response["messages"][-1]
-            print(last_message.content)
-            self.message(
-                AgentMessageEvent(
-                    type=AgentEventType.MESSAGE,
-                    data=AgentMessageData(
-                        emoji="🔍",
-                        message=last_message.content
-                    )
-                )
-            )
-            loop_tool.loop()
+                需要考虑以下几点：
+                1. 用户当前的水平和学习目标是什么
+                2. 你应该知道用户喜欢哪些东西, 想要学会语言最重要的是和生活与爱好相关的契机
+                3. 你应该知道用户可能会在什么地方发生错误, 应该怎么去检索这些错误记录, 应该检索哪些错误相关的内容
+                
+                你应该用{self.uow.accept_language}语言回答你做了什么
+                """},
+                {"role": "user", "content": f"""
+user's memory count and category: {self.memory_service.get_user_memory_categories_with_number()}
+"""},
+                {"role": "user", "content": user_input},
+            ]},
+            config
+        )
+        last_message = response["messages"][-1]
+        print(last_message.content)
+        # self.message(AgentMessageData(
+        #             emoji="🔍",
+        #             message=last_message.content
+        #     )
+        # )
         return last_message.content
-    
     # 生成问题
-    async def _generate_question(self, user_input: str) -> List[QuestionUnion]:
+    async def _generate_question(self) -> List[QuestionUnion]:
         """
         生成问题
         """
         #创建agent
-        loop_tool = LoopTool(max_loop_num=5)
         generate_agent = create_react_agent(
             model=self.model,
             tools=[
                 # 添加question_stack的工具
-                *self.question_stack.get_tools(),
-                *loop_tool.tool_call,
+                # *self.question_stack.get_tools()
+                make_search_resource_tool()
             ],
             checkpointer=self.checkpointer
         )
-        while loop_tool.is_loop:
-            # 6. 运行 Agent - 第一个问题
-            config = {"configurable": {"thread_id": "1"}}
-            response = await generate_agent.ainvoke(
-                {"messages": [
-                    {"role": "system", "content": f"""
-                     {user_input}
-                     你需要根据要求生成7个左右的题目
-                     如果你觉得已经生成的不错了, 请调用stop_loop工具
-                     """},
-                    
-                    {"role": "user", "content": self.question_stack.get_questions_prompt()}
-                ]},
-                config
-            )
-            last_message = response["messages"][-1]
-            self.message(
-                AgentMessageEvent(
-                    type=AgentEventType.MESSAGE,
-                    data=AgentMessageData(
-                        emoji="�",
-                        message=last_message.content
-                    )
-                )
-            )
-            loop_tool.loop()
+        # 6. 运行 Agent - 第一个问题
+        config = {"configurable": {"thread_id": "1"}}
+        response = await generate_agent.ainvoke(
+            {"messages": [
+                {"role": "system", "content": f"""
+你需要根据要求生成7个左右的题目
+                    """},
+                
+                {"role": "user", "content": self.question_stack.get_questions_prompt()}
+            ]},
+            config
+        )
+        last_message = response["messages"][-1]
+        # self.message(
+        #     data=AgentMessageData(
+        #         emoji="�",
+        #         message=last_message.content
+        #     )
+        # )
         
         return self.question_stack.questions

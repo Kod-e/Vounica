@@ -6,12 +6,14 @@ from app.services.common import BaseService
 from app.infra.models.grammar import Grammar
 from app.infra.context import uow_ctx
 from app.infra.repo.grammar_repository import GrammarRepository
+from app.services.common.grammar import GrammarService
 
 router = APIRouter(prefix="/grammar", tags=["grammar"])
 
 # 服务依赖
 async def get_grammar_service() -> BaseService[Grammar]:
     uow = uow_ctx.get()
+    GrammarService
     repo = GrammarRepository(db=uow.db)
     return BaseService[Grammar](repo)
 

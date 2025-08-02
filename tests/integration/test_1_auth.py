@@ -50,7 +50,7 @@ async def test_user_login(async_client):
     assert "access_token" in data, "No access token in response"
     assert "refresh_token" in data, "No refresh token in response"
 
-
+@pytest.mark.order(3)
 @pytest.mark.asyncio
 async def test_authenticated_async_client(registered_user, async_client):
     """
@@ -75,7 +75,7 @@ async def test_authenticated_async_client(registered_user, async_client):
     assert data["email"] == registered_user.get("email")
 
 
-@pytest.mark.order(4)
+@pytest.mark.order(3)
 async def test_unauthorized_access_to_refresh(async_client):
     """Test that unauthorized access to refresh token endpoint is properly rejected."""
     # 尝试在没有认证的情况下刷新token

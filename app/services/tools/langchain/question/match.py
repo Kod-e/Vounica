@@ -23,7 +23,7 @@ def add_match_question(
     message = f"MatchQuestion added, size={len(stack)}"
     return message
 # 制作函数, 注入应该注入的内容
-def build_add_match_tool(stack: List[QuestionSpec]) -> StructuredTool:
+def build_tools(stack: List[QuestionSpec]) -> StructuredTool:
     return StructuredTool.from_function(
         name="add_match_question",
         coroutine=partial(add_match_question, stack=stack),

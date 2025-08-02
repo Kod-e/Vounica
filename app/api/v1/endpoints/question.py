@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, Header, Request
 from fastapi.responses import StreamingResponse
-import asyncio, json
+import asyncio, json, urllib.parse
 from app.services.agent.question.agent import QuestionAgent
 from app.services.question.types import QuestionUnion, QuestionAdapter
 from typing import List
 from app.services.logic.question import QuestionHandler
 from app.services.question.base.spec import JudgeResult
-from app.infra.uow import UnitOfWork, get_uow
+from app.infra.uow import get_uow
 
 router = APIRouter(prefix="/question", tags=["question"])
 
@@ -14,17 +14,26 @@ router = APIRouter(prefix="/question", tags=["question"])
 # StreamingResponse 流式返回 Agent 进度与结果
 @router.post("/agent/chat/stream")
 async def make_question_by_chat_stream(
-    uow: UnitOfWork = Depends(get_uow),
-    user_input: str = Body(...)
+    uow = Depends(get_uow),
+    user_input: str = Body(...),
 ):
     """即时流式返回 Agent 进度与结果 (SSE)。"""
-
     question_agent = QuestionAgent()
-    headers = {
-        "Cache-Control": "no-cache",
-        "X-Accel-Buffering": "no",
-    }
-    return StreamingResponse(question_agent.run_stream(user_input), media_type="text/agent-event-stream", headers=headers)
+    # 进行URL解码
+    user_input = urllib.parse.unquote(user_input)
+    async def event_gen():
+        async for ev in question_agent.run_stream(user_input):
+            # SSE 帧必须以 \n\n 结束；加 data: 兼容浏览器
+            yield f"data:{ev.model_dump()}\n\n"
+
+    return StreamingResponse(
+        event_gen(),                      # ← 传包装后的 async-generator
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 @router.post("/agent/chat", response_model=List[QuestionUnion])
 async def make_question_by_chat(
