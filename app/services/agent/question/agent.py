@@ -19,7 +19,7 @@ from app.services.tools.langchain import make_search_resource_tool, QuestionStac
 from langchain_openai import ChatOpenAI
 import logging, langchain
 langchain.debug = True
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 from app.services.agent.core.schema import AgentEventType, AgentMessageEvent, AgentMessageData
 from app.services.agent.question.schema import QuestionAgentResult
 from app.services.common.memory import MemoryService
@@ -123,8 +123,8 @@ user's memory count and category: {self.memory_service.get_user_memory_categorie
             model=self.model,
             tools=[
                 # 添加question_stack的工具
-                # *self.question_stack.get_tools()
-                make_search_resource_tool()
+                *self.question_stack.get_tools()
+                # make_search_resource_tool()
             ],
             checkpointer=self.checkpointer
         )

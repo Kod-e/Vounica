@@ -22,7 +22,9 @@ def gather_tools(stack) -> List[StructuredTool]:
         build = getattr(module, "build_tools", None)
         if build is None:
             continue
-        built = build(stack)
+        # 对每个子模块注入 QuestionStack 的内部列表 `questions`，
+        # 避免在 add_*_question 中直接调用 `append` 时出现属性缺失错误。
+        built = build(stack.questions)
         if isinstance(built, list):
             tools.extend(built)
         elif built is not None:

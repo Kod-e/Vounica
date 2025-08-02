@@ -4,26 +4,36 @@ from langchain_core.tools import StructuredTool
 from functools import partial
 from pydantic import BaseModel, Field
 from app.services.question.base.spec import QuestionSpec
-
+from app.services.question.types import QuestionUnion
 # 搜索参数
+class AnswerPair(BaseModel):
+    left: str = Field(..., description="Left option")
+    right: str = Field(..., description="Right option")
 class QuestionArgs(BaseModel):
     stem: str = Field(..., description="Question stem")
     left_options: List[str] = Field(..., description="Left options list")
     right_options: List[str] = Field(..., description="Right options list")
-    correct_answer: List[Tuple[str, str]] = Field(..., description="Correct answer")
+    correct_answer: List[AnswerPair] = Field(..., description="Correct answer pairs")
 # 创建题
-def add_match_question(
-    stack: List[QuestionSpec],
-    stem: str, 
-    options: List[str], 
-    correct_answer: str
+async def add_match_question(
+    stack: List[QuestionUnion],
+    stem: str,
+    left_options: List[str],
+    right_options: List[str],
+    correct_answer: List[AnswerPair]
 ) -> str:
-    question = MatchQuestion(stem=stem, options=options, correct_answer=correct_answer)
+    correct_pairs: List[Tuple[str, str]] = [(pair.left, pair.right) for pair in correct_answer]
+    question = MatchQuestion(
+        stem=stem,
+        left_options=left_options,
+        right_options=right_options,
+        correct_answer=correct_pairs,
+    )
     stack.append(question)
     message = f"MatchQuestion added, size={len(stack)}"
     return message
 # 制作函数, 注入应该注入的内容
-def build_tools(stack: List[QuestionSpec]) -> StructuredTool:
+def build_tools(stack: List[QuestionUnion]) -> StructuredTool:
     return StructuredTool.from_function(
         name="add_match_question",
         coroutine=partial(add_match_question, stack=stack),
