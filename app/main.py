@@ -10,7 +10,6 @@ from fastapi import FastAPI, APIRouter
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.api.v1.router import router as v1_router
 
-# 注入 core providers
 from app.core.vector import make_qdrant_client
 from app.core.db import make_async_session_maker, get_engine
 from app.core.redis import make_redis_client
@@ -63,6 +62,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router, prefix="/health")
     return app
 
+app = create_app()
+
 if __name__ == "__main__":
-    app = create_app()
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True) 
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True) 
