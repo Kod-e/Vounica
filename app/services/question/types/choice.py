@@ -7,7 +7,7 @@ Choice question implementation based on QuestionSpec.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 
 from pydantic import Field
 
@@ -30,8 +30,8 @@ class ChoiceQuestion(QuestionSpec):
     correct_answer: str
     # 用户答案
     answer: Optional[str] = None
-    question_type: QuestionType = Field(
-       default=QuestionType.CHOICE
+    question_type: Literal[QuestionType.CHOICE] = Field(
+        default=QuestionType.CHOICE, description="discriminator"
     )
     # 描述题目
     def prompt(self) -> str:

@@ -6,13 +6,29 @@ from app.services.question.types import QuestionUnion, QuestionAdapter
 from typing import List
 from app.services.logic.question import QuestionHandler
 from app.services.question.base.spec import JudgeResult
+from app.services.agent.core.schema import AgentEvent, AgentMessageEvent
+from app.services.agent.question.schema import QuestionAgentResult, QuestionAgentEventUnion
 from app.infra.uow import get_uow
 
 router = APIRouter(prefix="/question", tags=["question"])
 
 
 # StreamingResponse 流式返回 Agent 进度与结果
-@router.post("/agent/chat/stream")
+@router.post(
+    "/agent/chat/stream",
+    response_model=QuestionAgentEventUnion,   # 让它进入 components.schemas
+    responses={
+        200: {
+            "description": "SSE stream; each 'data:' line is one JSON QuestionAgentEventUnion",
+            "content": {
+                "text/event-stream": {
+                    # 添加Json路径
+                    "schema": {"$ref": "#/components/schemas/QuestionAgentEventUnion"}
+                }
+            }
+        }
+    }
+)
 async def make_question_by_chat_stream(
     uow = Depends(get_uow),
     user_input: str = Body(...),
@@ -24,7 +40,7 @@ async def make_question_by_chat_stream(
     async def event_gen():
         async for ev in question_agent.run_stream(user_input):
             # SSE 帧必须以 \n\n 结束；加 data: 兼容浏览器
-            yield f"data:{ev.model_dump()}\n\n"
+            yield "data: " + ev.model_dump_json() + "\n\n"
 
     return StreamingResponse(
         event_gen(),                      # ← 传包装后的 async-generator

@@ -4,7 +4,7 @@ Match question implementation based on QuestionSpec.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Literal
 
 from pydantic import Field
 
@@ -30,8 +30,8 @@ class MatchQuestion(QuestionSpec):
     # 用户答案
     answer: Optional[List[Tuple[str, str]]] = None
     # 题目类型
-    question_type: QuestionType = Field(
-       default=QuestionType.MATCH
+    question_type: Literal[QuestionType.MATCH] = Field(
+        default=QuestionType.MATCH, description="discriminator"
     )
     
     # 描述题目

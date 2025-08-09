@@ -6,7 +6,7 @@ Assembly question implementation based on QuestionSpec.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 
 from pydantic import Field
 
@@ -29,8 +29,8 @@ class AssemblyQuestion(QuestionSpec):
     correct_answer: List[str]
     # 用户答案
     answer: Optional[List[str]] = None
-    question_type: QuestionType = Field(
-       default=QuestionType.ASSEMBLY
+    question_type: Literal[QuestionType.ASSEMBLY] = Field(
+        default=QuestionType.ASSEMBLY, description="discriminator"
     )
     
     # 描述题目
