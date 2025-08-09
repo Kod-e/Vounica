@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
-from jose import JWTError, jwt
+import jwt
+from jwt import InvalidTokenError
 from app.core.exceptions.auth.invalid_token import InvalidTokenException
 from dotenv import load_dotenv
 import os
@@ -52,10 +53,10 @@ def verify_access_token(token: str) -> Dict[str, Any]:
     """校验 token 并返回 payload。
 
     Raises:
-        JWTError: token 无效或过期。
+        InvalidTokenException: token 无效或过期。
     """
     try:
         payload = jwt.decode(token, _PUBLIC_KEY, algorithms=[ALGORITHM])
         return payload
-    except JWTError as exc:
+    except InvalidTokenError as exc:
         raise InvalidTokenException() from exc 

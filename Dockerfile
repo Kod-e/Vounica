@@ -1,8 +1,11 @@
-# 使用官方的Python 3.14基础镜像
-FROM python:3.14-slim
+# 使用官方的Python 3.13基础镜像
+FROM python:3.13-slim
 
-# 安装curl
-RUN apt-get update && apt-get install -y curl
+# 应用安全补丁，升级现有系统包
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
 
 # 设置工作目录
 WORKDIR /app
@@ -15,6 +18,11 @@ RUN mkdir runtime
 
 # 设置rumtime目录的权限为777
 RUN chmod -R 777 runtime
+
+# 优化 pip 行为并升级 pip
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+RUN python -m pip install --upgrade pip setuptools wheel
 
 # 安装依赖
 RUN pip install --no-cache-dir -r requirements.txt

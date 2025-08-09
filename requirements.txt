@@ -17,10 +17,10 @@ dataclasses-json==0.6.7
 decorator==5.2.1
 distro==1.9.0
 dnspython==2.7.0
-ecdsa==0.19.1
+# ecdsa removed; using PyJWT+cryptography for ES256
 email_validator==2.2.0
 fakeredis==2.30.2
-fastapi==0.105.0
+fastapi==0.115.6
 frozenlist==1.7.0
 greenlet==3.2.3
 grpcio==1.73.1
@@ -74,7 +74,8 @@ pytest-order==1.3.0
 pytest-tornasync==0.6.0.post2
 pytest-trio==0.8.0
 python-dotenv==1.1.1
-python-jose==3.5.0
+# python-jose removed; use PyJWT for JWT
+PyJWT[crypto]==2.10.1
 pytz==2025.2
 PyYAML==6.0.2
 qdrant-client==1.14.3
@@ -87,7 +88,7 @@ six==1.17.0
 sniffio==1.3.1
 sortedcontainers==2.4.0
 SQLAlchemy==2.0.41
-starlette==0.27.0
+starlette==0.40.0
 tenacity==9.1.2
 tiktoken==0.9.0
 tornado==6.5.1
