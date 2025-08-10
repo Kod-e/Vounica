@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 from dotenv import load_dotenv
 import os
+from sqlalchemy import text
+from sqlalchemy.inspection import inspect
 
 _session_maker: async_sessionmaker[AsyncSession] | None = None
 _engine: AsyncEngine | None = None
@@ -66,12 +68,22 @@ def make_async_session_maker(database_url: str | None = None, **engine_kwargs) -
         pool_recycle=3600,
     )
     default_kwargs.update(engine_kwargs)
-
+    
     engine: AsyncEngine = create_async_engine(database_url, **default_kwargs)
-
+    # 检测是否数据库内存在表, 不存在则创建
     session_maker = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
     # 设置session maker
     set_async_session_maker(session_maker)
     set_engine(engine)
     return session_maker 
+async def check_table_exists(engine: AsyncEngine = None):
+    if engine is None:
+        engine = get_engine()
+    # 检测是否数据库内存在表, 不存在则创建
+    async with engine.connect() as conn:
+        def _check(sync_conn):
+            insp = inspect(sync_conn)
+            # Inspector.has_table 跨方言可用；schema 对 PG 常用 'public'，MySQL 传 None
+            return insp.has_table("users")
+        return await conn.run_sync(_check)

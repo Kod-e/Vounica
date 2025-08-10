@@ -6,7 +6,6 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from app.core.db import Base  # get_db 未使用，移除以避免循环依赖警告
 from app.infra.models import *
 from app.core.vector.provider import make_qdrant_client
 from app.infra.vector.collections import COLLECTIONS_CONFIG
