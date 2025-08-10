@@ -12,7 +12,7 @@ class LoginSchema(BaseModel):
 class TokenSchema(BaseModel):
     access_token: str
     refresh_token: str
-
+    
 class RegisterResponseSchema(BaseModel):
     id: int
     email: str

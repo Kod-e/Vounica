@@ -7,7 +7,7 @@ from typing import List
 from app.services.logic.question import QuestionHandler
 from app.services.question.base.spec import JudgeResult
 from app.services.agent.core.schema import AgentEvent, AgentMessageEvent
-from app.services.agent.question.schema import QuestionAgentResult, QuestionAgentEventUnion
+from app.services.agent.question.schema import QuestionAgentEvent
 from app.infra.uow import get_uow
 
 router = APIRouter(prefix="/question", tags=["question"])
@@ -16,14 +16,14 @@ router = APIRouter(prefix="/question", tags=["question"])
 # StreamingResponse 流式返回 Agent 进度与结果
 @router.post(
     "/agent/chat/stream",
-    response_model=QuestionAgentEventUnion,   # 让它进入 components.schemas
+    response_model=QuestionAgentEvent,   # 让它进入 components.schemas
     responses={
         200: {
-            "description": "SSE stream; each 'data:' line is one JSON QuestionAgentEventUnion",
+            "description": "SSE stream; each 'data:' line is one JSON QuestionAgentEvent",
             "content": {
                 "text/event-stream": {
                     # 添加Json路径
-                    "schema": {"$ref": "#/components/schemas/QuestionAgentEventUnion"}
+                    "schema": {"$ref": "#/components/schemas/QuestionAgentEvent"}
                 }
             }
         }

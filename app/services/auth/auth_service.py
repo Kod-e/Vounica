@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 from datetime import datetime,timezone
-
+import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infra.uow  import UnitOfWork
 from app.core.auth.password import hash_password, verify_password
@@ -13,6 +13,10 @@ from app.core.exceptions.auth.invalid_token import InvalidTokenException
 from app.core.exceptions.auth.invalid_credentials import InvalidCredentialsException
 from app.core.exceptions.common.bad_request import BadRequestException  # assume exists
 
+
+import os
+
+DOMAIN = os.getenv("DOMAIN", 'local')
 
 class AuthService:
     """Registration, login, refresh token logic."""
@@ -40,6 +44,18 @@ class AuthService:
                 "name": name,
                 "email": email,
                 "password": hash_password(password),
+            },
+        )
+        return user
+    
+    async def guest(self, db: AsyncSession):
+        self._init_repos(db)
+        new_uuid = str(uuid.uuid4()).lower()
+        user = await self._user_repo.create(
+            {
+                "name": f"Guest {new_uuid}",
+                "email": f"guest.{new_uuid}@{DOMAIN}.com",
+                "password": hash_password(new_uuid),
             },
         )
         return user

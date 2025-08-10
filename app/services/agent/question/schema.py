@@ -1,5 +1,5 @@
 from typing import Annotated, List, Union
-from pydantic import Field
+from pydantic import Field, RootModel
 from app.services.agent.core.schema import AgentMessageEvent, AgentResultEvent
 from app.services.question.types import QuestionUnion
 
@@ -12,3 +12,5 @@ QuestionAgentEventUnion = Annotated[
     Union[AgentMessageEvent, QuestionAgentResult],
     Field(discriminator="type"),
 ]
+class QuestionAgentEvent(RootModel[QuestionAgentEventUnion]):
+    pass

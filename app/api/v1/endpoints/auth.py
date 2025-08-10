@@ -13,7 +13,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
     return AuthService(db=db)
 
-
+# 注册
 @router.post("/register", response_model=RegisterResponseSchema)
 async def register(
     body: RegisterSchema, 
@@ -29,6 +29,19 @@ async def register(
     except AppException as exc:
         raise HTTPException(status_code=exc.code, detail=exc.to_dict())
 
+# 获得一个Guest用户和Mail用户
+@router.post("/guest", response_model=TokenSchema)
+@router.get("/guest", response_model=TokenSchema)
+async def guest(
+    db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    try:
+        user = await auth_service.guest(db)
+        access_token, refresh = await auth_service.login(db, user.email, user.password)
+        return TokenSchema(access_token=access_token, refresh_token=refresh)
+    except AppException as exc:
+        raise HTTPException(status_code=exc.code, detail=exc.to_dict())
 
 @router.post("/login", response_model=TokenSchema)
 async def login(
