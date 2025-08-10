@@ -58,7 +58,11 @@ class AuthService:
                 "password": hash_password(new_uuid),
             },
         )
-        return user
+        assess_token = create_access_token(user.id)
+        rt_data = self._rt_repo.model.create_token(user.id)
+        # rt_data已经是一个字典，不需要再调用__dict__
+        await self._rt_repo.create(rt_data)
+        return assess_token, rt_data["token"]
 
     async def login(self, db: AsyncSession, email: str, password: str):
         self._init_repos(db)

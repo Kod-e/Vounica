@@ -38,7 +38,7 @@ async def guest(
 ):
     try:
         user = await auth_service.guest(db)
-        access_token, refresh = await auth_service.login(db, user.email, user.password)
+        access_token, refresh = await auth_service.guest(db)
         return TokenSchema(access_token=access_token, refresh_token=refresh)
     except AppException as exc:
         raise HTTPException(status_code=exc.code, detail=exc.to_dict())
