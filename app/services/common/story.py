@@ -22,5 +22,22 @@ class StoryService(BaseService[Story]):
             limit=limit,
             language=self._uow.target_language if only_target_language else None
         )
+        
+    # 获得用户所有故事的category
+    async def get_user_story_categories(self) -> List[str]:
+        """Get the user's all story categories."""
+        return await self._repo.get_user_story_categories(
+            user_id=self._uow.current_user.id
+        )
+    
+    # 从Category中获取故事list
+    async def get_story_by_category(self, category: str, limit: int = 50, offset: int = 0) -> List[Story]:
+        """Get the user's stories by category."""
+        return await self._repo.get_story_by_category(
+            user_id=self._uow.current_user.id,
+            category=category,
+            limit=limit,
+            offset=offset
+        )
 
 __all__ = ["StoryService"] 

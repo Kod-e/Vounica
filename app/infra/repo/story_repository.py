@@ -20,3 +20,17 @@ class StoryRepository(Repository[Story]):
             query = query.where(Story.language == language)
         stories = await self.db.execute(query.offset(offset).limit(limit))
         return stories.scalars().all()
+    
+    # 获取用户的所有故事的category
+    async def get_user_story_categories(self, user_id: int) -> List[str]:
+        """Get the user's all story categories."""
+        query = select(Story.category).where(Story.user_id == user_id).distinct()
+        result = await self.db.execute(query)
+        return result.scalars().all()
+    
+    # 从Category中获取故事list
+    async def get_story_by_category(self, user_id: int, category: str, limit: int = 50, offset: int = 0) -> List[Story]:
+        """Get the user's stories by category."""
+        query = select(Story).where(Story.user_id == user_id, Story.category == category).offset(offset).limit(limit)
+        result = await self.db.execute(query)
+        return result.scalars().all()

@@ -50,4 +50,24 @@ async def get_stories(
 ):
     stories = await story_service.get_user_stories(offset=offset, limit=limit, only_target_language=only_target_language)
     # 使用TypeAdapter进行高效验证，但FastAPI要求response_model为标准类型
-    return StorySchemaListAdapter.validate_python(stories) 
+    return StorySchemaListAdapter.validate_python(stories)
+
+# 获取用户的所有故事的category
+@router.get("/categories", response_model=List[str])
+async def get_story_categories(
+    uow: UnitOfWork = Depends(get_uow),
+    story_service: StoryService = Depends(get_story_service)
+):
+    return await story_service.get_user_story_categories()
+
+# 从Category中获取故事list
+@router.get("/category/page", response_model=List[StorySchema])
+async def get_story_by_category(
+    uow: UnitOfWork = Depends(get_uow),
+    story_service: StoryService = Depends(get_story_service),
+    category: str = Query(...),
+    limit: int = 50,
+    offset: int = 0
+):
+    stories = await story_service.get_story_by_category(category, limit, offset)
+    return StorySchemaListAdapter.validate_python(stories)
