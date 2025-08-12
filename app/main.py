@@ -5,6 +5,7 @@ import uvicorn
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from fastapi import FastAPI, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
 
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -61,6 +62,31 @@ def create_app() -> FastAPI:
         description="Vounica API",
         version="0.1.0",
         lifespan=lifespan,
+    )
+
+    # CORS 配置
+    cors_origins_env = os.getenv("CORS_ORIGINS")
+    if cors_origins_env and cors_origins_env.strip():
+        try:
+            import json
+            parsed = json.loads(cors_origins_env)
+            if isinstance(parsed, list):
+                allow_origins = [str(origin).strip() for origin in parsed if str(origin).strip()]
+            else:
+                allow_origins = [o.strip() for o in str(cors_origins_env).split(",") if o.strip()]
+        except Exception:
+            allow_origins = [o.strip() for o in str(cors_origins_env).split(",") if o.strip()]
+        allow_credentials = True
+    else:
+        allow_origins = ["*"]
+        allow_credentials = False
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allow_origins,
+        allow_credentials=allow_credentials,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     # 注册路由
