@@ -61,6 +61,18 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
+        },
+        {
+            "name": "Run FastAPI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "UVICORN_RELOAD": "false"
+            }
         }
     ]
 }

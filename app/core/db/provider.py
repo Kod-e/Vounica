@@ -56,7 +56,7 @@ def make_async_session_maker(database_url: str | None = None, **engine_kwargs) -
     if database_url is None:
         database_url = os.getenv(
             "DATABASE_URL",
-            "mysql+aiomysql://user:password@localhost:3306/vounica",
+            "postgresql+asyncpg://vounica:vounicapass@localhost:5432/vounica",
         )
 
     # 默认参数创建
