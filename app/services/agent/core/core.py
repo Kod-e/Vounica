@@ -23,7 +23,8 @@ class CoreAgent:
         self.high_model = ChatOpenAI(model=LLMModel.HIGH.value["name"])
         self.low_model = ChatOpenAI(model=LLMModel.LOW.value["name"])
         self.checkpointer = InMemorySaver()
-        
+        # 最后的Event
+        self.last_event: Optional[AgentEvent] = None
         # 消息队列
         self._message_queue: asyncio.Queue = asyncio.Queue()
         self._loop = asyncio.get_running_loop()
@@ -57,7 +58,6 @@ class CoreAgent:
     # event 方法, 代替message方法, 直接发出AgentEvent
     def event(self, event: AgentEvent):
         self._loop.call_soon_threadsafe(self._message_queue.put_nowait, event)
-        
     # 持续向外部stream消息, 每个消息必须是一个AgentEvent对象, 并且可以被直接放到FastAPI的StreamingResponse中
     async def run_stream(self, *args):
         agent_task = asyncio.create_task(self.run(*args))
@@ -80,7 +80,6 @@ class CoreAgent:
 
             if t == "on_chat_model_start":
                 self.event(AgentThinkingEvent())
-
             elif t == "on_chat_model_stream":
                 if self.is_streaming == False:
                     self.is_streaming = True
@@ -90,19 +89,29 @@ class CoreAgent:
                 text = getattr(chunk, "content", None)
                 if text:
                     self.stream_cache += text
-                    self.event(AgentStreamChunkEvent(data=AgentStreamChunkData(chunk=text)))
+                    self.event(AgentStreamChunkEvent(
+                        data=AgentStreamChunkData(chunk=text)
+                    ))
 
             elif t == "on_chat_model_end":
+                # self.message(AgentMessageData(
+                #     emoji="💬",
+                #     message=self.stream_cache
+                # ))
                 self.event(AgentStreamEndEvent())
                 self.is_streaming = False
 
             elif t == "on_tool_end":
-                self.event(
-                    AgentToolCallEvent(data=AgentToolData(tool_name=name, tool_input=data.get("input", "")))
-                )
+                self.event(AgentToolCallEvent(
+                    data = AgentToolData(
+                        tool_name=name,
+                        tool_input="test"
+                    )
+                ))
 
             elif t == "on_chain_end":
                 # 整个子链/节点收尾
-                pass
+                if self.last_event:
+                    self.event(self.last_event)
             
             print("event",t,"name", name, "data")

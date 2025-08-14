@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from enum import Enum
-from typing import Literal
+from typing import Literal,Dict,Any
 
 class AgentEventType(str, Enum):
     MESSAGE = "message"
@@ -57,3 +57,6 @@ class AgentMessageEvent(AgentEvent):
 class AgentResultEvent(AgentEvent):
     type: Literal[AgentEventType.RESULT] = Field(default=AgentEventType.RESULT)
     data: BaseModel
+class AgentResultEventDict(AgentEvent):
+    type: Literal[AgentEventType.RESULT] = Field(default=AgentEventType.RESULT)
+    data: Dict[str, Any]
