@@ -5,7 +5,6 @@ from typing import Literal
 class AgentEventType(str, Enum):
     MESSAGE = "message"
     RESULT = "result"
-    
 
 class AgentEvent(BaseModel):
     type: AgentEventType

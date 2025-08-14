@@ -1,10 +1,11 @@
 from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple, cast, abstractmethod
+from langgraph.graph.state import CompiledStateGraph
 import json, asyncio
 from pydantic import BaseModel
 from app.infra.context import uow_ctx
 from app.llm import chat_completion, LLMModel
-from app.services.agent.core.schema import AgentEventType, AgentEvent, AgentMessageEvent, AgentResultEvent
+from app.services.agent.core.schema import AgentEventType, AgentEvent, AgentMessageEvent, AgentResultEvent, AgentMessageData
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from app.services.tools.langchain import make_search_resource_tool, QuestionStack, LoopTool
@@ -26,6 +27,12 @@ class CoreAgent:
         # 消息队列
         self._message_queue: asyncio.Queue = asyncio.Queue()
         self._loop = asyncio.get_running_loop()
+        
+        # stream缓存
+        self.stream_cache: str = ""
+        
+        # 是否正在stream
+        self.is_streaming: bool = False
 
 
 
@@ -60,3 +67,43 @@ class CoreAgent:
                 break
         # 确保AgentTask完成
         await agent_task
+    
+    # 持续向外部发送stream event, 通过agent和payload, config
+    async def run_stream_events(self, agent:CompiledStateGraph , payload: Dict[str, Any], config: Dict[str, Any]):
+        async for ev in agent.astream_events(payload, config=config, version="v2"):
+            t = ev["event"]
+            name = ev.get("name")  # 哪个节点/模型/工具
+            data = ev.get("data", {})
+
+            if t == "on_chat_model_start":
+                self.message(AgentMessageData(emoji="🌀", message=f"正在思考…（{name}）"))
+
+            elif t == "on_chat_model_stream":
+                if self.is_streaming == False:
+                    self.is_streaming = True
+                    self.stream_cache = ""
+                chunk = data.get("chunk")
+                # 兼容 AIMessageChunk 或 provider 自定义结构
+                text = getattr(chunk, "content", None)
+                if text:
+                    # self.message(AgentMessageData(emoji="💬", message=text))
+                    self.stream_cache += text
+
+            elif t == "on_chat_model_end":
+                self.message(AgentMessageData(
+                    emoji="💬",
+                    message=self.stream_cache
+                ))
+                self.is_streaming = False
+
+            elif t == "on_tool_start":
+                self.message(AgentMessageData(emoji="🔧", message=f"调用 {name}…"))
+
+            elif t == "on_tool_end":
+                self.message(AgentMessageData(emoji="🧩", message=f"{name} 完成"))
+
+            elif t == "on_chain_end":
+                # 整个子链/节点收尾
+                pass
+            
+            print("event",t,"name", name, "data")

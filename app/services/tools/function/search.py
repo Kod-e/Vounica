@@ -108,6 +108,9 @@ async def search_resource(
         limit:   Max rows.
     """
     uow = uow_ctx.get()
+    #小写resource和field
+    resource = resource.lower()
+    field = field.lower()
     
     # 检查是否是一个合法的资源
     if resource not in _SEARCH_META:

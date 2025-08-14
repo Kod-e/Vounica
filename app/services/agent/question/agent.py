@@ -1,4 +1,5 @@
 from __future__ import annotations
+from urllib import response
 
 """
 使用 OPAR 循环实现的 QuestionAgent 类。
@@ -55,146 +56,82 @@ class QuestionAgent(CoreAgent):
         
         # 执行OPAR循环
         self.user_input = user_input
-        self.observe_result =  await self._observe(user_input)
-        self.plan_result = await self._plan_question()        
-        questions = await self._generate_question()
-        self.finish(QuestionAgentResult(data=questions))
-        return questions
-        
-    
+        self.observe_result =  await self._observe(user_input)        
+        self.finish(QuestionAgentResult(data=[]))
+        return []
+
     async def _observe(self, user_input: str) -> None:
         """
         观察阶段：观察用户上下文并搜索相关信息。
         
         分析用户输入，识别用户可能的需求，并在数据库中搜索相关资源。
         """
-        self.message(AgentMessageData(
-                emoji="🔍",
-                message=user_input
-            )
-        )
         # 创建Agent
         observe_agent = create_react_agent(
             model=self.low_model,
             tools=[
-                make_search_resource_tool()
-            ],
-            checkpointer=self.checkpointer
-        )
-        # 6. 运行 Agent - 第一个问题
-        config = {"configurable": {"thread_id": "1"}}
-        response = await observe_agent.ainvoke(
-            {"messages": [
-                {"role": "system", "content": f"""
-你是一个语言学习平台的智能观察代理。, 用户正在学习{self.uow.target_language}语言(ISO 639-1 标准)
-你的任务是分析在当前请求下的用户画像, 如果没有找到当前的画像, 你可以回答没找到, 但是不要进行编造
-
-需要考虑以下几点：
-1. 用户当前的水平和学习目标是什么
-2. 你应该知道用户喜欢哪些东西, 想要学会语言最重要的是和生活与爱好相关的契机
-3. 你应该知道用户可能会在什么地方发生错误, 应该怎么去检索这些错误记录, 应该检索哪些错误相关的内容
-
-你应该用{self.uow.accept_language}语言回答你做了什么
-                """},
-                {"role": "user", "content": f"""
-user's memory count and category: {self.memory_service.get_user_memory_categories_with_number()}
-"""},
-                {"role": "user", "content": user_input},
-            ]},
-            config
-        )
-        last_message = response["messages"][-1]
-        print(last_message.content)
-        self.message(AgentMessageData(
-                    emoji="🔍",
-                    message=last_message.content
-            )
-        )
-        return last_message.content
-    # 计划问题
-    async def _plan_question(self) -> str:
-        """
-        计划问题
-        """
-        # 创建agent
-        plan_agent = create_react_agent(
-            model=self.low_model,
-            tools=[],
-            checkpointer=self.checkpointer
-        )
-        # 6. 运行 Agent - 第一个问题
-        config = {"configurable": {"thread_id": "1"}}
-        response = await plan_agent.ainvoke(
-            {"messages": [
-                {"role": "system", "content": f"""
-你是一个语言学习平台的智能题目计划代理
-用户正在学习{self.uow.target_language}语言(ISO 639-1 标准)
-你的任务是根据用户的画像和用户的请求生成一个计划, 计划生成怎么样的请求
-
-计划的内容包括
-用户应该针对哪些内容进行练习
-用户可能喜欢什么, 喜欢的内容应该怎么穿插在题目里, 如果用户画像里没有相关的内容,请忽略这一条
-用户最近可能在做什么, 题目应该怎么融合用户正在做的或者未来可能做的事情的场景, 如果用户画像里没有相关的内容,请忽略这一条
-用户的水平怎么样, 针对用户请求的问题, 怎么制定题目会让用户学到东西又不至于太难
-用户画像如下:
-{self.observe_result}
-                    """},
-                
-                {"role": "user", "content": self.user_input}
-            ]},
-            config
-        )
-        last_message = response["messages"][-1]
-        self.message(AgentMessageData(
-                    emoji="📋",
-                    message=last_message.content
-            )
-        )
-        return last_message.content
-        # 6. 运行 Agent - 第一个问题
-    # 生成问题
-    async def _generate_question(self) -> List[QuestionUnion]:
-        """
-        生成问题
-        """
-        #创建agent
-        generate_agent = create_react_agent(
-            model=self.low_model,
-            tools=[
-                # 添加question_stack的工具
+                make_search_resource_tool(),
                 *self.question_stack.get_tools()
             ],
             checkpointer=self.checkpointer
         )
         # 6. 运行 Agent - 第一个问题
         config = {"configurable": {"thread_id": "1"}}
-        response = await generate_agent.ainvoke(
-            {"messages": [
+        payload = {"messages": [
                 {"role": "system", "content": f"""
-你是一个语言学习平台的智能题目生成代理
-用户正在学习{self.uow.target_language}语言(ISO 639-1 标准)
-你的任务是根据计划生成7-10个题目
+你是一个AI语言学习平台的题目生成Agent(目前开启了开发者模式)
 
-你应该保证题型的多元化,不能只有一种题目
-题目需要满足练习的要求
-题目应该符合用户的喜好和水平
-题目应该答案唯一, 不能有多个答案
-题目应该有指向性, 不能是开放性问题
-题目应该只包含语言学习, 不能包含其他内容,比如专业知识
+You Can:
+1. 使用search_resource获取用户的信息
+2. 生成题目放到QuestionStack中
 
-题目不应该放在回答里, 应该只通过工具调用生成
-回答应该不包含题目的内容, 只包含你做了什么
-                    """},
-                
-                {"role": "user", "content": self.plan_result}
-            ]},
-            config
+
+Goal:
+- 分析用户的输入, 生成适合用户的题目
+- 生成的题目会放到QuestinoStack中, 结束时用户会收到Stack内的所有题目
+- 用户正在使用{self.uow.accept_language}学习{self.uow.target_language}语言(ISO 639-1 标准)
+Constrains:
+- **如果你在过程中发生了任何疑似技术性的错误, 你应该返回错误的信息, 工程师会阅读这个信息并且修复, 所以需要尽可能的详细**
+- 在做得到的情况下, 你应该试着从数据库获取用户的喜好
+- 如果你找不到任何用户画像, 你应该尝试根据用户的需求给出测试性的练习(如A1-C1之间的渐进难度)
+- 你应该在制作过程中告诉用户你做了什么
+- 你不应该在给用户的回复中包含任何题目和答案
+- 生成的题目应该符合用户的水平
+
+
+Tools:
+
+search_resouce
+这个工具可以检索用户的信息
+
+信息分以下几类
+Memory:
+- LLM根据用户对题目的回答, 聊天, 记录的用户画像, 这个表完全由LLM管理
+
+Vocab&Grammar:
+ - 这个表记录了用户对某个单词/语法的掌握程度
+ - name代表这个单词或者语法的名称, 内部字段使用的是用户正在学习的语言记录的
+ - usage代表这个单词或者语法的使用场景, 用于区分一个相同的语法的不同场景, 以及用于方便向量查询
+
+Story:
+- 这个表记录了用户自己写的一些关于自己的故事
+
+Mistake:
+  - 这个表记录了用户的错题集
+
+add_*_question
+
+这一类工具用于添加一个Question到QuestionStack中
+
+                """},
+                {"role": "user", "content": f"""
+user's memory count and category: {await self.memory_service.get_user_memory_categories_with_number()}
+"""},
+                {"role": "user", "content": user_input},
+            ]}
+        await self.run_stream_events(
+            agent=observe_agent,
+            payload=payload,
+            config=config,
         )
-        last_message = response["messages"][-1]
-        self.message(AgentMessageData(
-                    emoji="🤔",
-                    message=last_message.content
-            )
-        )
-        print(self.question_stack.get_questions_prompt())
-        return self.question_stack.questions
+        return "生成完成"

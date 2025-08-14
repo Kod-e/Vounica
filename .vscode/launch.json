@@ -68,7 +68,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/app/main.py",
             "console": "integratedTerminal",
-            "justMyCode": false,
+            "justMyCode": true,
             "env": {
                 "PYTHONPATH": "${workspaceFolder}",
                 "UVICORN_RELOAD": "false"

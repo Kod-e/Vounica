@@ -19,13 +19,10 @@ def make_search_resource_tool() -> StructuredTool:
         coroutine=search_resource,
         description=(
             """
-检索用户在Vounica中记录的资源
-vocab: 用户单词的习得状态
-grammar: 用户语法的习得状态
-memory: 你对用户的记忆, 这个Memory只能通过LLM填写
-story: 用户自己记录的关于自己的故事和笔记
-mistake: 用户的错题本
-支持的资源
+从数据库检索用户在Vounica中记录的资源
+
+你只能检索下方的这些支持的资源, 你可以视为数据库的表和字段
+例如, 如果你需要检索vocab.name, 你应该使用resource=vocab, filed=name, 字段应该小写
 vocab.name 单词名称
 vocab.usage 单词使用场景, 由LLM生成
 grammar.name 语法名称
@@ -36,6 +33,9 @@ mistake.question 问题内容
 mistake.answer 用户的回答
 mistake.correct_answer 正确回答
 mistake.error_reason 错误原因, 由LLM生成
+
+如果你想进行语义查询(比如检索用户旅行相关的单词), 你应该用向量搜索
+否则, 你应该输入一个合法的正则表达式
             """
         ),
         args_schema=SearchArgs,

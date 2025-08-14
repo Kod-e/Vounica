@@ -39,8 +39,9 @@ async def make_question_by_chat_stream(
     user_input = urllib.parse.unquote(user_input)
     async def event_gen():
         async for ev in question_agent.run_stream(user_input):
+            result = "data: " + ev.model_dump_json() + "\n\n"
             # SSE 帧必须以 \n\n 结束；加 data: 兼容浏览器
-            yield "data: " + ev.model_dump_json() + "\n\n"
+            yield result
 
     return StreamingResponse(
         event_gen(),                      # ← 传包装后的 async-generator
