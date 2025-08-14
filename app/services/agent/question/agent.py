@@ -57,7 +57,7 @@ class QuestionAgent(CoreAgent):
         # 执行OPAR循环
         self.user_input = user_input
         self.observe_result =  await self._observe(user_input)        
-        self.finish(QuestionAgentResult(data=[]))
+        self.finish(QuestionAgentResult(data=self.question_stack.questions))
         return []
 
     async def _observe(self, user_input: str) -> None:

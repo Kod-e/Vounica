@@ -5,7 +5,7 @@ import json, asyncio
 from pydantic import BaseModel
 from app.infra.context import uow_ctx
 from app.llm import chat_completion, LLMModel
-from app.services.agent.core.schema import AgentEventType, AgentEvent, AgentMessageEvent, AgentResultEvent, AgentMessageData
+from app.services.agent.core.schema import *
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from app.services.tools.langchain import make_search_resource_tool, QuestionStack, LoopTool
@@ -54,7 +54,10 @@ class CoreAgent:
     def message(self, data: BaseModel):
         event = AgentMessageEvent(type=AgentEventType.MESSAGE, data=data)
         self._loop.call_soon_threadsafe(self._message_queue.put_nowait, event)
-    
+    # event 方法, 代替message方法, 直接发出AgentEvent
+    def event(self, event: AgentEvent):
+        self._loop.call_soon_threadsafe(self._message_queue.put_nowait, event)
+        
     # 持续向外部stream消息, 每个消息必须是一个AgentEvent对象, 并且可以被直接放到FastAPI的StreamingResponse中
     async def run_stream(self, *args):
         agent_task = asyncio.create_task(self.run(*args))
@@ -76,7 +79,7 @@ class CoreAgent:
             data = ev.get("data", {})
 
             if t == "on_chat_model_start":
-                self.message(AgentMessageData(emoji="🌀", message=f"正在思考…（{name}）"))
+                self.event(AgentThinkingEvent())
 
             elif t == "on_chat_model_stream":
                 if self.is_streaming == False:
@@ -86,21 +89,17 @@ class CoreAgent:
                 # 兼容 AIMessageChunk 或 provider 自定义结构
                 text = getattr(chunk, "content", None)
                 if text:
-                    # self.message(AgentMessageData(emoji="💬", message=text))
                     self.stream_cache += text
+                    self.event(AgentStreamChunkEvent(data=AgentStreamChunkData(chunk=text)))
 
             elif t == "on_chat_model_end":
-                self.message(AgentMessageData(
-                    emoji="💬",
-                    message=self.stream_cache
-                ))
+                self.event(AgentStreamEndEvent())
                 self.is_streaming = False
 
-            elif t == "on_tool_start":
-                self.message(AgentMessageData(emoji="🔧", message=f"调用 {name}…"))
-
             elif t == "on_tool_end":
-                self.message(AgentMessageData(emoji="🧩", message=f"{name} 完成"))
+                self.event(
+                    AgentToolCallEvent(data=AgentToolData(tool_name=name, tool_input=data.get("input", "")))
+                )
 
             elif t == "on_chain_end":
                 # 整个子链/节点收尾
