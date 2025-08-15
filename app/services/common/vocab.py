@@ -24,5 +24,13 @@ class VocabService(BaseService[Vocab]):
             limit=limit,
             language=self._uow.target_language
         )
-
+    # 获取user有多少个记录的vocab, 返回Prompt
+    async def get_user_vocab_count_prompt_for_agent(self) -> str:
+        """Get the user's vocab count prompt for agent."""
+        count = await self._repo.get_user_vocab_count(
+            user_id=self._uow.current_user.id,
+            language=self._uow.target_language
+        )
+        result_str = f"##User has {count} vocabs\n"
+        return result_str
 __all__ = ["VocabService"] 

@@ -2,7 +2,7 @@ from app.core.db.repository import Repository
 from ..models import Vocab
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 
 class VocabRepository(Repository[Vocab]):
@@ -22,4 +22,9 @@ class VocabRepository(Repository[Vocab]):
         vocabs = await self.db.execute(query.offset(offset).limit(limit))
         return vocabs.scalars().all()
     
-    
+    # 获取用户有多少个记录的vocab, 必须传递language
+    async def get_user_vocab_count(self, user_id: int, language: str) -> int:
+        """Get the user's vocab count."""
+        query = select(func.count(Vocab.id)).where(Vocab.user_id == user_id).where(Vocab.language == language)
+        result = await self.db.execute(query)
+        return result.scalar()

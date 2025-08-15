@@ -67,6 +67,55 @@ class MemoryService(BaseService[Memory]):
             limit=limit,
             offset=offset
         )
-
+        
+    # 获取数据库里关于User Memory数量的统计
+    async def get_user_memory_count_prompt_for_agent(self) -> str:
+        """Get the user's memory count."""
+        result_str = "#User's Memory Count\n"
+        count_dict = await self._repo.get_category_counts(
+            user_id=self._uow.current_user.id
+        )
+        if len(count_dict) == 0:
+            result_str += "No Any memory\n"
+        else:
+            for category, count in count_dict.items():
+                result_str += f"{category}: {count}\n"
+        return result_str
+        
+    # 获取用户最重要的N条记忆的summar, 并且分类
+    async def get_user_memory_summary_prompt_for_agent(self, limit: int = 150) -> str:
+        """Get the user's most important memories summary."""
+        result_dict = {}
+        # 利用MemoryRepository获取用户最重要的几条记忆
+        memories = await self._repo.get_memory_by_language(
+            user_id=self._uow.current_user.id,
+            language=self._uow.target_language,
+            limit=limit
+        )
+        result_str = "#User's Memory Summary\n"
+        result_str += f"ID|Time|Summary|Priority|Language ISO 639-1(if is not from target language, it will be show, if is from target language, it will be hidden)\n"
+        if len(memories) == 0:
+            result_str += "No Any memory\n"
+            return result_str
+        for memory in memories:
+            # 检测result_dict里是否存在memory.category, 如果不存在, 则添加
+            if memory.category not in result_dict:
+                result_dict[memory.category] = []
+            # 添加memory.summary到result_dict[memory.category]
+            # 如果不是当前语言, 后方添加来自其他语言
+            if memory.language != self._uow.target_language:
+                result_dict[memory.category].append(
+                    f"{memory.id}|{memory.updated_at.strftime('%Y-%m-%d')}|{memory.summary}|{memory.priority}|THIS MEMORY IS FROM {memory.language}"
+                )
+            else:
+                result_dict[memory.category].append(
+                    f"{memory.id}|{memory.updated_at.strftime('%Y-%m-%d')}|{memory.summary}|{memory.priority}"
+            )
+        # 遍历result_dict的key
+        for category, memories in result_dict.items():
+            result_str += f"##{category}\n"
+            for memory in memories:
+                result_str += f"{memory}\n"
+        return result_str
 
 __all__ = ["MemoryService"] 

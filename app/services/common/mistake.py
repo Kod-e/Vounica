@@ -26,5 +26,15 @@ class MistakeService(BaseService[Mistake]):
             limit=limit,
             offset=offset
         )
+        
+    # 获取用户有多少道错题, 返回Prompt
+    async def get_user_mistake_count_prompt_for_agent(self) -> str:
+        """Get the user's mistake count prompt for agent."""
+        count = await self._repo.get_user_mistake_count(
+            user_id=self._uow.current_user.id,
+            language=self._uow.target_language
+        )
+        result_str = f"##User has {count} mistakes\n"
+        return result_str
 
 __all__ = ["MistakeService"] 

@@ -13,5 +13,14 @@ class GrammarService(BaseService[Grammar]):
         self._repo: GrammarRepository = GrammarRepository(db=self._uow.db)
         super().__init__(self._repo)
 
+    # 获取用户有多少个记录的grammar, 必须传递language
+    async def get_user_grammar_count_prompt_for_agent(self) -> str:
+        """Get the user's grammar count."""
+        count = await self._repo.get_user_grammar_count(
+            user_id=self._uow.current_user.id,
+            language=self._uow.target_language
+        )
+        result_str = f"##User has {count} grammars\n"
+        return result_str
 
 __all__ = ["GrammarService"] 

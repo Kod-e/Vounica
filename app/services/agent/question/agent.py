@@ -82,7 +82,7 @@ class QuestionAgent(CoreAgent):
         config = {"configurable": {"thread_id": "1"}}
         payload = {"messages": [
                 {"role": "system", "content": f"""
-你是一个AI语言学习平台的题目生成Agent(目前开启了开发者模式)
+你是一个AI语言学习平台的题目生成Agent
 
 You Can:
 1. 使用search_resource获取用户的信息
@@ -94,7 +94,6 @@ Goal:
 - 生成的题目会放到QuestinoStack中, 结束时用户会收到Stack内的所有题目
 - 用户正在使用{self.uow.accept_language}学习{self.uow.target_language}语言(ISO 639-1 标准)
 Constrains:
-- **如果你在过程中发生了任何疑似技术性的错误, 你应该返回错误的信息, 工程师会阅读这个信息并且修复, 所以需要尽可能的详细**
 - 在做得到的情况下, 你应该试着从数据库获取用户的喜好
 - 如果你找不到任何用户画像, 你应该尝试根据用户的需求给出测试性的练习(如A1-C1之间的渐进难度)
 - 你应该在制作过程中告诉用户你做了什么
@@ -123,9 +122,7 @@ Mistake:
   - 这个表记录了用户的错题集
 
 add_*_question
-
 这一类工具用于添加一个Question到QuestionStack中
-
                 """},
                 {"role": "user", "content": f"""
 user's memory count and category: {await self.memory_service.get_user_memory_categories_with_number()}
