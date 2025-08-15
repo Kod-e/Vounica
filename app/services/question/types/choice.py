@@ -47,20 +47,20 @@ Correct Answer:
         return question_prompt
 
     # 判断答案
-    async def judge(self, answer: str) -> JudgeResult:
+    async def judge(self) -> JudgeResult:
         """Judge user answer against the correct answer.
         判断答案时，仅在错误情况下调用 LLM 生成 error_reason。
         """
-        is_correct = answer.strip() == self.correct_answer.strip()
+        is_correct = self.answer.strip() == self.correct_answer.strip()
 
         error_reason: str | None = None
         if not is_correct:
-            error_reason = await self.generate_error_reason(answer)
+            error_reason = await self.generate_error_reason(self.answer)
 
         return JudgeResult(
             correct=is_correct,
             question=f"{self.stem} Select -> {self.options}",
-            answer=answer,
+            answer=self.answer,
             correct_answer=self.correct_answer,
             error_reason=error_reason,
         )

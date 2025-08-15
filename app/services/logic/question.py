@@ -11,16 +11,16 @@ class QuestionHandler:
         
     
     # 处理题目, 判断错误, 并且存入mistake表
-    async def judge(self, question: QuestionUnion, answer: str) -> JudgeResult:
+    async def judge(self, question: QuestionUnion) -> JudgeResult:
         # 判断错误
-        judge_result: JudgeResult = await question.judge(answer)
+        judge_result: JudgeResult = await question.judge()
         return judge_result
     
     # 记录用户的回答（同时并发执行 judge，不做限流与去重）
-    async def record(self, questions: List[QuestionSpec], answer: str) -> List[JudgeResult]:
+    async def record(self, questions: List[QuestionSpec]) -> List[JudgeResult]:
         # 这里的questions应该是前端传回来的log列表, 可能会有重复的题目, 但是重复代表用户错误了多次, 应该记录多次错题集
         results: List[JudgeResult] = await asyncio.gather(
-            *(self.judge(q, answer) for q in questions),
+            *(self.judge(q) for q in questions),
             return_exceptions=False,
         )
 

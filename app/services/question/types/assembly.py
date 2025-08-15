@@ -63,28 +63,34 @@ Correct Answer:
         return text
 
     # 判断答案
-    async def judge(self, answer: List[str]) -> JudgeResult:
+    async def judge(self) -> JudgeResult:
         """Judge user answer against the correct answer using lenient string comparison.
         答案(こたえ)を緩(ゆる)く比較(ひかく)します。
         """
-        if not answer:
+        if not self.answer:
             return JudgeResult(
                 correct=False,
-                error_reason=await self.generate_error_reason(answer)
+                error_reason=await self.generate_error_reason(self.answer)
             )
 
-        is_correct = self._normalize_tokens(answer) == self._normalize_tokens(self.correct_answer)
+        is_correct = self._normalize_tokens(self.answer) == self._normalize_tokens(self.correct_answer)
 
         if not is_correct:
             return JudgeResult(
                 correct=False,
-                error_reason=await self.generate_error_reason(answer)
+                error_reason=await self.generate_error_reason(self.answer)
             )
 
-        return JudgeResult(correct=True, error_reason=None)
+        return JudgeResult(
+            correct=True,
+            question=self.prompt(),
+            answer=self.answer,
+            correct_answer=self.correct_answer,
+            error_reason=None
+        )
 
     # 生成错误原因
-    async def generate_error_reason(self, answer: List[str]) -> str:
+    async def generate_error_reason(self) -> str:
         """调用 LLM 生成错误原因。"""
         uow = uow_ctx.get()
         response = await chat_completion(
@@ -95,7 +101,7 @@ you need to generate the user's error reason in a very short way,
 use the question's language({uow.target_language}) to generate the error reason.
 """),
                     HumanMessage(content=self.prompt() + f"""
-The user's answer is: {answer}
+The user's answer is: {self.answer}
                     """)
                 ],
             model_type=LLMModel.STANDARD.value["name"]

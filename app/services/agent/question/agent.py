@@ -70,8 +70,8 @@ class QuestionAgent(CoreAgent):
         分析用户输入，识别用户可能的需求，并在数据库中搜索相关资源。
         """
         # 创建Agent
-        observe_agent = create_react_agent(
-            model=self.low_model,
+        question_agent = create_react_agent(
+            model=self.high_model,
             tools=[
                 make_search_resource_tool(),
                 *self.question_stack.get_tools()
@@ -133,7 +133,7 @@ user's memory count and category: {await self.memory_service.get_user_memory_cat
                 {"role": "user", "content": user_input},
             ]}
         await self.run_stream_events(
-            agent=observe_agent,
+            agent=question_agent,
             payload=payload,
             config=config,
         )
