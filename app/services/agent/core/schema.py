@@ -16,7 +16,7 @@ class AgentEventType(str, Enum):
 
 class AgentEvent(BaseModel):
     type: AgentEventType
-    data: BaseModel
+    data: Any
 
 class AgentMessageData(BaseModel):
     emoji: str
@@ -56,7 +56,7 @@ class AgentMessageEvent(AgentEvent):
 
 class AgentResultEvent(AgentEvent):
     type: Literal[AgentEventType.RESULT] = Field(default=AgentEventType.RESULT)
-    data: BaseModel
+    data: Any
 class AgentResultEventDict(AgentEvent):
     type: Literal[AgentEventType.RESULT] = Field(default=AgentEventType.RESULT)
     data: Dict[str, Any]

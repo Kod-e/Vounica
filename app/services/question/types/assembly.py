@@ -18,11 +18,15 @@ from langchain_core.language_models import LanguageModelInput
 from app.llm.client import chat_completion
 from app.llm.models import LLMModel
 from app.infra.context import uow_ctx
+import re, unicodedata
 
 @register_question_type(QuestionType.ASSEMBLY)
 class AssemblyQuestion(QuestionSpec):
-    """Assembly question (fill in the blanks)."""
-    
+    """
+    Assembly question (fill in the blanks).
+
+    選択(せんたく)語(ご)の組(く)み立(た)て問題(もんだい)。
+    """
     # 题干及答案相关字段 (Pydantic 模型字段)
     stem: str
     options: List[str]
@@ -32,7 +36,7 @@ class AssemblyQuestion(QuestionSpec):
     question_type: Literal[QuestionType.ASSEMBLY] = Field(
         default=QuestionType.ASSEMBLY, description="discriminator"
     )
-    
+
     # 描述题目
     def prompt(self) -> str:
         """Return the question stem as prompt."""
@@ -45,31 +49,40 @@ Correct Answer:
 {self.correct_answer}
         """
         return question_prompt
-    
+
+    def _normalize_tokens(self, tokens: List[str]) -> str:
+        """Normalize tokens for lenient comparison (NFKC, lowercase, strip punctuation)."""
+        text = " ".join(tokens)
+        text = unicodedata.normalize("NFKC", text).lower()
+        text = re.sub(r"[“”\"‘’'`]", "", text)
+        text = re.sub(r"[\.,!\?;:]", "", text)
+        text = re.sub(r"[，。！？；：、]", "", text)
+        text = re.sub(r"[「」『』【】〔〕［］｛｝（）()〈〉《》]", "", text)
+        text = re.sub(r"[・…·•．]", "", text)
+        text = re.sub(r"\s+", " ", text).strip()
+        return text
+
     # 判断答案
     async def judge(self, answer: List[str]) -> JudgeResult:
-        """Judge user answer against the correct answer.
-        判断答案时，仅在错误情况下调用 LLM 生成 error_reason。
+        """Judge user answer against the correct answer using lenient string comparison.
+        答案(こたえ)を緩(ゆる)く比較(ひかく)します。
         """
-        # 如果答案为空，则认为答案错误
         if not answer:
             return JudgeResult(
                 correct=False,
                 error_reason=await self.generate_error_reason(answer)
             )
-        # 如果不一致，则认为答案错误
-        elif answer != self.correct_answer:
+
+        is_correct = self._normalize_tokens(answer) == self._normalize_tokens(self.correct_answer)
+
+        if not is_correct:
             return JudgeResult(
                 correct=False,
                 error_reason=await self.generate_error_reason(answer)
             )
-        # 如果一致，则认为答案正确
-        else:
-            return JudgeResult(
-                correct=True,
-                error_reason=None
-            )
-    
+
+        return JudgeResult(correct=True, error_reason=None)
+
     # 生成错误原因
     async def generate_error_reason(self, answer: List[str]) -> str:
         """调用 LLM 生成错误原因。"""

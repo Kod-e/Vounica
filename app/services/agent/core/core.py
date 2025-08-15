@@ -23,17 +23,9 @@ class CoreAgent:
         self.high_model = ChatOpenAI(model=LLMModel.HIGH.value["name"])
         self.low_model = ChatOpenAI(model=LLMModel.LOW.value["name"])
         self.checkpointer = InMemorySaver()
-        # 最后的Event
-        self.last_event: Optional[AgentEvent] = None
         # 消息队列
         self._message_queue: asyncio.Queue = asyncio.Queue()
         self._loop = asyncio.get_running_loop()
-        
-        # stream缓存
-        self.stream_cache: str = ""
-        
-        # 是否正在stream
-        self.is_streaming: bool = False
 
 
 
@@ -81,23 +73,15 @@ class CoreAgent:
             if t == "on_chat_model_start":
                 self.event(AgentThinkingEvent())
             elif t == "on_chat_model_stream":
-                if self.is_streaming == False:
-                    self.is_streaming = True
-                    self.stream_cache = ""
                 chunk = data.get("chunk")
                 # 兼容 AIMessageChunk 或 provider 自定义结构
                 text = getattr(chunk, "content", None)
                 if text:
-                    self.stream_cache += text
                     self.event(AgentStreamChunkEvent(
                         data=AgentStreamChunkData(chunk=text)
                     ))
 
             elif t == "on_chat_model_end":
-                # self.message(AgentMessageData(
-                #     emoji="💬",
-                #     message=self.stream_cache
-                # ))
                 self.event(AgentStreamEndEvent())
                 self.is_streaming = False
 
@@ -108,10 +92,4 @@ class CoreAgent:
                         tool_input="test"
                     )
                 ))
-
-            elif t == "on_chain_end":
-                # 整个子链/节点收尾
-                if self.last_event:
-                    self.event(self.last_event)
-            
             print("event",t,"name", name, "data")

@@ -67,3 +67,21 @@ async def judge_question(
 ):
     question_handler = QuestionHandler()
     return await question_handler.judge(question)
+
+# 记录用户的回答
+@router.post("/record", response_model=List[JudgeResult])
+async def record_question(
+    uow = Depends(get_uow),
+    questions: List[QuestionUnion] = Body(...)
+):
+    question_handler = QuestionHandler()
+    return await question_handler.record(questions)
+
+# 获得错误原因
+@router.post("/error_reason", response_model=str)
+async def get_error_reason(
+    uow = Depends(get_uow),
+    question: QuestionUnion = Body(...)
+):
+    question_handler = QuestionHandler()
+    return await question_handler.generate_error_reason(question)

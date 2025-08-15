@@ -18,7 +18,7 @@ from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from app.services.tools.langchain import make_search_resource_tool, QuestionStack, LoopTool
 from langchain_openai import ChatOpenAI
-from app.services.agent.core.schema import AgentMessageEvent,AgentResultEventDict
+from app.services.agent.core.schema import AgentMessageEvent,AgentResultEvent,AgentMessageData
 from app.services.agent.question.schema import QuestionAgentResult,QuestionAgentEvent
 from app.services.common.memory import MemoryService
 from app.services.common.grammar import GrammarService
@@ -59,11 +59,10 @@ class QuestionAgent(CoreAgent):
         self.observe_result =  await self._observe(user_input)        
         # self.finish(QuestionAgentResult(data=self.question_stack.questions))
         questions_dicts = [question.model_dump_json() for question in self.question_stack.questions]
-        self.last_event = (
-            AgentResultEventDict(
-                data=questions_dicts
-            )
-        )
+        self.event(
+            QuestionAgentResult(
+                data = self.question_stack.questions
+            ))
         return []
 
     async def _observe(self, user_input: str) -> None:
