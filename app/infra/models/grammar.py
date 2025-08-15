@@ -31,13 +31,13 @@ class Grammar(BaseModel):
     # 累计复习次数
     review_count = Column(Integer, default=0)
 
-    # 上次复习时间
+    # 上次复习时间(一开始准备使用的, 不过看起来项目中没用到)
     last_review_at = Column(DateTime)
 
-    # 下一次复习时间（SRS 算法计算）
+    # 下一次复习时间（SRS 算法计算）(一开始准备使用的, 不过看起来项目中没用到)
     next_review_at = Column(DateTime)
 
-    # SM-2 easiness factor，默认 2.5
+    # SM-2 easiness factor，默认 2.5(一开始准备使用的, 不过看起来项目中没用到)
     easiness_factor = Column(Float, default=2.5)
     
     # 语言, ISO 639-1 code，例如 "en", "ja", "zh"
