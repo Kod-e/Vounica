@@ -56,16 +56,14 @@ class QuestionAgent(CoreAgent):
         
         # 执行OPAR循环
         self.user_input = user_input
-        self.observe_result =  await self._observe(user_input)        
-        # self.finish(QuestionAgentResult(data=self.question_stack.questions))
-        questions_dicts = [question.model_dump_json() for question in self.question_stack.questions]
+        await self._make_questions(user_input)        
         self.event(
             QuestionAgentResult(
                 data = self.question_stack.questions
             ))
-        return []
+        return self.question_stack.questions
 
-    async def _observe(self, user_input: str) -> None:
+    async def _make_questions(self, user_input: str) -> None:
         """
         观察阶段：观察用户上下文并搜索相关信息。
         
@@ -139,4 +137,3 @@ user's memory count and category: {await self.memory_service.get_user_memory_cat
             payload=payload,
             config=config,
         )
-        return "生成完成"
