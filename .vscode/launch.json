@@ -70,9 +70,12 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env": {
-                "PYTHONPATH": "${workspaceFolder}",
-                "UVICORN_RELOAD": "false"
+              "PYTHONPATH": "${workspaceFolder}",
+              "UVICORN_RELOAD": "false",
+              "UVICORN_HOST": "0.0.0.0",
+              "UVICORN_PORT": "8000",
+              "PYTHONASYNCIODEBUG": "1"
             }
-        }
+          }
     ]
 }

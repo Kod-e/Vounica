@@ -27,7 +27,8 @@ vocab.name 单词名称
 vocab.usage 单词使用场景, 由LLM生成
 grammar.name 语法名称
 grammar.usage 语法使用场景, 由LLM生成
-memory.content 记忆的内容
+memory.content 记忆的内容, 由LLM生成
+memory.summary 记忆的总结, 由LLM生成
 story.category 故事的分类
 mistake.question 问题内容
 mistake.answer 用户的回答

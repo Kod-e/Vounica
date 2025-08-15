@@ -74,6 +74,8 @@ class QuestionAgent(CoreAgent):
             model=self.high_model,
             tools=[
                 make_search_resource_tool(),
+                self.question_stack.build_delete_question_tool(),
+                self.question_stack.build_get_questions_prompt_tool(),
                 *self.question_stack.get_tools()
             ],
             checkpointer=self.checkpointer
@@ -91,19 +93,26 @@ You Can:
 
 Goal:
 - 分析用户的输入, 生成适合用户的题目
-- 生成的题目会放到QuestinoStack中, 结束时用户会收到Stack内的所有题目
+- 在你认为生成完题目后, 使用get_questions工具检查Question是否符合QuestionRule
+- 如果Question不符合QuestionRule, 你应该删除QuestionStack中的题目, 并且重新生成题目, 之后检查, 直到符合QuestionRule为止
 - 用户正在使用{self.uow.accept_language}学习{self.uow.target_language}语言(ISO 639-1 标准)
 Constrains:
 - 在做得到的情况下, 你应该试着从数据库获取用户的喜好
-- 如果你找不到任何用户画像, 你应该尝试根据用户的需求给出测试性的练习(如A1-C1之间的渐进难度)
+- 如果你找不到任何用户画像, 你应该制作一套测试性的题目, 从最简单到最难(如A1-C1之间的渐进难度)
 - 你应该在制作过程中告诉用户你做了什么
-- 你不应该在给用户的回复中包含任何题目和答案
-- 生成的题目应该符合用户的水平
+- 生成的题目应该符合用户的水平, 并且针对用户可能的薄弱点进行训练
+QuestionRule:
+- 用户对corrent_answer不可见, 你应该只把答案安全的放到这个里面
+- 题目的答案不能在corrent_answer外出现
+- 用户不能在不掌握题目的实际知识的情况下, 通过推理已有的内容(如steam, choice)直接得出答案
+- 题目的答案应该唯一
+- 题目的答案应该正确
+- 题目的答案应该明确, 不应该存在歧义
 
 
 Tools:
 
-search_resouce
+- search_resouce
 这个工具可以检索用户的信息
 
 信息分以下几类
@@ -121,11 +130,27 @@ Story:
 Mistake:
   - 这个表记录了用户的错题集
 
-add_*_question
-这一类工具用于添加一个Question到QuestionStack中
+- delete_question
+这个工具用于删除QuestionStack中的一个题目
+
+- get_questions
+这个工具用于获取QuestionStack中的所有题目, 并且以多行文本的形式返回
+
                 """},
-                {"role": "user", "content": f"""
-user's memory count and category: {await self.memory_service.get_user_memory_categories_with_number()}
+                {"role": "system", "content": f"""
+#User Info
+- 这里记载了User在数据库中记录了多少信息, 如果你使用search_resource工具, 会在下方列出的信息内检索
+{await self.memory_service.get_user_memory_count_prompt_for_agent()}
+{await self.story_service.get_user_story_count_prompt_for_agent()}
+{await self.mistake_service.get_user_mistake_count_prompt_for_agent()}
+{await self.vocab_service.get_user_vocab_count_prompt_for_agent()}
+{await self.grammar_service.get_user_grammar_count_prompt_for_agent()}
+"""},
+                {"role": "system", "content": f"""
+{await self.memory_service.get_user_memory_summary_prompt_for_agent()}
+"""},
+                {"role": "system", "content": f"""
+{await self.story_service.get_user_story_summary_prompt_for_agent()}
 """},
                 {"role": "user", "content": user_input},
             ]}

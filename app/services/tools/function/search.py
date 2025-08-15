@@ -53,6 +53,7 @@ _SEARCH_META: Dict[ResourceLiteral, Dict[str, Any]] = {
         "model": _memory_model.Memory,
         "fields": {
             "content": {"vector": True, "collection": VectorCollection.MEMORY_CONTENT},
+            "summary": {"vector": True, "collection": VectorCollection.MEMORY_SUMMARY},
         },
     },
     "story": {

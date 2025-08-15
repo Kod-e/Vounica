@@ -9,9 +9,12 @@ from app.services.agent.core.schema import *
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from app.services.tools.langchain import make_search_resource_tool, QuestionStack, LoopTool
+from app.services.common import MemoryService, StoryService, MistakeService, VocabService, GrammarService
 from langchain_openai import ChatOpenAI
 import logging, langchain
-
+import httpx
+from langchain_core.globals import set_llm_cache
+set_llm_cache(None)
 
 class CoreAgent:
     """基础 Agent，提供模型、推送等通用能力。"""

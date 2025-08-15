@@ -3,13 +3,14 @@ from __future__ import annotations
 import os
 from enum import Enum
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
 # 模型ID配置
-OPENAI_MODEL_LOW = os.getenv("OPENAI_MODEL_LOW", "gpt-5-nano-2025-08-07")
-OPENAI_MODEL_STADARD = os.getenv("OPENAI_MODEL_STADARD", "gpt-5-mini-2025-08-07")
-OPENAI_MODEL_HIGH = os.getenv("OPENAI_MODEL_HIGH", "gpt-5-2025-08-07")
+OPENAI_MODEL_LOW = os.getenv("OPENAI_MODEL_LOW", "gpt-5-nano")
+OPENAI_MODEL_STADARD = os.getenv("OPENAI_MODEL_STADARD", "gpt-4o")
+OPENAI_MODEL_HIGH = os.getenv("OPENAI_MODEL_HIGH", "gpt-4.1")
 OPENAI_EMBED_MODEL = os.getenv("OPENAI_EMBED_MODEL", "text-embedding-3-small")
 
 # 模型价格配置 (1M tokens/USD)
@@ -31,21 +32,18 @@ class LLMModel(Enum):
         "price": OPENAI_MODEL_LOW_PRICE,
         "description": "低成本模型，适合简单任务"
     }
-    
     # 标准模型，成本和性能平衡
     STANDARD = {
         "name": OPENAI_MODEL_STADARD,
         "price": OPENAI_MODEL_STADARD_PRICE,
         "description": "标准模型，平衡成本和性能"
     }
-    
     # 高质量模型，适合复杂推理
     HIGH = {
         "name": OPENAI_MODEL_HIGH,
         "price": OPENAI_MODEL_HIGH_PRICE,
         "description": "高质量模型，适合复杂推理任务"
     }
-    
     # 嵌入模型，用于文本向量化
     EMBED = {
         "name": OPENAI_EMBED_MODEL,

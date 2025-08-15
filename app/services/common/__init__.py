@@ -9,7 +9,7 @@ from .mistake import MistakeService  # noqa: F401
 from .story import StoryService  # noqa: F401
 from .user import UserService  # noqa: F401
 from .vocab import VocabService  # noqa: F401
-
+from .memory import MemoryService  # noqa: F401
 
 __all__ = [
     "BaseService",
@@ -18,4 +18,5 @@ __all__ = [
     "StoryService",
     "UserService",
     "VocabService",
+    "MemoryService",
 ] 

@@ -13,11 +13,6 @@ WORKDIR /app
 # 复制当前目录内容到工作目录
 COPY . /app
 
-# 创建rumtime
-RUN mkdir runtime
-
-# 设置rumtime目录的权限为777
-RUN chmod -R 777 runtime
 
 # 优化 pip 行为并升级 pip
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
