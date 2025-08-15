@@ -20,6 +20,8 @@ class Memory(BaseModel):
     # 记忆内容, 记忆内容需要可以被string化, 由LLM生成, 并且会vector化
     content = Column(Text)
     
+    # 记忆的摘要
+    summary = Column(String(64))
     # This key is used to search the memory, and it is a tree structure.
     # 记忆的category, 最终这个category会作为一个Tree状目录
     category = Column(String(32))

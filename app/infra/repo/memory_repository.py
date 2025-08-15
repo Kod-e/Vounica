@@ -79,3 +79,25 @@ class MemoryRepository(Repository[Memory], MemoryRepositoryProtocol):
         query = select(Memory).where(Memory.user_id == user_id, Memory.category == category).offset(offset).limit(limit)
         result = await self.db.execute(query)
         return result.scalars().all()
+    
+    
+    # 从Memory中获得256条以内的memory
+    # 首先按照memory的language为target排序, 
+    # 然后按照memory的priority排序
+    # 最后按照memory的updated_at排序
+    async def get_memory_by_language(self, user_id: int, language: str, limit: int = 256) -> List[Memory]:
+        """Get the user's memories by language."""
+        query = select(Memory).where(Memory.user_id == user_id, Memory.language == language).order_by(desc(Memory.priority), desc(Memory.updated_at)).limit(limit)
+        result = await self.db.execute(query)
+        count = len(result.scalars().all())
+        # 如果result的length小于limit, 继续按照规则查询不为target的memory, 直到长度达到limit
+        if count < limit:
+            # 查询不为target的memory, limit为limit - count
+            limit = limit - count
+            query = select(Memory).where(Memory.user_id == user_id, Memory.language != language).order_by(desc(Memory.priority), desc(Memory.updated_at)).limit(limit)
+            result = await self.db.execute(query)
+        return result.scalars().all()
+    
+    
+    
+    
