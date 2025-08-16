@@ -10,7 +10,7 @@ class QuestionHandler:
         self._uow = uow_ctx.get()
         
     
-    # 处理题目, 判断错误, 并且存入mistake表
+    # 处理题目, 判断错误
     async def judge(self, question: QuestionUnion) -> JudgeResult:
         # 判断错误
         judge_result: JudgeResult = await question.judge()
@@ -30,4 +30,3 @@ class QuestionHandler:
                 # 存入mistake表
                 self._uow.db.add(question.to_mistake(judge_result))
         return results
-    

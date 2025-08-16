@@ -4,8 +4,7 @@ from app.services.logic.question import QuestionHandler
 from typing import List
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
-from app.services.tools.langchain import make_search_resource_tool, make_memory_add_tool, make_memory_update_tool, make_memory_delete_tool
-
+from app.services.tools.langchain import make_search_resource_tool, make_memory_add_tool, make_memory_update_tool, make_memory_delete_tool, make_vocab_add_tool, make_vocab_record_tool, make_grammar_add_tool, make_grammar_record_tool
 class RecordAgent(CoreAgent):
     def __init__(self):
         super().__init__()
@@ -25,7 +24,11 @@ class RecordAgent(CoreAgent):
                 make_search_resource_tool(),
                 make_memory_add_tool(),
                 make_memory_update_tool(),
-                make_memory_delete_tool()
+                make_memory_delete_tool(),
+                make_vocab_add_tool(),
+                make_vocab_record_tool(),
+                make_grammar_add_tool(),
+                make_grammar_record_tool()
             ],
             checkpointer=self.checkpointer
         )
