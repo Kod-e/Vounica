@@ -71,8 +71,9 @@ class RecordAgent(CoreAgent):
     async def record_questions(self, questions: List[QuestionUnion]):
         # 判断所有的题目
         self.questions = questions
+        print("start record questions")
         self.judge_results = await self.question_handler.record(self.questions)
-        
+        print("end record questions")
         judge_result_str = ""
         for judge_result in self.judge_results:
             judge_result_str += f"#{judge_result.question}\n"
@@ -86,7 +87,7 @@ class RecordAgent(CoreAgent):
             judge_result_str += "\n"
             
         self.suggestion = judge_result_str
-        
+        print("judge_result_str", judge_result_str)
         record_agent = create_react_agent(
             model=self.model,
             tools=[
@@ -103,6 +104,7 @@ class RecordAgent(CoreAgent):
             checkpointer=self.checkpointer
         )
         config = {"configurable": {"thread_id": "1"}}
+        print("make payload")
         payload = {"messages": [
                 {"role": "system", "content": f"""
 你是“RecordAgent”（答题记录与学习画像更新Agent）。你的职责是对用户完成的一组题目（试卷）进行解析与归档，更新用户的长期/短期画像，并生成下一阶段学习建议。你不会生成题目；你只处理“已完成题目”的结果。
@@ -180,6 +182,7 @@ Mistake:
 """},
                 {"role": "user", "content": judge_result_str},
             ]}
+        print("start run_stream_events")
         await self.run_stream_events(
             agent=record_agent,
             payload=payload,

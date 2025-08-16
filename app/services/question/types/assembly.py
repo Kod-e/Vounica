@@ -84,8 +84,8 @@ Correct Answer:
         return JudgeResult(
             correct=True,
             question=self.prompt(),
-            answer=self.answer,
-            correct_answer=self.correct_answer,
+            answer=f"{self.answer}",
+            correct_answer=f"{self.correct_answer}",
             error_reason=None
         )
 
