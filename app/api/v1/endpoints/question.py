@@ -16,7 +16,7 @@ router = APIRouter(prefix="/question", tags=["question"])
 
 # StreamingResponse 流式返回 Agent 进度与结果
 @router.post(
-    "/agent/chat/stream",
+    "/agent/question/stream",
     response_model=QuestionAgentEvent,   # 让它进入 components.schemas
     responses={
         200: {
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/question", tags=["question"])
         }
     }
 )
-async def make_question_by_chat_stream(
+async def make_question_by_agent_stream(
     uow = Depends(get_uow),
     user_input: str = Body(...),
 ):
@@ -53,8 +53,8 @@ async def make_question_by_chat_stream(
         },
     )
 
-@router.post("/agent/chat", response_model=List[QuestionUnion])
-async def make_question_by_chat(
+@router.post("/agent/question", response_model=List[QuestionUnion])
+async def make_question_by_agent(
     uow = Depends(get_uow),
     user_input: str = Body(...)
 ):
@@ -79,7 +79,7 @@ async def record_question(
     return await question_handler.record(questions)
 
 # Stream记录用户的回答
-@router.post("/record/stream",    
+@router.post("/agent/record/stream",    
     response_model=RecordAgentEvent,   # 让它进入 components.schemas
     responses={
         200: {
