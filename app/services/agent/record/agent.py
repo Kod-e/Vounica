@@ -1,8 +1,9 @@
 from app.services.agent.core.core import CoreAgent
 from app.services.question.types import QuestionUnion
 from app.services.logic.question import QuestionHandler
+from pydantic import BaseModel
 from typing import List
-from langchain_core.tools import tool
+from langchain_core.tools import StructuredTool
 from langgraph.prebuilt import create_react_agent
 from app.services.tools.langchain import make_search_resource_tool, make_memory_add_tool, make_memory_update_tool, make_memory_delete_tool, make_vocab_add_and_record_tool, make_vocab_record_tool, make_grammar_add_and_record_tool, make_grammar_record_tool
 from app.services.common.memory import MemoryService
@@ -10,7 +11,10 @@ from app.services.common.grammar import GrammarService
 from app.services.common.story import StoryService
 from app.services.common.mistake import MistakeService
 from app.services.common.vocab import VocabService
-from app.services.agent.record.schema import RecordAgentEvent, RecordAgentResultData
+from app.services.agent.record.schema import RecordAgentEvent, RecordAgentResultData, RecordAgentResultEvent
+
+class SetSuggestionArgs(BaseModel):
+    suggestion: str
 
 class RecordAgent(CoreAgent):
     def __init__(self):
@@ -30,8 +34,41 @@ class RecordAgent(CoreAgent):
     def edit_suggestion(self, suggestion: str):
         self.suggestion = suggestion
         return "##suggestion\n" + self.suggestion
-                        
+    
     async def run(self, questions: List[QuestionUnion]):
+        await self.record_questions(questions)
+        await self.make_suggestion()
+        self.event(RecordAgentResultEvent(
+            data=RecordAgentResultData(
+                suggestion=self.suggestion,
+                judge_results=self.judge_results
+            )
+        ))
+    async def make_suggestion(self):
+        tool = StructuredTool.from_function(
+            name="set_suggestion",
+            coroutine=self.set_suggestion,
+            description="给用户生成一个文字建议",
+            args_schema=SetSuggestionArgs
+        )
+        suggestion_agent = create_react_agent(
+            model=self.model,
+            tools=[tool],
+            checkpointer=self.checkpointer
+        )
+        config = {"configurable": {"thread_id": "1"}}
+        payload = {"messages": [{"role": "system", "content": "根据之前用户的回答, 给用户生成建议"}]}
+        await self.run_stream_events(
+            agent=suggestion_agent,
+            payload=payload,
+            config=config,
+        )
+        
+    async def set_suggestion(self, suggestion: str):
+        self.suggestion = suggestion
+        return "##suggestion\n" + self.suggestion
+    
+    async def record_questions(self, questions: List[QuestionUnion]):
         # 判断所有的题目
         self.questions = questions
         self.judge_results = await self.question_handler.record(self.questions)
@@ -60,7 +97,8 @@ class RecordAgent(CoreAgent):
                 make_vocab_add_and_record_tool(),
                 make_vocab_record_tool(),
                 make_vocab_add_and_record_tool(),
-                make_grammar_record_tool()
+                make_grammar_record_tool(),
+                
             ],
             checkpointer=self.checkpointer
         )
@@ -81,6 +119,8 @@ Goal:
 - 如果不存在, 添加这个语法/词汇的Vocab/Grammar的新的行, 添加工具会自动记录, 所以不需要再使用record_vocab/record_grammar工具
 - 在确认存在, 或者添加新的记录后, 根据用户正确或者错误的使用了语法或者词汇, 使用record_vocab/record_memory工具记录一次错误或者正确
 - 完成记录后, 思考这道题目的新的答案是否相对之前的用户画像发生了变化, 如果发生了变化, 修改或者添加Memory
+
+
 Constrains:
 - 如果你想知道某个Vocab or Grammar是否在数据库中存在, 你应该用正则表达式查询, 这可以很轻易的查询这个Vocab or Grammar的所有Usage的变体, 来确认是否存在
 - 如果你发现目前某个Vocab or Grammar的使用场景和数据库中已经存在的非常相似, 你应该直接使用已存在的而非新的
@@ -145,10 +185,3 @@ Mistake:
             payload=payload,
             config=config,
         )
-        
-        self.event(RecordAgentEvent(
-            data=RecordAgentResultData(
-                suggestion=self.suggestion,
-                judge_results=self.judge_results
-            )
-        ))

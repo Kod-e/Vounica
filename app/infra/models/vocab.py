@@ -20,7 +20,7 @@ class Vocab(BaseModel):
     usage = Column(Text)
     
     # 单词的习得状态, 这是在附近最近N次练习中, 单词被正确使用的概率, 从0-1
-    status = Column(Float)
+    status = Column(Float, default=1.0)
 
     # SRS 相关字段
     correct_rate = Column(Float, default=0.0)
