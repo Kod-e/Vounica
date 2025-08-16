@@ -22,9 +22,8 @@ class JudgeResult(BaseModel):
     # 关于题目的基本信息
     question: str
     answer: str
-    correct_answer: str = None
-    error_reason: str = None
-    
+    correct_answer: Optional[str] = None
+    error_reason: Optional[str] = None
 
     
 # 题目规范

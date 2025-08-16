@@ -135,7 +135,6 @@ Mistake:
 
 - get_questions
 这个工具用于获取QuestionStack中的所有题目, 并且以多行文本的形式返回
-
                 """},
                 {"role": "system", "content": f"""
 #User Info
