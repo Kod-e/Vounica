@@ -1,4 +1,5 @@
 from app.services.question.types import MatchQuestion
+import random
 from typing import List, Tuple
 from langchain_core.tools import StructuredTool
 from functools import partial
@@ -23,6 +24,8 @@ async def add_match_question(
     correct_answer: List[AnswerPair]
 ) -> str:
     correct_pairs: List[Tuple[str, str]] = [(pair.left, pair.right) for pair in correct_answer]
+    #打乱right_options
+    random.shuffle(right_options)
     question = MatchQuestion(
         stem=stem,
         left_options=left_options,

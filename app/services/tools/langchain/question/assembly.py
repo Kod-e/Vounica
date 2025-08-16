@@ -5,6 +5,7 @@ from functools import partial
 from pydantic import BaseModel, Field
 from app.services.question.base.spec import QuestionSpec
 from app.services.question.types import QuestionUnion
+import random
 # 搜索参数
 class QuestionArgs(BaseModel):
     stem: str = Field(..., description="Question stem")
@@ -23,7 +24,8 @@ async def add_assembly_question(
         answer_list = [correct_answer]
     else:
         answer_list = correct_answer
-
+    #打乱options
+    random.shuffle(options)
     question = AssemblyQuestion(stem=stem, options=options, correct_answer=answer_list)
     stack.append(question)
     message = f"AssemblyQuestion added, size={len(stack)}"
