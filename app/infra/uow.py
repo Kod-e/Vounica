@@ -28,6 +28,7 @@ from app.infra.models import User
 from app.infra.quota import QuotaBucket
 from contextvars import Token
 from .context import uow_ctx
+from fastapi import WebSocket
 
 class UnitOfWork:
     """Resource manager implementing unit-of-work pattern"""
@@ -181,4 +182,77 @@ async def get_uow(
     finally:
         # 无论如何都要关闭资源
         uow_ctx.reset(token)
+        await uow.close()
+
+
+async def get_uow_ws(
+    websocket: WebSocket,
+    db: AsyncSession = Depends(get_db),
+    vector: VectorSession = Depends(get_vector_session),
+    redis_client: redis.Redis = Depends(get_redis_client),
+) -> AsyncGenerator[UnitOfWork, None]:
+    """
+    WebSocket-compatible dependency to aggregate resources and auth.
+
+    Token and language preferences are read from either headers or query params:
+    - token: Authorization bearer token (without the "Bearer " prefix if passed as query)
+    - accept_language: preferred UI language
+    - target_language: target learning language
+    """
+
+    # Prefer header Authorization if present; otherwise read from query
+    auth_header = websocket.headers.get("authorization")
+    token: str | None = None
+    if auth_header and auth_header.lower().startswith("bearer "):
+        token = auth_header.split(" ", 1)[1]
+    else:
+        token = websocket.query_params.get("token")
+
+    if not token:
+        raise UnauthorizedException("Missing bearer token")
+
+    try:
+        payload = verify_access_token(token)
+    except InvalidTokenException as exc:
+        raise UnauthorizedException("Invalid token") from exc
+
+    user_sub = payload.get("sub")
+    if user_sub is None:
+        raise UnauthorizedException("Token missing subject")
+
+    try:
+        user_id = int(user_sub)
+    except ValueError:
+        raise UnauthorizedException("Malformed subject in token")
+
+    user_repo = UserRepository(db=db)
+    user = await user_repo.get_by_id(user_id)
+    if user is None:
+        raise UnauthorizedException("User not found")
+
+    # Languages from headers or query params
+    accept_language = websocket.headers.get("accept-language") or websocket.query_params.get("accept_language")
+    target_language = websocket.headers.get("target-language") or websocket.query_params.get("target_language")
+
+    uow = UnitOfWork(
+        db=db,
+        vector=vector,
+        redis=redis_client,
+        current_user=user,
+        accept_language=accept_language,
+        target_language=target_language,
+        quota=QuotaBucket(redis_client, user),
+        current_user_id=user_id,
+    )
+
+    token_ctx: Token = uow_ctx.set(uow)
+    try:
+        yield uow
+        # Let caller decide commit timing; default to commit when scope ends
+        await uow.commit()
+    except Exception:
+        await uow.rollback()
+        raise
+    finally:
+        uow_ctx.reset(token_ctx)
         await uow.close()

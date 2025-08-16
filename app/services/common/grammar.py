@@ -23,9 +23,15 @@ class GrammarService(BaseService[Grammar]):
         result_str = f"##User has {count} grammars\n"
         return result_str
     
+    # 添加一个grammar, 并且记录一次正确/错误
+    async def add_and_record_grammar(self, name: str, usage: str, correct: bool) -> Grammar:
+        grammar: Grammar = await self.create({"name": name, "usage": usage, "language": self._uow.target_language})
+        await self.record_grammar(grammar.id, correct)
+        return grammar
+    
     # 记录一次正确/错误
     async def record_grammar(self, grammar_id: int, correct: bool) -> Grammar:
-        grammar: Grammar = await self._repo.get_by_id(grammar_id)
+        grammar: Grammar = await self._repo.get_by_id(self._uow.db, grammar_id)
         if grammar is None:
             return f"grammar not found: {grammar_id}"
 

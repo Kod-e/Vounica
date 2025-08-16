@@ -34,9 +34,15 @@ class VocabService(BaseService[Vocab]):
         result_str = f"##User has {count} vocabs\n"
         return result_str
     
+    # 添加一个vocab, 并且记录一次正确/错误
+    async def add_and_record_vocab(self, name: str, usage: str, correct: bool) -> Vocab:
+        vocab: Vocab = await self.create({"name": name, "usage": usage, "language": self._uow.target_language})
+        await self.record_vocab(vocab.id, correct)
+        return vocab
+    
     # 记录一次正确/错误
     async def record_vocab(self, vocab_id: int, correct: bool) -> Vocab:
-        vocab: Vocab = await self._repo.get_by_id(vocab_id)
+        vocab: Vocab = await self._repo.get_by_id(self._uow.db, vocab_id)
         if vocab is None:
             return f"vocab not found: {vocab_id}"
 

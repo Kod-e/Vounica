@@ -1,4 +1,4 @@
-from ..function.grammar import add_grammar, record_grammar
+from ..function.grammar import add_grammar, record_grammar, add_and_record_grammar
 from langchain_core.tools import StructuredTool
 from functools import partial
 from pydantic import BaseModel, Field
@@ -11,6 +11,11 @@ class GrammarRecordArgs(BaseModel):
     grammar_id: int = Field(..., description="Grammar ID")
     correct: bool = Field(..., description="Correct or incorrect")
     
+class GrammarAddAndRecordArgs(BaseModel):
+    name: str = Field(..., description="Grammar name")
+    usage: str = Field(..., description="Grammar usage")
+    correct: bool = Field(..., description="Correct or incorrect")
+    
 def make_grammar_add_tool() -> StructuredTool:
     return StructuredTool.from_function(
         name="add_grammar",
@@ -21,6 +26,19 @@ def make_grammar_add_tool() -> StructuredTool:
 如果你通过数据库查询(通过正则匹配name), 并且发现有相同usage的语法, 那不应该调用这个函数导致重复添加
 """,
         args_schema=GrammarAddArgs,
+    )
+
+def make_grammar_add_and_record_tool() -> StructuredTool:
+
+    return StructuredTool.from_function(
+        name="add_and_record_grammar",
+        coroutine=add_and_record_grammar,
+        description="""
+# 给用户添加一条语法习得记录, 并且记录一次正确/错误
+如果一个语法的name(在语言中实际的书写形式)和usage(在语言中的使用场景)相同或者非常相似, 那就视为一个语法
+如果你通过数据库查询(通过正则匹配name), 并且发现有相同usage的语法, 那不应该调用这个函数导致重复添加
+""",
+        args_schema=GrammarAddAndRecordArgs,
     )
 
 def make_grammar_record_tool() -> StructuredTool:

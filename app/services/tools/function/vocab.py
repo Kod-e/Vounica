@@ -16,6 +16,9 @@ language: {uow_ctx.get().target_language}
 updated_at: {vocab.updated_at.isoformat()}
 """
 
+async def add_and_record_vocab(name: str, usage: str, correct: bool) -> Vocab:
+    return await VocabService().add_and_record_vocab(name, usage, correct)
+
 # 给Vocab记录一次correct/incorrect
 async def record_vocab(vocab_id: int,correct: bool) -> str:
     vocab: Vocab = await VocabService().record_vocab(vocab_id, correct)

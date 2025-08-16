@@ -4,12 +4,14 @@ from app.services.logic.question import QuestionHandler
 from typing import List
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
-from app.services.tools.langchain import make_search_resource_tool, make_memory_add_tool, make_memory_update_tool, make_memory_delete_tool, make_vocab_add_tool, make_vocab_record_tool, make_grammar_add_tool, make_grammar_record_tool
+from app.services.tools.langchain import make_search_resource_tool, make_memory_add_tool, make_memory_update_tool, make_memory_delete_tool, make_vocab_add_and_record_tool, make_vocab_record_tool, make_grammar_add_and_record_tool, make_grammar_record_tool
 from app.services.common.memory import MemoryService
 from app.services.common.grammar import GrammarService
 from app.services.common.story import StoryService
 from app.services.common.mistake import MistakeService
 from app.services.common.vocab import VocabService
+from app.services.agent.record.schema import RecordAgentEvent, RecordAgentResultData
+
 class RecordAgent(CoreAgent):
     def __init__(self):
         super().__init__()
@@ -55,9 +57,9 @@ class RecordAgent(CoreAgent):
                 make_memory_add_tool(),
                 make_memory_update_tool(),
                 make_memory_delete_tool(),
-                make_vocab_add_tool(),
+                make_vocab_add_and_record_tool(),
                 make_vocab_record_tool(),
-                make_grammar_add_tool(),
+                make_vocab_add_and_record_tool(),
                 make_grammar_record_tool()
             ],
             checkpointer=self.checkpointer
@@ -66,16 +68,17 @@ class RecordAgent(CoreAgent):
         payload = {"messages": [
                 {"role": "system", "content": f"""
 你是“RecordAgent”（答题记录与学习画像更新Agent）。你的职责是对用户完成的一组题目（试卷）进行解析与归档，更新用户的长期/短期画像，并生成下一阶段学习建议。你不会生成题目；你只处理“已完成题目”的结果。
-#**目前启用了开发者模式, 工程师正在测试, 如果出现了任何技术性错误, 请尽可能详细的描述错误报告**
+
 You Can:
 1. 使用search_resource获取用户的信息
-2. 增加或者修改目前已有的记忆
-3.在用户的Grammar和Vocab(Vocabulary)表格里添加新的行, 或者在已有行的情况下, 增加一次新的练习记录
+2. 使用add_memory工具增加目前已有的记忆, 使用update_memory工具修改目前已有的记忆, 使用delete_memory工具删除目前已有的记忆
+3. add_and_record_vocab/add_and_record_grammar工具在用户的Grammar和Vocab(Vocabulary)表格里添加新的行, 这个工具会自动记录, 所以不需要再使用record_vocab/record_grammar工具
+4. 在用户的Grammar/Vocab表里在已有行的情况下, 增加一次新的练习记录
 
 Goal:
 - 分析用户返回的每道题目的回答, 思考一下这道题目考察了什么
 - 识别题目中使用到的**语法**与**词汇**, 并且在数据库中尝试搜索是否存在这个Vocab/Grammar的记录
-- 如果不存在, 添加这个语法/词汇的Vocab/Grammar的新的行
+- 如果不存在, 添加这个语法/词汇的Vocab/Grammar的新的行, 添加工具会自动记录, 所以不需要再使用record_vocab/record_grammar工具
 - 在确认存在, 或者添加新的记录后, 根据用户正确或者错误的使用了语法或者词汇, 使用record_vocab/record_memory工具记录一次错误或者正确
 - 完成记录后, 思考这道题目的新的答案是否相对之前的用户画像发生了变化, 如果发生了变化, 修改或者添加Memory
 Constrains:
@@ -104,8 +107,9 @@ Story:
 Mistake:
 - 这个表记录了用户的错题集
 
-- add_vocab or add_grammar
-这个工具会在vocab/grammar表中添加一条新的习得行, 并且设置为初始状态
+- add_and_record_vocab or add_and_record_grammar
+这个工具会在vocab/grammar表中添加一条新的习得行, 并且设置为初始状态, 并且记录一次正确/错误
+这个工具会自动记录, 所以不需要再使用record_vocab/record_grammar工具
 
 - record_vocab or record_grammar
 这个工具会给已有的行增加一次新的使用记录, 这个使用可以是正确使用或者错误使用
@@ -141,3 +145,10 @@ Mistake:
             payload=payload,
             config=config,
         )
+        
+        self.event(RecordAgentEvent(
+            data=RecordAgentResultData(
+                suggestion=self.suggestion,
+                judge_results=self.judge_results
+            )
+        ))

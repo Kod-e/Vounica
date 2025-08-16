@@ -25,3 +25,6 @@ id: {grammar.id}
 correct: {correct}
 updated_at: {grammar.updated_at.isoformat()}
 """
+
+async def add_and_record_grammar(name: str, usage: str, correct: bool) -> Grammar:
+    return await GrammarService().add_and_record_grammar(name, usage, correct)

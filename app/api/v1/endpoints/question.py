@@ -2,15 +2,18 @@ from fastapi import APIRouter, Depends, Body, Header, Request
 from fastapi.responses import StreamingResponse
 import asyncio, json, urllib.parse
 from app.services.agent.question.agent import QuestionAgent
-from app.services.question.types import QuestionUnion, QuestionAdapter
+from app.services.question.types import QuestionUnion, QuestionListAdapter
 from typing import List
 from app.services.logic.question import QuestionHandler
 from app.services.question.base.spec import JudgeResult
-from app.services.agent.core.schema import AgentEvent, AgentMessageEvent
+from app.services.agent.core.schema import AgentEventType
 from app.services.agent.question.schema import QuestionAgentEvent
 from app.infra.uow import get_uow
 from app.services.agent.record.agent import RecordAgent
 from app.services.agent.record.schema import RecordAgentEvent
+from fastapi import WebSocket, WebSocketDisconnect
+from app.infra.uow import get_uow_ws
+import contextlib   
 router = APIRouter(prefix="/question", tags=["question"])
 
 
@@ -52,6 +55,34 @@ async def make_question_by_agent_stream(
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@router.websocket("/agent/question/ws")
+async def make_question_by_agent_ws(
+    websocket: WebSocket,
+    uow = Depends(get_uow_ws),
+):
+    await websocket.accept()
+    question_agent = QuestionAgent()
+    try:
+        # 接收第一条包含 user_input 的消息，或从 query 参数读取
+        user_input = websocket.query_params.get("user_input")
+        if not user_input:
+            msg = await websocket.receive_text()
+            with contextlib.suppress(Exception):
+                import json as _json
+                obj = _json.loads(msg)
+                if isinstance(obj, dict) and "user_input" in obj:
+                    user_input = obj["user_input"]
+                else:
+                    user_input = msg
+        async for ev in question_agent.run_stream(user_input):
+            await websocket.send_text(ev.model_dump_json())
+    except WebSocketDisconnect:
+        pass
+    finally:
+        with contextlib.suppress(Exception):
+            await websocket.close()
 
 @router.post("/agent/question", response_model=List[QuestionUnion])
 async def make_question_by_agent(
@@ -113,6 +144,28 @@ async def record_question_by_stream(
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@router.websocket("/agent/record/ws")
+async def record_question_ws(
+    websocket: WebSocket,
+    uow = Depends(get_uow_ws),
+):
+    await websocket.accept()
+    record_agent = RecordAgent()
+    try:
+        # 接收第一条包含 questions 的消息
+        msg = await websocket.receive_text()
+        questions: List[QuestionUnion] = QuestionListAdapter.validate_json(msg)
+        async for ev in record_agent.run_stream(questions):
+            await websocket.send_text(ev.model_dump_json())
+            if ev.type == AgentEventType.RESULT:
+                break
+    except WebSocketDisconnect:
+        pass
+    finally:
+        with contextlib.suppress(Exception):
+            await websocket.close()
 
 # 获得错误原因
 @router.post("/error_reason", response_model=JudgeResult)
