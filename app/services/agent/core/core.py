@@ -89,10 +89,11 @@ class CoreAgent:
                 self.is_streaming = False
 
             elif t == "on_tool_end":
+                print("on_tool_end", name, data)
                 self.event(AgentToolCallEvent(
                     data = AgentToolData(
                         tool_name=name,
-                        tool_input="test"
+                        tool_data=data
                     )
                 ))
             print("event",t,"name", name, "data")

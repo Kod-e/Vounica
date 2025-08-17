@@ -55,7 +55,7 @@ Correct Answer:
 
         error_reason: str | None = None
         if not is_correct:
-            error_reason = await self.generate_error_reason(self.answer)
+            error_reason = await self.generate_error_reason()
 
         return JudgeResult(
             correct=is_correct,
@@ -65,7 +65,7 @@ Correct Answer:
             error_reason=error_reason,
         )
     # 生成错误原因
-    async def generate_error_reason(self, answer: str) -> str:
+    async def generate_error_reason(self) -> str:
         """调用 LLM 生成错误原因。"""
         uow = uow_ctx.get()
         response = await chat_completion(
@@ -76,7 +76,7 @@ you need to generate the user's error reason in a very short way,
 use the question's language({uow.target_language}) to generate the error reason.
 """),
                     HumanMessage(content=self.prompt() + f"""
-                    The user's answer is: {answer}
+                    The user's answer is: {self.answer}
                     """)
                 ],
             model_type=LLMModel.STANDARD.value["name"]

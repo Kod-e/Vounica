@@ -21,7 +21,7 @@ class Grammar(BaseModel):
     usage = Column(Text)
     
     # 语法的习得状态, 这是在附近最近N次练习中, 语法被正确使用的概率, 从0-1
-    status = Column(Float)
+    status = Column(Float, default=1.0)
 
     # SRS 相关字段
 

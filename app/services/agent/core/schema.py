@@ -24,7 +24,7 @@ class AgentMessageData(BaseModel):
     
 class AgentToolData(BaseModel):
     tool_name: str
-    tool_input: str
+    tool_data: Dict[str, Any]
 
 class AgentStreamChunkData(BaseModel):
     chunk: str

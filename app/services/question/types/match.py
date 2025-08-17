@@ -57,7 +57,7 @@ Correct Answer:
 
         error_reason: str | None = None
         if not is_correct:
-            error_reason = await self.generate_error_reason(self.answer)
+            error_reason = await self.generate_error_reason()
 
         return JudgeResult(
             correct=is_correct,

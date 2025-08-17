@@ -49,7 +49,7 @@ class QuestionSpec(BaseModel, ABC):
         """
         
     @abstractmethod
-    def judge(self, answer: Any) -> JudgeResult:
+    async def judge(self) -> JudgeResult:
         """Judge the given answer and return a JudgeResult object.
         判断用户答案, 返回评判结果。
         """
@@ -57,7 +57,7 @@ class QuestionSpec(BaseModel, ABC):
 
     # 生成error_reason
     @abstractmethod
-    def generate_error_reason(self, answer: Any) -> str:
+    async def generate_error_reason(self) -> str:
         """Generate error reason for the given answer.
         生成错误原因。
         """

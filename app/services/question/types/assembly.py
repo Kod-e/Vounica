@@ -70,7 +70,10 @@ Correct Answer:
         if not self.answer:
             return JudgeResult(
                 correct=False,
-                error_reason=await self.generate_error_reason(self.answer)
+                question=self.prompt(),
+                answer=f"{self.answer}",
+                correct_answer=f"{self.correct_answer}",
+                error_reason=await self.generate_error_reason()
             )
 
         is_correct = self._normalize_tokens(self.answer) == self._normalize_tokens(self.correct_answer)
@@ -78,7 +81,10 @@ Correct Answer:
         if not is_correct:
             return JudgeResult(
                 correct=False,
-                error_reason=await self.generate_error_reason(self.answer)
+                question=self.prompt(),
+                answer=f"{self.answer}",
+                correct_answer=f"{self.correct_answer}",
+                error_reason=await self.generate_error_reason()
             )
 
         return JudgeResult(
