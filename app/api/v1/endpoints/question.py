@@ -10,7 +10,7 @@ from app.services.agent.core.schema import AgentEventType
 from app.services.agent.question.schema import QuestionAgentEvent
 from app.infra.uow import get_uow
 from app.services.agent.record.agent import RecordAgent
-from app.services.agent.record.schema import RecordAgentEvent
+from app.services.agent.record.schema import RecordAgentEvent, RecordAgentRequestData
 from fastapi import WebSocket, WebSocketDisconnect
 from app.infra.uow import get_uow_ws
 import contextlib   
@@ -104,10 +104,10 @@ async def judge_question(
 @router.post("/record", response_model=List[JudgeResult])
 async def record_question(
     uow = Depends(get_uow),
-    questions: List[QuestionUnion] = Body(...)
+    data: RecordAgentRequestData = Body(...)
 ):
     question_handler = QuestionHandler()
-    return await question_handler.record(questions)
+    return await question_handler.record(data.questions)
 
 # Stream记录用户的回答
 @router.post("/agent/record/stream",    
@@ -126,12 +126,12 @@ async def record_question(
 )
 async def record_question_by_stream(
     uow = Depends(get_uow),
-    questions: List[QuestionUnion] = Body(...)
+    data: RecordAgentRequestData = Body(...)
 ):
     record_agent = RecordAgent()
     # 进行URL解码
     async def event_gen():
-        async for ev in record_agent.run_stream(questions):
+        async for ev in record_agent.run_stream(data.user_input, data.questions):
             result = "data: " + ev.model_dump_json() + "\n\n"
             # SSE 帧必须以 \n\n 结束；加 data: 兼容浏览器
             yield result
@@ -156,8 +156,10 @@ async def record_question_ws(
     try:
         # 接收第一条包含 questions 的消息
         msg = await websocket.receive_text()
-        questions: List[QuestionUnion] = QuestionListAdapter.validate_json(msg)
-        async for ev in record_agent.run_stream(questions):
+        msg_dict = json.loads(msg)
+        user_input = msg_dict["user_input"]
+        questions: List[QuestionUnion] = QuestionListAdapter.validate_python(msg_dict["questions"])
+        async for ev in record_agent.run_stream(user_input, questions):
             await websocket.send_text(ev.model_dump_json())
             if ev.type == AgentEventType.RESULT:
                 break

@@ -2,6 +2,11 @@ from typing import Annotated, List, Union
 from pydantic import Field, RootModel, BaseModel
 from app.services.agent.core.schema import AgentResultEvent,AgentThinkingEvent,AgentMessageEvent,AgentStreamChunkEvent,AgentStreamEndEvent,AgentToolCallEvent
 from app.services.question.base.spec import JudgeResult
+from app.services.question.types import QuestionUnion
+
+class RecordAgentRequestData(BaseModel):
+    questions: List[QuestionUnion]
+    user_input: str
 
 class RecordAgentResultData(BaseModel):
     judge_results: List[JudgeResult]

@@ -36,8 +36,10 @@ class RecordAgent(CoreAgent):
         self.suggestion = suggestion
         return "##suggestion\n" + self.suggestion
     
-    async def run(self, questions: List[QuestionUnion]):
-        await self.record_vocab_grammar(questions)
+    async def run(self, user_input: str, questions: List[QuestionUnion]):
+        self.user_input = user_input
+        self.questions = questions
+        await self.record_vocab_grammar()
         await self.record_memory()
         await self.make_suggestion()
         self.event(RecordAgentResultEvent(
@@ -70,9 +72,8 @@ class RecordAgent(CoreAgent):
         self.suggestion = suggestion
         return "##suggestion\n" + self.suggestion
     
-    async def record_vocab_grammar(self, questions: List[QuestionUnion]):
+    async def record_vocab_grammar(self):
         # 判断所有的题目
-        self.questions = questions
         print("start record questions")
         self.judge_results = await self.question_handler.record(self.questions)
         print("end record questions")

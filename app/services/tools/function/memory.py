@@ -23,7 +23,7 @@ async def add_memory(
 ) -> str:
     session = uow_ctx.get().db
     async with _lock_for_session(session):
-        memory: Memory = await MemoryService().create({"category": category, "content": content, "summary": summary, "language": uow_ctx.get().target_language, " priority": priority})
+        memory: Memory = await MemoryService().create({"category": category, "content": content, "summary": summary, "language": uow_ctx.get().target_language, "priority": priority})
     return f"""
 memory added:
 id: {memory.id}
