@@ -22,9 +22,9 @@ class CoreAgent:
     def __init__(self):
         # UoW 与模型
         self.uow = uow_ctx.get()
-        self.model = ChatOpenAI(model=LLMModel.STANDARD.value["name"])
-        self.high_model = ChatOpenAI(model=LLMModel.HIGH.value["name"])
-        self.low_model = ChatOpenAI(model=LLMModel.LOW.value["name"])
+        self.model = ChatOpenAI(model=LLMModel.STANDARD.model_name)
+        self.high_model = ChatOpenAI(model=LLMModel.HIGH.model_name)
+        self.low_model = ChatOpenAI(model=LLMModel.LOW.model_name)
         self.checkpointer = InMemorySaver()
         # 消息队列
         self._message_queue: asyncio.Queue = asyncio.Queue()

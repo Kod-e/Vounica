@@ -73,7 +73,7 @@ class QuestionSpec(BaseModel, ABC):
             user_id=uow.current_user_id,
             question=judge_result.question,
             question_type=self.question_type,
-            language_type=uow.target_language,
+            language=uow.target_language,
             answer=judge_result.answer,
             correct_answer=judge_result.correct_answer,
             error_reason=judge_result.error_reason,

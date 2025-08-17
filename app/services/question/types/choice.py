@@ -79,6 +79,6 @@ use the question's language({uow.target_language}) to generate the error reason.
                     The user's answer is: {self.answer}
                     """)
                 ],
-            model_type=LLMModel.STANDARD.value["name"]
+            model_type=LLMModel.STANDARD
         )
         return response.content

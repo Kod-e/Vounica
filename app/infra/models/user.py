@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 from dotenv import load_dotenv
 import os
 load_dotenv()
-TOKEN_QUOTA = int(os.getenv("TOKEN_QUOTA", 1000))
+TOKEN_QUOTA = int(os.getenv("TOKEN_QUOTA", 1000 * 1000 * 10))
 
 # 用户表, 记录用户的基本信息
 class User(BaseModel):
