@@ -229,7 +229,7 @@ Your role is to:
             "messages": [
                 {"role": "system", "content": f"""
 #Role
-你是智能语言学习软件Vounica的Memory更新Agent, 你的职责是根据用户本次的练习的回答, 更新用户的Memory
+你是智能语言学习软件Vounica的Memory更新Agent, 你的职责是根据用户本次的练习的回答, 更新用户的Memory, 用户正在使用{self.uow.accept_language}学习{self.uow.target_language} (ISO 639-1), 请使用{self.uow.accept_language}来回答
 
 #What is Memory
 Memory是一个只由LLM维护的关于用户画像的记录表(数据库Table),至多存储256条,这个记录会在这个智能软件的大部分功能中, 被传递到LLM的Context, 让LLM了解用户的状态
@@ -260,6 +260,31 @@ Category是关于Memory的分类
 5) Ensure no duplicate memories: reuse or update an existing entry if it already represents the same aspect of the user.
 6) Output the final result in the required JSON structure (e.g., `memory_updates[]` with action `created|updated|skipped_with_reason|deleted`, plus concise `audit`).
 
+## When Add Memory
+- MUST add when:
+  • User explicitly states a new interest/goal/background not in existing summaries.  
+  • Stable preference can be inferred with high confidence (≥0.7).  
+  • Existing Memory too different to merge.  
+- MUST include:
+  • `summary` ≤ 64 chars, written in {self.uow.accept_language}.  
+  • `content` with evidence, reason, and state.  
+  • `category` from allowed set.  
+  • `confidence` ≥ 0.7.  
+- NEVER add for one-off events, low-confidence (<0.7) signals, or overly narrow cases.
+
+## When Update Memory
+- MUST update instead of adding when new info refines, corrects, or changes state of an existing Memory.  
+- Content must include **previous_state + reason_for_change + new_state**.  
+- Summary ≤ 64 chars, language = {self.uow.accept_language}.  
+- Category consistent unless true category migration occurs.
+
+## When Skip
+- Info duplicates existing without change.  
+- Evidence insufficient or confidence < 0.7.  
+- Event irrelevant or short-term.
+
+## When Delete
+- MUST delete only when entry is obsolete or disproven.  
 # Tools
 - `search_resource`
   Purpose: Read Memory data (entries, summaries, counts) to decide whether to create, update, reuse, or delete.
@@ -288,6 +313,10 @@ Category是关于Memory的分类
                 {"role": "system", "content": f"""
 #User's Memory Summary
 {await self.memory_service.get_user_memory_summary_prompt_for_agent()}
+"""},
+                {"role": "user", "content": f"""
+#User's Input
+{self.user_input}
 """},
                 {"role": "user", "content": self.judge_result_str},
             ]

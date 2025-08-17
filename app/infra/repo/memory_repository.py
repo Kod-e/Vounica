@@ -89,14 +89,16 @@ class MemoryRepository(Repository[Memory], MemoryRepositoryProtocol):
         """Get the user's memories by language."""
         query = select(Memory).where(Memory.user_id == user_id, Memory.language == language).order_by(desc(Memory.priority), desc(Memory.updated_at)).limit(limit)
         result = await self.db.execute(query)
-        count = len(result.scalars().all())
+        result = result.scalars().all()
+        count = len(result)
         # 如果result的length小于limit, 继续按照规则查询不为target的memory, 直到长度达到limit
         if count < limit:
             # 查询不为target的memory, limit为limit - count
             limit = limit - count
-            query = select(Memory).where(Memory.user_id == user_id, Memory.language != language).order_by(desc(Memory.priority), desc(Memory.updated_at)).limit(limit)
-            result = await self.db.execute(query)
-        return result.scalars().all()
+            new_query = select(Memory).where(Memory.user_id == user_id, Memory.language != language).order_by(desc(Memory.priority), desc(Memory.updated_at)).limit(limit)
+            new_result = await self.db.execute(new_query)
+            result = result + new_result.scalars().all()
+        return result
     
     
     
