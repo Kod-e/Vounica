@@ -142,9 +142,11 @@ Your role is to:
   • MUST NOT contain more than two tokens.  
   • Acceptable variants include inflections such as English endings (-ing, -s, -est) or Japanese verb conjugations.  
   • MUST NOT include full phrases or multi-word expressions.  
+  • MUST ALWAYS be written in the target language.
 
 - For `usage`:
-  • MUST describe a broad, generalizable usage context (e.g., “plural expression”, “comparative form”, “superlative form”).  
+  • MUST be written in the target language.  
+  • MUST describe a broad, generalizable usage context (e.g., “複数形の表現” for Japanese, “plural expression” for English).  
   • MUST NOT describe a usage that is restricted to a single phrase, example, or overly narrow context.  
   • Usage entries should serve as category labels for multiple potential examples, not one isolated case.  
 
@@ -154,9 +156,11 @@ Your role is to:
   • MUST represent a single grammar pattern, not a full sentence or expression.  
   • Variants (e.g., different conjugations or alternative surface forms) MUST be grouped under the same grammar `name` entry.  
   • MUST NOT create duplicate entries for the same grammar pattern.  
+  • MUST ALWAYS be written in the target language.
 
 - For `usage`:
-  • MUST describe the general usage context of the grammar pattern (e.g., “expressing condition”, “progressive aspect”, “topic vs. subject marker”).  
+  • MUST be written in the target language.  
+  • MUST describe the general usage context of the grammar pattern (e.g., “条件を表す文法” for Japanese, “expressing condition” for English).  
   • MUST NOT describe a usage that is tied only to one phrase, sentence, or overly narrow context.  
   • Usage entries should be broad and reusable as category labels for multiple examples, not specific to one case.  
 
