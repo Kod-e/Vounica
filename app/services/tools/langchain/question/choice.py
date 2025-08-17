@@ -17,6 +17,9 @@ async def add_choice_question(
     options: List[str], 
     correct_answer: str
 ) -> str:
+    # 确保correct_answer在options中
+    if correct_answer not in options:
+        return f"Correct answer {correct_answer} is not in options {options}, you should check your input"
     question = ChoiceQuestion(stem=stem, options=options, correct_answer=correct_answer)
     stack.append(question)
     message = f"ChoiceQuestion added, size={len(stack)}"

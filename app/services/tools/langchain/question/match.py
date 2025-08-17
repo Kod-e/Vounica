@@ -26,6 +26,11 @@ async def add_match_question(
     correct_pairs: List[Tuple[str, str]] = [(pair.left, pair.right) for pair in correct_answer]
     #打乱right_options
     random.shuffle(right_options)
+    # 确保correct_answer在left_options和right_options中
+    if not all(item in left_options for item in [pair.left for pair in correct_pairs]):
+        return f"Correct answer {correct_pairs} is not in left_options {left_options}, you should check your input"
+    if not all(item in right_options for item in [pair.right for pair in correct_pairs]):
+        return f"Correct answer {correct_pairs} is not in right_options {right_options}, you should check your input"
     question = MatchQuestion(
         stem=stem,
         left_options=left_options,

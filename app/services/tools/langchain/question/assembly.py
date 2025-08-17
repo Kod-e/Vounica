@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from app.services.question.base.spec import QuestionSpec
 from app.services.question.types import QuestionUnion
 import random
+from collections import Counter
 # 搜索参数
 class QuestionArgs(BaseModel):
     stem: str = Field(..., description="Question stem")
@@ -26,6 +27,15 @@ async def add_assembly_question(
         answer_list = correct_answer
     #打乱options
     random.shuffle(options)
+    # 确保options有能力拼出correct_answer
+    def norm(w: str) -> str:
+        w = w.strip()
+        w = w.lower()
+        return w
+    need = Counter(norm(w) for w in answer_list)
+    have = Counter(norm(w) for w in options)
+    if need > have:
+        return f"Correct answer {answer_list} is not in options {options}, you should check your input"
     question = AssemblyQuestion(stem=stem, options=options, correct_answer=answer_list)
     stack.append(question)
     message = f"AssemblyQuestion added, size={len(stack)}"
