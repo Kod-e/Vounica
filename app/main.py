@@ -4,8 +4,9 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -14,6 +15,7 @@ from app.api.v1.router import router as v1_router
 from app.core.vector import make_qdrant_client
 from app.core.db import make_async_session_maker, get_engine, check_table_exists
 from app.core.redis import make_redis_client
+from app.core.exceptions.base import BaseException as AppException
 
 # 加载环境变量
 load_dotenv()
@@ -88,6 +90,13 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # 注册全局异常处理器，将应用内自定义异常统一为标准JSON
+    async def handle_app_exception(request: Request, exc: AppException):
+        # 返回严格的 to_dict 结构作为顶层 JSON，HTTP 状态码取自 exc.code
+        return JSONResponse(status_code=exc.code, content=exc.to_dict())
+
+    app.add_exception_handler(AppException, handle_app_exception)
 
     # 注册路由
     app.include_router(v1_router, prefix="/v1")

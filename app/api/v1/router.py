@@ -12,6 +12,7 @@ from app.api.v1.endpoints.story import router as story_router
 from app.api.v1.endpoints.vocab import router as vocab_router
 from app.api.v1.endpoints.user import router as user_router
 from app.api.v1.endpoints.question import router as question_router
+from app.core.exceptions.base import BaseException as AppException
 # 创建路由实例
 router = APIRouter(tags=["v1"])
 
@@ -36,6 +37,9 @@ async def db_test(db: AsyncSession = Depends(get_db)):
         if row:
             return {"status": "database connection successful", "result": row[0]}
         return {"status": "database connection successful", "result": None}
+    except AppException as exc:
+        # 交给全局异常处理器
+        raise exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
 

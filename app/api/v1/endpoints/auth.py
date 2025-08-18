@@ -27,7 +27,8 @@ async def register(
         # 使用201状态码, 表示资源创建成功
         return RegisterResponseSchema(id=user.id, email=user.email, access_token=access_token, refresh_token=refresh)
     except AppException as exc:
-        raise HTTPException(status_code=exc.code, detail=exc.to_dict())
+        # 让全局异常处理器处理
+        raise exc
 
 # 获得一个Guest用户和Mail用户
 @router.post("/guest", response_model=TokenSchema)
@@ -41,7 +42,7 @@ async def guest(
         access_token, refresh = await auth_service.guest(db)
         return TokenSchema(access_token=access_token, refresh_token=refresh)
     except AppException as exc:
-        raise HTTPException(status_code=exc.code, detail=exc.to_dict())
+        raise exc
 
 @router.post("/login", response_model=TokenSchema)
 async def login(
@@ -54,7 +55,7 @@ async def login(
         # 使用200状态码, 表示请求成功
         return TokenSchema(access_token=access_token, refresh_token=refresh)
     except AppException as exc:
-        raise HTTPException(status_code=exc.code, detail=exc.to_dict())
+        raise exc
 
 
 @router.post("/refresh", response_model=RefreshResponseSchema)
@@ -68,4 +69,4 @@ async def refresh(
         # 使用200状态码, 表示请求成功
         return RefreshResponseSchema(access_token=access_token)
     except AppException as exc:
-        raise HTTPException(status_code=exc.code, detail=exc.to_dict()) 
+        raise exc 
