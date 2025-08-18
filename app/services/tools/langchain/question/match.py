@@ -26,10 +26,18 @@ async def add_match_question(
     correct_pairs: List[Tuple[str, str]] = [(pair.left, pair.right) for pair in correct_answer]
     #打乱right_options
     random.shuffle(right_options)
+    # 确保left_options和right_options长度相同, 并且字符串不重复
+    if len(left_options) != len(right_options):
+        return f"Left options and right options length must be the same, you should check your input"
+    if len(left_options) != len(set(left_options)):
+        return f"Left options must be unique, you should check your input"
+    if len(right_options) != len(set(right_options)):
+        return f"Right options must be unique, you should check your input"
+    
     # 确保correct_answer在left_options和right_options中
-    if not all(item in left_options for item in [pair.left for pair in correct_pairs]):
+    if not all(item in left_options for item in [left for left, _ in correct_pairs]):
         return f"Correct answer {correct_pairs} is not in left_options {left_options}, you should check your input"
-    if not all(item in right_options for item in [pair.right for pair in correct_pairs]):
+    if not all(item in right_options for item in [right for _, right in correct_pairs]):
         return f"Correct answer {correct_pairs} is not in right_options {right_options}, you should check your input"
     question = MatchQuestion(
         stem=stem,
@@ -47,11 +55,11 @@ def build_tools(stack: List[QuestionUnion]) -> StructuredTool:
         coroutine=partial(add_match_question, stack=stack),
         description=(
             """
-Add a match question to the stack.
-stem: Question stem
-left_options: Left options list
-right_options: Right options list
-correct_answer: Correct answer
+            Add a match question to the stack.
+            stem: Question stem
+            left_options: Left options list
+            right_options: Right options list
+            correct_answer: Correct answer
             """
         ),
         args_schema=QuestionArgs,
