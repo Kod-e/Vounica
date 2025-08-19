@@ -18,7 +18,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 MODEL_MAP = {
     LLMModel.HIGH: ChatOpenAI(model=LLMModel.HIGH.model_name),
-    LLMModel.STANDARD: ChatOpenAI(model=LLMModel.STANDARD.model_name),
+    LLMModel.STANDARD: ChatOpenAI(
+        model=LLMModel.HIGH.model_name,
+        reasoning_effort="minimal"
+    ),
     LLMModel.LOW: ChatOpenAI(model=LLMModel.LOW.model_name),
 }
 OPENAI_NAVITE_CLIENT = OpenAI(api_key=OPENAI_API_KEY)

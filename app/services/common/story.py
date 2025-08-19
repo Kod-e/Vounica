@@ -1,10 +1,11 @@
 """Story service wrapper."""
-from typing import List
+from typing import List, Dict, Any
 from app.services.common.common_base import BaseService
 from app.infra.models.story import Story
 from app.infra.repo.story_repository import StoryRepository
+from langchain_core.messages import SystemMessage, HumanMessage
 from app.infra.context import uow_ctx
-
+from app.llm.client import chat_completion, LLMModel
 
 class StoryService(BaseService[Story]):
     """Service for Story entity."""
@@ -13,6 +14,22 @@ class StoryService(BaseService[Story]):
         self._uow = uow_ctx.get()
         self._repo : StoryRepository = StoryRepository(db=self._uow.db)
         super().__init__(self._repo)
+        
+    async def create(self, data: Dict[str, Any]) -> Story:
+        """Create a new story."""
+        # 查看data的summary是否为空, 并且content存在而且不为空
+        if data.get("summary") == "" or data.get("summary") is None and data.get("content") and data.get("content") != "":
+            # 调用LLM生成summary和content
+            response = await chat_completion(
+                model_type=LLMModel.HIGH,
+                input=[
+                    SystemMessage(content="You are a user's story summary generator, you need to summarize the user's input to a String(256), and keep the user's intention as much as possible, if the story is short, return the whole story, only ensure the final length is less than 256 characters"),
+                    HumanMessage(content=data.get("content"))
+                ]
+            )
+            data["summary"] = response.content
+        # 调用LLM生成summary和content
+        return await super().create(data)
         
     async def get_user_stories(self, offset: int = 0, limit: int = 100, only_target_language: bool = False) -> List[Story]:
         """Get the user's stories."""
