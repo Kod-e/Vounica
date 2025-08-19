@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+
+# Virtual envs
+.venv/
+venv/
+ENV/
+env/
+
+# VCS / IDE
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Tests & docs (optional for smaller images)
+tests/
+docs/
+
+# OS / misc
+.DS_Store 

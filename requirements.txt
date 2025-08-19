@@ -17,7 +17,7 @@ dataclasses-json==0.6.7
 decorator==5.2.1
 distro==1.9.0
 dnspython==2.7.0
-# ecdsa removed; using PyJWT+cryptography for ES256
+ecdsa==0.19.1
 email_validator==2.2.0
 fakeredis==2.30.2
 fastapi==0.115.6
@@ -67,6 +67,7 @@ pydantic==2.11.7
 pydantic-settings==2.10.1
 pydantic_core==2.33.2
 Pygments==2.19.2
+PyJWT==2.10.1
 PyMySQL==1.1.1
 pytest==8.4.1
 pytest-asyncio==1.1.0
@@ -74,12 +75,11 @@ pytest-order==1.3.0
 pytest-tornasync==0.6.0.post2
 pytest-trio==0.8.0
 python-dotenv==1.1.1
-# python-jose removed; use PyJWT for JWT
-PyJWT[crypto]==2.10.1
+python-jose==3.5.0
 pytz==2025.2
 PyYAML==6.0.2
 qdrant-client==1.14.3
-redis==6.2.0
+redis==6.4.0
 regex==2024.11.6
 requests==2.32.4
 requests-toolbelt==1.0.0
