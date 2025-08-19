@@ -3,7 +3,7 @@ from app.services.common.common_base import BaseService
 from app.infra.models.grammar import Grammar
 from app.infra.repo.grammar_repository import GrammarRepository
 from app.infra.context import uow_ctx
-
+from typing import List
 
 class GrammarService(BaseService[Grammar]):
     """Service for Grammar entity."""
@@ -54,4 +54,20 @@ class GrammarService(BaseService[Grammar]):
         grammar.review_count = n_new
         return grammar  
 
+    # 获取最近的5条grammar的prompt
+    async def get_recent_grammar_prompt_for_agent(self, limit: int = 5) -> str:
+        """Get the recent grammar prompt for agent."""
+        grammars: List[Grammar] = await self._repo.get_recent_records(
+            db=self._uow.db,
+            filter={"user_id": self._uow.current_user.id, "language": self._uow.target_language},
+            limit=limit
+        )
+        result_str = "#User's Last 5 Recent Grammars\n"
+        result_str += f"ID|Time|Name|Usage|Status(Total Correct Rate in last 5 times, max 1.0, min 0.0)\n"
+        if len(grammars) == 0:
+            result_str += "No Any grammar Record\n"
+            return result_str
+        for grammar in grammars:
+            result_str += f"{grammar.id}|{grammar.updated_at.strftime('%Y-%m-%d')}|{grammar.name}|{grammar.usage}|{grammar.status:.2f}\n"
+        return result_str
 __all__ = ["GrammarService"] 

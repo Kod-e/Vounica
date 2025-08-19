@@ -71,7 +71,7 @@ class QuestionAgent(CoreAgent):
         """
         # 创建Agent
         question_agent = create_react_agent(
-            model=self.high_model,
+            model=self.model,
             tools=[
                 make_search_resource_tool(),
                 self.question_stack.build_delete_question_tool(),
@@ -80,7 +80,6 @@ class QuestionAgent(CoreAgent):
             ],
             checkpointer=self.checkpointer
         )
-        self.uow.accept_language = "ja_JP"
         # 6. 运行 Agent - 第一个问题
         config = {"configurable": {"thread_id": "1"}}
         payload = {"messages": [
@@ -237,6 +236,15 @@ C. ありがとう
 """},
                 {"role": "system", "content": f"""
 {await self.story_service.get_user_story_summary_prompt_for_agent()}
+"""},
+                {"role": "system", "content": f"""
+{await self.vocab_service.get_recent_vocab_prompt_for_agent()}
+"""},
+                {"role": "system", "content": f"""
+{await self.grammar_service.get_recent_grammar_prompt_for_agent()}
+"""},
+                {"role": "system", "content": f"""
+{await self.mistake_service.get_user_mistake_prompt_for_agent()}
 """},
                 {"role": "user", "content": user_input},
             ]}

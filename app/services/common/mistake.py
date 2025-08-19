@@ -37,4 +37,22 @@ class MistakeService(BaseService[Mistake]):
         result_str = f"##User has {count} mistakes\n"
         return result_str
 
+    # 获取用户最近的5道错题的prompt
+    async def get_user_mistake_prompt_for_agent(self, limit: int = 5) -> str:
+        """Get the user's recent mistakes prompt for agent."""
+        mistakes: List[Mistake] = await self._repo.get_recent_records(
+            db=self._uow.db,
+            filter={"user_id": self._uow.current_user.id, "language": self._uow.target_language},
+            limit=limit
+        )
+
+        result_str = "#User's Last 5 Recent Mistakes\n"
+        result_str += f"ID|Time|Question\n"
+        if len(mistakes) == 0:
+            result_str += "No Any mistake Record\n"
+            return result_str
+        for mistake in mistakes:
+            result_str += f"{mistake.id}|{mistake.updated_at.strftime('%Y-%m-%d')}|{mistake.question}\n"
+        return result_str
+
 __all__ = ["MistakeService"] 

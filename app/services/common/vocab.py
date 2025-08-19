@@ -64,4 +64,22 @@ class VocabService(BaseService[Vocab]):
         vocab.correct_rate = r_new
         vocab.review_count = n_new
         return vocab
+    
+    # 获取最近的5条vocab的prompt
+    async def get_recent_vocab_prompt_for_agent(self, limit: int = 5) -> str:
+        """Get the recent vocab prompt for agent."""
+        vocabs: List[Vocab] = await self._repo.get_recent_records(
+            db=self._uow.db,
+            filter={"user_id": self._uow.current_user.id, "language": self._uow.target_language},
+            limit=limit
+        )
+        result_str = "#User's Last 5 Recent Vocabs\n"
+        result_str += f"ID|Time|Name|Usage|Status(Total Correct Rate in last 5 times, max 1.0, min 0.0)\n"
+        if len(vocabs) == 0:
+            result_str += "No Any vocab Record\n"
+            return result_str
+        for vocab in vocabs:
+            result_str += f"{vocab.id}|{vocab.updated_at.strftime('%Y-%m-%d')}|{vocab.name}|{vocab.usage}|{vocab.status:.2f}\n"
+        return result_str
+    
 __all__ = ["VocabService"] 

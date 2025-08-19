@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar, Type, List, Optional, Any, Dict, Union
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, func
+from sqlalchemy import select, update, delete, func, desc
 from sqlalchemy.sql import Select
 from sqlalchemy.engine.result import ScalarResult
 
@@ -28,7 +28,18 @@ class Repository(Generic[T]):
             model: SQLAlchemy model class
         """
         self.model = model
-        # 保存模型类供 CRUD 方法使用
+
+    # 获取最近N条记录
+    async def get_recent_records(self, db: AsyncSession, filter: Optional[Dict[str, Any]] = None, limit: int = 5) -> List[T]:
+        """
+        Retrieve the most recent records.
+        """
+        query = select(self.model)
+        if filter:
+            query = query.filter_by(**filter)
+        query = query.order_by(desc(self.model.updated_at)).limit(limit)
+        result = await db.execute(query)
+        return result.scalars().all()
     
     async def get_by_id(self, db: AsyncSession, id: Any) -> Optional[T]:
         """

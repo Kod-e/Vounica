@@ -9,8 +9,8 @@ load_dotenv()
 
 # 模型ID配置
 OPENAI_MODEL_LOW = os.getenv("OPENAI_MODEL_LOW", "gpt-5-nano")
-OPENAI_MODEL_STADARD = os.getenv("OPENAI_MODEL_STADARD", "gpt-4o")
-OPENAI_MODEL_HIGH = os.getenv("OPENAI_MODEL_HIGH", "gpt-4.1")
+OPENAI_MODEL_STADARD = os.getenv("OPENAI_MODEL_STADARD", "gpt-5-mini")
+OPENAI_MODEL_HIGH = os.getenv("OPENAI_MODEL_HIGH", "gpt-5")
 OPENAI_EMBED_MODEL = os.getenv("OPENAI_EMBED_MODEL", "text-embedding-3-small")
 
 # 模型价格配置 (1M tokens/USD)

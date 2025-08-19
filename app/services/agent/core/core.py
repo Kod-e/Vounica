@@ -22,9 +22,18 @@ class CoreAgent:
     def __init__(self):
         # UoW 与模型
         self.uow = uow_ctx.get()
-        self.model = ChatOpenAI(model=LLMModel.STANDARD.model_name)
-        self.high_model = ChatOpenAI(model=LLMModel.HIGH.model_name)
-        self.low_model = ChatOpenAI(model=LLMModel.LOW.model_name)
+        self.model = ChatOpenAI(
+            model=LLMModel.HIGH.model_name,
+            reasoning_effort="minimal"
+        )
+        self.high_model = ChatOpenAI(
+            model=LLMModel.HIGH.model_name,
+            reasoning_effort="high"
+        )
+        self.low_model = ChatOpenAI(
+            model=LLMModel.STANDARD.model_name,
+            reasoning_effort="low"
+        )
         self.checkpointer = InMemorySaver()
         # 消息队列
         self._message_queue: asyncio.Queue = asyncio.Queue()
@@ -96,4 +105,5 @@ class CoreAgent:
                         tool_data=data
                     )
                 ))
-            print("event",t,"name", name, "data")
+            elif t == "on_chain_end" and name == "LangGraph":
+                break

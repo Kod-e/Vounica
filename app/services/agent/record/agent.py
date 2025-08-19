@@ -204,6 +204,15 @@ Your role is to:
                 {"role": "system", "content": f"""
 {await self.story_service.get_user_story_summary_prompt_for_agent()}
 """},
+                {"role": "system", "content": f"""
+{await self.vocab_service.get_recent_vocab_prompt_for_agent()}
+"""},
+                {"role": "system", "content": f"""
+{await self.grammar_service.get_recent_grammar_prompt_for_agent()}
+"""},
+                {"role": "system", "content": f"""
+{await self.mistake_service.get_user_mistake_prompt_for_agent()}
+"""},
                 {"role": "user", "content": judge_result_str},
             ]}
         print("start run_stream_events")
@@ -317,6 +326,15 @@ Category是关于Memory的分类
                 {"role": "user", "content": f"""
 #User's Input
 {self.user_input}
+"""},
+{"role": "system", "content": f"""
+{await self.vocab_service.get_recent_vocab_prompt_for_agent()}
+"""},
+                {"role": "system", "content": f"""
+{await self.grammar_service.get_recent_grammar_prompt_for_agent()}
+"""},
+                {"role": "system", "content": f"""
+{await self.mistake_service.get_user_mistake_prompt_for_agent()}
 """},
                 {"role": "user", "content": self.judge_result_str},
             ]
