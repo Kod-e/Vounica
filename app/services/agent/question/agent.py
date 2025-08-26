@@ -27,7 +27,7 @@ from app.services.common.mistake import MistakeService
 from app.services.common.vocab import VocabService
 class QuestionAgent(CoreAgent):
     """
-    使用 OPAR (观察、计划、行动、反思) 循环的问题生成代理。
+    使用 React 循环的问题生成代理。
     
     该类用于根据用户状态和输入生成个性化的语言学习题目。
     """
@@ -49,7 +49,7 @@ class QuestionAgent(CoreAgent):
     # 实现run方法
     async def run(self, user_input: str) -> List[QuestionUnion]:
         """
-        运行完整的 OPAR 循环并根据用户输入生成问题。
+        运行完整的 React 循环并根据用户输入生成问题。
         
         该方法协调整个问题生成过程，包括观察、计划、行动和反思阶段。
         """
@@ -65,9 +65,7 @@ class QuestionAgent(CoreAgent):
 
     async def _make_questions(self, user_input: str) -> None:
         """
-        观察阶段：观察用户上下文并搜索相关信息。
-        
-        分析用户输入，识别用户可能的需求，并在数据库中搜索相关资源。
+        React 阶段：分析用户输入, 生成题目
         """
         # 创建Agent
         question_agent = create_react_agent(

@@ -231,8 +231,8 @@ async def get_uow_ws(
         raise UnauthorizedException("User not found")
 
     # Languages from headers or query params
-    accept_language = websocket.headers.get("accept-language") or websocket.query_params.get("accept_language")
-    target_language = websocket.headers.get("target-language") or websocket.query_params.get("target_language")
+    accept_language = websocket.query_params.get("accept-language") or websocket.headers.get("accept-language")
+    target_language = websocket.query_params.get("target-language") or websocket.headers.get("target-language")
 
     uow = UnitOfWork(
         db=db,
