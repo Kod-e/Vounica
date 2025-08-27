@@ -34,7 +34,7 @@ class QuestionSpec(BaseModel, ABC):
 
 ---
 
-## 例：Choic
+## 例：Choice
 
 Swift の **protocol 指向** に近い考え方で、  
 **`prompt()` / `judge()` / `generate_error_reason()` を実装して Pydantic に乗れば、それはもう Question** です。  
