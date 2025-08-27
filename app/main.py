@@ -4,10 +4,11 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
-from fastapi import FastAPI, APIRouter, Request
+from fastapi import FastAPI, APIRouter, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.api.v1.router import router as v1_router
@@ -50,10 +51,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     qdrant_client.close()
     await redis_client.aclose()
 
+# Vue の build 出力 dist/（リポジトリ直下）
+DIST_DIR = (Path(__file__).resolve().parent.parent / "dist").resolve()
+INDEX_HTML = DIST_DIR / "index.html"
+
 # 健康检查端点
 health_router = APIRouter()
 
-@health_router.get("/health")
+@health_router.get("", include_in_schema=False)
 async def health_check():
     return {"status": "healthy"}
 
@@ -101,6 +106,24 @@ def create_app() -> FastAPI:
     # 注册路由
     app.include_router(v1_router, prefix="/v1")
     app.include_router(health_router, prefix="/health")
+
+    if DIST_DIR.exists():
+        assets_dir = DIST_DIR / "assets"
+        if assets_dir.exists():
+            app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+    @app.get("/", include_in_schema=False)
+    async def root():
+        if not INDEX_HTML.exists():
+            raise HTTPException(status_code=404)
+        return FileResponse(INDEX_HTML)
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        seg = full_path.split("/", 1)[0]
+        if seg.startswith("v") and seg[1:].isdigit():
+            raise HTTPException(status_code=404)
+        if not INDEX_HTML.exists():
+            raise HTTPException(status_code=404)
+        return FileResponse(INDEX_HTML)
     return app
 
 app = create_app()
@@ -109,4 +132,4 @@ if __name__ == "__main__":
     host = os.getenv("UVICORN_HOST", "0.0.0.0")
     port = int(os.getenv("UVICORN_PORT", "8000"))
     reload_flag = str(os.getenv("UVICORN_RELOAD", "false")).strip().lower() in {"1", "true", "yes", "on"}
-    uvicorn.run("app.main:app", host=host, port=port, reload=reload_flag) 
+    uvicorn.run("app.main:app", host=host, port=port, reload=reload_flag)
