@@ -14,6 +14,8 @@ Service層は、Infra層を通じてデータを取得・保存します。
 - Schema（データの変換や検証）
 - 外部サービス連携（Qdrant, Redisなど）
 
+---
+
 ## Database Model（Story）
 
 Database Model は DB のテーブルやレコードを Python クラスで表現したものです。
@@ -46,4 +48,37 @@ class Story(BaseModel):
 
     # ストーリーの言語 (ISO 639-1 code, 例: "ja", "en", "zh")
     language = Column(String(8), default="zh")
+```
+
+---
+
+## Repository (Story)
+
+Repository は Core の Base Repository を継承しています。  
+そのため `get_by_id`, `create`, `update`, `delete` ... などの基本操作は全部自動で使えます。  
+さらに Infra 側で「よく使う ORM クエリ」をメソッドにまとめ、外部から便利に呼び出せるようにしました。  
+私はこういう形でクエリをカプセル化すると、Service 層のコードがすごく読みやすくなると思います。
+
+例えば StoryRepositoryは、ユーザーの最近のストーリーを簡単に取得できます。
+```python
+#app/infra/repo/story_repository.py
+class StoryRepository(Repository[Story]):
+    """Repository class for Story model.
+    これは Story model用(よう)の repository 基本(きほん) classです。
+    """
+
+    def __init__(self, db: AsyncSession):
+        super().__init__(Story)
+        self.db = db 
+
+    # ユーザーのストーリーを取得する関数
+    async def get_user_stories(
+        self, user_id: int, offset: int = 0, limit: int = 100, language: str | None = None
+    ) -> List[Story]:
+        """Get the user's stories."""
+        query = select(Story).where(Story.user_id == user_id)
+        if language:
+            query = query.where(Story.language == language)
+        stories = await self.db.execute(query.offset(offset).limit(limit))
+        return stories.scalars().all()
 ```
