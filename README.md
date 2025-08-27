@@ -84,8 +84,10 @@ docker compose up -d --build
 最初にユーザーが「学びたい内容」を入力すると、Question Agent が冷スタートします。  
 学習履歴や文法・語彙の記録がない状態から診断テストを作成し、段階的に問題を生成します。
 
-![Cold Start 入力画面](https://static.vounica.com/image/qagent/1.webp)  
-![Cold Start 出題画面](https://static.vounica.com/image/qagent/2.webp)
+<p align="center">
+  <img src="https://static.vounica.com/image/qagent/1.webp" alt="Cold Start Input" width="400"/>
+  <img src="https://static.vounica.com/image/qagent/2.webp" alt="Cold Start Output" width="400"/>
+</p>
 
 
 ### Question → Record → Question のループ
