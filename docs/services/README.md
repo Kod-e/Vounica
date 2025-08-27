@@ -6,7 +6,7 @@ Infra がデータを保存・取得するだけなら、Service はそれを組
 
 
 ## Common Service
-
+(app/service/common)
 Common は「Repo を使いやすくする小さなサービス」です。  
 私はここで **Unit of Work (UoW)** を前提にして、**ユーザーIDを意識しない CRUD** を実現しました。  
 つまり、呼び出す側は毎回 `user_id` を渡さなくても、**現在のユーザーの文脈**で安全に操作できます。
@@ -48,3 +48,13 @@ class StoryService(BaseService[Story]):
         user_id = self._uow.current_user_id
         return await self._repo.filter_by_user_id(self._uow.db, user_id)
 ```
+
+## Auth Service
+(app/service/auth)
+Auth Service は ユーザー認証まわり をまとめています。
+register / login / refresh / guest などを一つの class にして、内部では UserRepository と RefreshTokenRepository を使います。
+- register：新しいユーザーを作成する。すでに同じメールがあるとエラー。
+- guest：一時的なGuestユーザーを自動生成して、token を返す。
+- login：メールとパスワードをチェックして、正しい場合に token を返す。
+- refresh：refresh token を確認して、新しい access token を返す。
+私は Auth Service を使うことで、FastAPI の handler がシンプルになり、認証ロジックを一か所で管理できるのが便利だと思いました。
