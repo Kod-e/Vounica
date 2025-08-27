@@ -77,33 +77,38 @@ class CoreAgent:
     
     # 持续向外部发送stream event, 通过agent和payload, config
     async def run_stream_events(self, agent:CompiledStateGraph , payload: Dict[str, Any], config: Dict[str, Any]):
-        async for ev in agent.astream_events(payload, config=config, version="v2"):
-            t = ev["event"]
-            name = ev.get("name")  # 哪个节点/模型/工具
-            data = ev.get("data", {})
+        try:
+            async for ev in agent.astream_events(payload, config=config, version="v2"):
+                t = ev["event"]
+                name = ev.get("name")  # 哪个节点/模型/工具
+                data = ev.get("data", {})
 
-            if t == "on_chat_model_start":
-                self.event(AgentThinkingEvent())
-            elif t == "on_chat_model_stream":
-                chunk = data.get("chunk")
-                # 兼容 AIMessageChunk 或 provider 自定义结构
-                text = getattr(chunk, "content", None)
-                if text:
-                    self.event(AgentStreamChunkEvent(
-                        data=AgentStreamChunkData(chunk=text)
+                if t == "on_chat_model_start":
+                    self.event(AgentThinkingEvent())
+                elif t == "on_chat_model_stream":
+                    chunk = data.get("chunk")
+                    # 兼容 AIMessageChunk 或 provider 自定义结构
+                    text = getattr(chunk, "content", None)
+                    if text:
+                        self.event(AgentStreamChunkEvent(
+                            data=AgentStreamChunkData(chunk=text)
+                        ))
+
+                elif t == "on_chat_model_end":
+                    self.event(AgentStreamEndEvent())
+                    self.is_streaming = False
+
+                elif t == "on_tool_end":
+                    print("on_tool_end", name, data)
+                    self.event(AgentToolCallEvent(
+                        data = AgentToolData(
+                            tool_name=name,
+                            tool_data=data
+                        )
                     ))
-
-            elif t == "on_chat_model_end":
-                self.event(AgentStreamEndEvent())
-                self.is_streaming = False
-
-            elif t == "on_tool_end":
-                print("on_tool_end", name, data)
-                self.event(AgentToolCallEvent(
-                    data = AgentToolData(
-                        tool_name=name,
-                        tool_data=data
-                    )
-                ))
-            elif t == "on_chain_end" and name == "LangGraph":
-                break
+                elif t == "on_chain_end" and name == "LangGraph":
+                    break
+        except Exception as e:
+            print(e)
+            self.event(AgentStreamEndEvent())
+            self.is_streaming = False
