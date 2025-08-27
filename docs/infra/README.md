@@ -99,3 +99,35 @@ User, Story, Memory, Vocab, Grammar, Mistake など全部に対応する Schema 
 Pydantic で入力チェックと出力整形をしています。
 
 私は Schema を infra にまとめることで、API 層と Service 層の両方から再利用できて便利だと思いました。
+
+## Vector (Qdrant)
+(app/infra/vector)
+AI Agent が 意味検索 をできるようにすると、プロジェクト全体の効率がすごく高くなります。
+例えば「食べ物」で検索すると、リンゴ・ラーメン・寿司 まで一緒に見つけられる。
+そのため、このプロジェクトでは Memory, Grammar, Vocab, Mistake, Story などを Qdrant の collection に分けて保存しています。
+
+現在は OpenAI の embedding model を使ってベクトル化しています。
+正直に言うとオープンソースやクローズドの選択肢はいろいろありますが、便利さのために OpenAI を選びました。
+
+
+## Unit of Work (UoW)
+
+FastAPI には 依存注入 (Dependency Injection) の仕組みがあります。
+このプロジェクトでは、UnitOfWork を作って DB / Vector(Qdrant) / Redis / User 情報 を まとめて一回で注入 できるようにしました。
+
+普通の ORM (SQLAlchemy) には transaction があって commit / rollback ができますが、Qdrant には transaction がありません。
+そこで UoW で2つを同時に扱う仕組みを作り、最後に commit() か rollback() を呼ぶと DB と Qdrant が同じ状態になるようにしています。
+
+さらに Core の JWT 認証処理 もここに統合しています。
+だから API handler では uow を一度受け取れば、request 全体で次のものにアクセスできます：
+- uow.db (SQLAlchemy Session)
+- uow.vector (Qdrant の VectorSession)
+- uow.redis (Redis Client)
+- uow.current_user (JWT から解決した User 情報)
+- uow.quota (Token QuotaBucket)
+
+また、uow_ctx という ContextVar を使っているので、request の途中のどこからでも今の UoW にアクセス可能です。
+これは Agent の tool call にも役立ちます。
+例えば prompt injection 攻撃で「別のユーザーの情報を見せて」と言われても、uow_ctx がユーザーごとに隔離されているので越権アクセスはできません。
+
+私はこの設計のおかげで 「一回依存を渡すだけで全部安全に使える」 のがとても便利だと思いました。
