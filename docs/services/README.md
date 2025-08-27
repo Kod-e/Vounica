@@ -58,3 +58,21 @@ register / login / refresh / guest などを一つの class にして、内部�
 - login：メールとパスワードをチェックして、正しい場合に token を返す。
 - refresh：refresh token を確認して、新しい access token を返す。
 私は Auth Service を使うことで、FastAPI の handler がシンプルになり、認証ロジックを一か所で管理できるのが便利だと思いました。
+
+- [tools.md](tools.md)  
+  ここは Agent が呼び出す **ツール置き場** です。  
+  `function` のほうは「Agent が Call できる関数の型」を定義していて、必要なら UoW を注入した wrapper をかけます。  
+  `langchain` のほうは ReAct Agent にそのまま渡せる tools を並べていて、Args はどう受けるかをちゃんと決めています。  
+
+- [question.md](question.md)  
+  Question の基本型 (`QuestionSpec`) を定義しました。  
+  SwiftUI を書いたときの発想に近くて、「protocol っぽい」書き方で、Choice / Match / Assembly とかを増やしても自然に拡張できます。  
+
+- [question_stack.md](question_stack.md)  
+  これは Agent のための「試験用の下書きノート」みたいなもの。  
+  Question を一時的に積んでおいて、最終的に「試験問題」としてまとめるためのツールです。  
+
+- [agent.md](agent.md)  
+  Agent の本体。CoreAgent がベースで、Event push とか init の共通処理をまとめています。  
+  そこから QuestionAgent と RecordAgent を作って、学習ループを回しています。  
+  正直、ここが一番「動いてる感」があって、作ってて面白かったところです。  
