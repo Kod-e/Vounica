@@ -19,8 +19,8 @@ async def add_assembly_question(
     options: List[str],
     correct_answer: Union[str, List[str]]
 ) -> str:
-    if len(stack) >= 10:
-        return f"You have reached the maximum number of questions (10). Please delete some questions first."
+    if len(stack) >= 8:
+        return f"You have reached the maximum number of questions (8). Please delete some questions first."
     # 如果传入的是 str，则转为单元素 list
     answer_list: List[str]
     if isinstance(correct_answer, str):
@@ -40,7 +40,7 @@ async def add_assembly_question(
         return f"Correct answer {answer_list} is not in options {options}, you should check your input"
     question = AssemblyQuestion(stem=stem, options=options, correct_answer=answer_list)
     stack.append(question)
-    message = f"{len(stack)}/10(Max) AssemblyQuestion added, stem: {stem} Now We Have {len(stack)} Questions, Max 10 Questions"
+    message = f"{len(stack)}/8(Max) AssemblyQuestion added, stem: {stem}"
     return message
 # 制作函数, 注入应该注入的内容
 def build_tools(stack: List[QuestionUnion]) -> StructuredTool:

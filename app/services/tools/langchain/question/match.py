@@ -23,8 +23,8 @@ async def add_match_question(
     right_options: List[str],
     correct_answer: List[AnswerPair]
 ) -> str:
-    if len(stack) >= 10:
-        return f"You have reached the maximum number of questions (10). Please delete some questions first."
+    if len(stack) >= 8:
+        return f"You have reached the maximum number of questions (8). Please delete some questions first."
     correct_pairs: List[Tuple[str, str]] = [(pair.left, pair.right) for pair in correct_answer]
     #打乱right_options
     random.shuffle(right_options)
@@ -48,7 +48,7 @@ async def add_match_question(
         correct_answer=correct_pairs,
     )
     stack.append(question)
-    message = f"{len(stack)}/10(Max) MatchQuestion added, stem: {stem} Now We Have {len(stack)} Questions, Max 10 Questions"
+    message = f"{len(stack)}/8(Max) MatchQuestion added, stem: {stem}"
     return message
 # 制作函数, 注入应该注入的内容
 def build_tools(stack: List[QuestionUnion]) -> StructuredTool:
