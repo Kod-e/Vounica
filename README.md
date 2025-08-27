@@ -4,7 +4,10 @@
 > 全体の意味は「一人一人に unique な language learning コースを作る」です。
 
 
-## 🔧 Install（おすすめ）
+## Install と　Access
+
+## Demo
+https://vounica.com
 
 ### 1. リポジトリを clone
 ```bash
@@ -16,11 +19,15 @@ cd Vounica
 cp .example.env .env
 cp .example.docker.env .docker.env
 ```
+.env と .docker.env をコピーしたあと、OPENAI_API_KEY, JWT_PRIVATE_KEY_B64, JWT_PUBLIC_KEY_B64 など未記入の値を必ず設定してください。
+JWT鍵は ES256 (ECDSA P-256) を PEM形式で生成し、Base64 に変換して入れます。
 ### 3. Docker Compose で起動（おすすめ）
+```bash
 docker compose up -d --build
-
+```
 ### 4. Access
 APIとVue Dist: http://localhost:8000/
+
 ## 使用している技術
 
 ### backend：Python + Fa stAPI + SQLAlchemy + Qdrant
