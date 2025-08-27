@@ -89,3 +89,13 @@ QuotaBucket は app/infra/quota/bucket.py にあります。
 Redis を使って User ごとの 消費バケツ (consumption bucket) を作ります。
 Bucket には window (有効期限) があり、時間が過ぎると自動で reset されます。
 私はこの仕組みで「使いすぎ防止」と「公平性」がシンプルにできると思いました。
+
+
+## Schema
+
+FastAPI で使う Schema は全部 app/infra/schemas/ に置いています。
+例えば RegisterSchema, LoginSchema, TokenSchema などです。
+User, Story, Memory, Vocab, Grammar, Mistake など全部に対応する Schema があり、
+Pydantic で入力チェックと出力整形をしています。
+
+私は Schema を infra にまとめることで、API 層と Service 層の両方から再利用できて便利だと思いました。
