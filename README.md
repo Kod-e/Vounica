@@ -79,16 +79,34 @@ docker compose up -d --build
   エンドポイント定義や依存解決が含まれます。  
 
 ## ScreenShots
-
 ### Question Agent 冷スタート
 最初にユーザーが「学びたい内容」を入力すると、Question Agent が冷スタートします。  
 学習履歴や文法・語彙の記録がない状態から診断テストを作成し、段階的に問題を生成します。
 
 <p align="center">
-  <img src="https://static.vounica.com/image/qagent/1.webp" alt="Cold Start Input" width="400"/>
-  <img src="https://static.vounica.com/image/qagent/2.webp" alt="Cold Start Output" width="400"/>
+  <img src="https://static.vounica.com/image/qstagent/1.webp" alt="Cold Start Input" width="400"/>
+  <img src="https://static.vounica.com/image/qstagent/2.webp" alt="Cold Start Output" width="400"/>
 </p>
 
+### Question Type Examples
+Vounica では主に 3 種類の問題形式をサポートしています。  
+下記は Choice, Match, Assembly の画面例です。
+
+<p align="center">
+  <img src="https://static.vounica.com/image/question/1.webp" alt="Choice Question" width="280"/>
+  <img src="https://static.vounica.com/image/question/2.webp" alt="Match Question" width="280"/>
+  <img src="https://static.vounica.com/image/question/3.webp" alt="Assembly Question" width="280"/>
+</p>
+
+
+### Database View (Frontend)
+ユーザーの回答や習得状態はフロントエンドから DB として確認できます。  
+以下は Memory と Vocab の例です。
+
+<p align="center">
+  <img src="https://static.vounica.com/image/database/1.webp" alt="Memory View" width="400"/>
+  <img src="https://static.vounica.com/image/database/2.webp" alt="Vocab View" width="400"/>
+</p>
 
 ### Question → Record → Question のループ
 
