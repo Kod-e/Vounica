@@ -108,6 +108,17 @@ Vounica では主に 3 種類の問題形式をサポートしています。
   <img src="https://static.vounica.com/image/database/2.webp" alt="Vocab View" width="400"/>
 </p>
 
+### Memory in Agent
+Vounica はユーザーの入力や回答を記憶し、次回以降の問題生成に反映します。  
+ユーザーが明示的に「この単語を練習したい」と要求しなくても、過去の記録を参照して  
+関連する語彙や文法を自動で出題することができます。
+
+<p align="center">
+  <img src="https://static.vounica.com/image/memory/1.webp" alt="Memory Function 1" width="280"/>
+  <img src="https://static.vounica.com/image/memory/2.webp" alt="Memory Function 2" width="280"/>
+  <img src="https://static.vounica.com/image/memory/3.webp" alt="Memory Function 3" width="280"/>
+</p>
+
 ### Question → Record → Question のループ
 
 Vounica の特徴は、Question（問題を出す）→ Record（答えや間違いを記録する）→ Question（次の問題を出す）というサイクルです。このサイクルは Agent によって管理されており、ユーザーの学習状態に合わせて最適な問題を自動で選びます。これにより、効率的で個別化された学習体験を提供します。
