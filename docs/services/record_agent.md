@@ -1,5 +1,5 @@
 # RecordAgent
-
+(app/service/agent/record/agent.py)
 RecordAgent は **採点・記録** を担当する Agent です。動きは QuestionAgent と同じく **ReAct**。目的があるときに **tool call** を発火し、観察→思考→次の行動…をループします。私はこの分離（出題＝Question / 記録＝Record）が一番わかりやすいと思いました。
 
 ---

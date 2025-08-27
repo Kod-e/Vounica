@@ -1,5 +1,5 @@
 # QuestionAgent
-
+(app/service/agent/question/agent.py)
 QuestionAgent は **ReAct** で動く出題用の Agent です。目的があるときに **tool call** を発火し、観察→思考→次の行動…をループします。私はこの流れが一番シンプルで、ログも追いやすいと思っています。
 
 ---
