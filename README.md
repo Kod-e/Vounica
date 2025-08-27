@@ -4,7 +4,7 @@
 > 全体の意味は「一人一人に unique な language learning コースを作る」です。
 
 
-## Install と　Access
+## InstallとAccess
 
 ## Demo
 https://vounica.com
