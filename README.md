@@ -49,7 +49,7 @@ docker compose up -d --build
 
 ### frontend：Vue 3 + Pinia + OpenAPI Fetch
 
-- この GitHub repo には backend の code だけです。frontend は別 repo（https://github.com/Kod-e/Vounica-Web）にあります。  
+- この GitHub repo には backend の code だけです。frontend は別 repo https://github.com/Kod-e/Vounica-Web
 - Vue3 + Pinia を使うと、UI は data を管理せず、ただ表示するだけです。imperative な code はほとんど不要です。  
 - backend の FastAPI が出す OpenAPI schema をそのまま使えるので、frontend で model を作り直す必要はありません。
 
