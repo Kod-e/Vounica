@@ -68,10 +68,6 @@ register / login / refresh / guest などを一つの class にして、内部�
   Question の基本型 (`QuestionSpec`) を定義しました。  
   SwiftUI を書いたときの発想に近くて、「protocol っぽい」書き方で、Choice / Match / Assembly とかを増やしても自然に拡張できます。  
 
-- [question_stack.md](question_stack.md)  
-  これは Agent のための「試験用の下書きノート」みたいなもの。  
-  Question を一時的に積んでおいて、最終的に「試験問題」としてまとめるためのツールです。  
-
 - [agent.md](agent.md)  
   Agent の本体。CoreAgent がベースで、Event push とか init の共通処理をまとめています。  
   そこから QuestionAgent と RecordAgent を作って、学習ループを回しています。  
