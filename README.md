@@ -41,7 +41,7 @@ docker compose up -d --build
 
 ## 使用している技術
 
-### backend：Python + Fa stAPI + SQLAlchemy + Qdrant
+### backend：Python + FastAPI + SQLAlchemy + Qdrant
 
 - Python は library が多く、とても便利です。  
 - ORM, Qdrant SDK, OpenAI SDK, LangChain などを使っています。  
