@@ -82,3 +82,10 @@ class StoryRepository(Repository[Story]):
         stories = await self.db.execute(query.offset(offset).limit(limit))
         return stories.scalars().all()
 ```
+
+## Quota (Token制限)
+
+QuotaBucket は app/infra/quota/bucket.py にあります。
+Redis を使って User ごとの 消費バケツ (consumption bucket) を作ります。
+Bucket には window (有効期限) があり、時間が過ぎると自動で reset されます。
+私はこの仕組みで「使いすぎ防止」と「公平性」がシンプルにできると思いました。
