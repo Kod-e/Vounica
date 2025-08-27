@@ -4,7 +4,6 @@
 > 全体の意味は「一人一人に unique な language learning コースを作る」です。
 
 
-
 ## 使用している技術
 
 ### backend：Python + Fa stAPI + SQLAlchemy + Qdrant
