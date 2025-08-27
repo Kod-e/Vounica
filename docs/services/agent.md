@@ -95,3 +95,7 @@ message queue で **生産（Agent）** と **消費（外部）** を分離し�
 ## QuestionAgent
 - [question_agent.md](question_agent.md)  
   Question Agent の本体
+
+## RecordAgent
+- [record_agent.md](record_agent.md)  
+  Record Agent の本体
