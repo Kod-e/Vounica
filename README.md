@@ -3,11 +3,20 @@
 > 名前の後半「unica」は Latin 語から来ました。前半の「vo」は voice（声）、vocabulary（単語）などの意味を考えられます。  
 > 全体の意味は「一人一人に unique な language learning コースを作る」です。
 
+Vounica は、AI を利用した **言語学習支援プラットフォーム** です。  
+ユーザーが自分で書いた日記や興味のある内容をもとに、システムが自動で問題（Question）を作成し、  
+解答や間違いを記録（Record）して、次の問題に反映します。  
 
-## InstallとAccess
+この **QuestionAgent → RecordAgent → QuestionAgent のループ** によって、  
+使えば使うほどシステムがユーザーを理解し、個別最適な学習体験を提供します。  
 
+従来の固定カリキュラム型アプリと違い、Vounica は **ユーザー自身の生活・興味・文脈** を中心に学習内容を生成するため、  
+「自分の言葉」で学べるのが特徴です。
 ## Demo
 https://vounica.com
+
+- OpenAPI ドキュメント: https://api.vounica.com/docs
+## InstallとAccess
 
 ### 1. リポジトリを clone
 ```bash
@@ -26,7 +35,9 @@ JWT鍵は ES256 (ECDSA P-256) を PEM形式で生成し、Base64 に変換して
 docker compose up -d --build
 ```
 ### 4. Access
-APIとVue Dist: http://localhost:8000/
+- Frontend (Vue Dist): http://localhost:8000/  
+- API (例: http://localhost:8000/v1/auth/guest)  
+- OpenAPI ドキュメント: http://localhost:8000/docs
 
 ## 使用している技術
 
@@ -66,6 +77,16 @@ APIとVue Dist: http://localhost:8000/
 - [docs/api/README.md](docs/api/README.md)  
   Infra 層の schema を利用して Service の機能を呼び出す FastAPI endpoint を提供する層。  
   エンドポイント定義や依存解決が含まれます。  
+
+## ScreenShots
+
+### Question Agent 冷スタート
+最初にユーザーが「学びたい内容」を入力すると、Question Agent が冷スタートします。  
+学習履歴や文法・語彙の記録がない状態から診断テストを作成し、段階的に問題を生成します。
+
+![Cold Start 入力画面](https://static.vounica.com/image/qagent/1.webp)  
+![Cold Start 出題画面](https://static.vounica.com/image/qagent/2.webp)
+
 
 ### Question → Record → Question のループ
 
