@@ -1,9 +1,7 @@
-# .env
+.env
 .venv
 .*
 # ignore python cache for all folders
 __pycache__/    
 !.vscode/    
 !.dockerignore
-!.docker.env
-!.env
