@@ -86,3 +86,52 @@ def make_memory_add_tool() -> StructuredTool:
         args_schema=MemoryAddArgs,
     )
 ```
+
+## Question Stack
+(app/service/tools/langchain/question_stack.py)
+これは Question Agent の“出題用の下書き（試験用の束）”です。  
+Agent 初期化のときに作られて、**いくつかの設問をまとめて持つ**／**全部を文字列化して AI に渡す**ために使います。  
+私は「問題を一回ここに積んでから出す」方が制御しやすいと思っています。
+
+---
+
+### 何をするの？
+
+- `questions: List[QuestionUnion]` に設問をためる  
+- 追加／削除／一覧を **LangChain の StructuredTool** で外から操作できる  
+- 「全部の問題を 1 本の prompt 文字列」にして返す（Agent がそのまま読む）
+- gather_tools は app/service/tools/langchain/question の下にある全部の .py Moduleをまわって、もしその中に build_tools 関数があれば拾ってまとめる、っていう仕組みです。
+
+```python
+from typing import List
+from langchain_core.tools import StructuredTool
+from app.infra.context import uow_ctx
+
+class QuestionStack:
+    def __init__(self):
+        self.uow = uow_ctx.get()
+        self.questions: List[QuestionUnion] = []
+
+    # LangChain 側に渡すツールを集める（下の「プラグイン構造」を参照）
+    def get_tools(self) -> List[StructuredTool]:
+        from app.services.tools.langchain.question import gather_tools
+        return gather_tools(self)
+
+    # ---- 自分自身を操作するツール（例） ----
+
+    def build_delete_question_tool(self) -> StructuredTool:
+        return StructuredTool.from_function(
+            name="delete_question",
+            description="スタックから1問を削除します。削除後は後ろのindexが詰まります。",
+            func=self.delete_question,
+            args_schema=DeleteQuestionArgs,  # pydantic モデル
+        )
+
+    def build_get_questions_prompt_tool(self) -> StructuredTool:
+        return StructuredTool.from_function(
+            name="get_questions",
+            description="現在の全設問を1つの multi-line prompt として返します。",
+            func=self.get_questions_prompt,
+            args_schema=EmptyArgs,  # 引数なしのダミーschema（{}で呼ぶ）
+        )
+```
