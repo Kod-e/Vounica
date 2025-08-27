@@ -1,10 +1,10 @@
 # Agent
 
-Agent は **ReAct 方式** で動きます。目的があるときに tool call を発火し、観察→思考→次の行動…を **ループ** します。ゴールに到達したら終了。私はこのやり方が一番読みやすく、ログも追いやすいと感じています。
+Agent は **ReAct 方式** で動きます。目的があるときに tool call を発火し、観察→思考→次の行動…を **ループ** します。ゴールに到達したら終了
 
 ---
 
-## ReAct の流れ（要点）
+## ReAct の流れ
 - 目的を設定（例：ユーザーの最近の学習ログから次の問題を作る）
 - 思考（reasoning）
 - 必要なら **tool call**（memory / vocab / grammar / search / question_stack など）
@@ -90,3 +90,8 @@ message queue で **生産（Agent）** と **消費（外部）** を分離し�
 - UoW によって **安全** と **一貫性** を担保
 
 私はこの構成が「実装が見通しやすく、運用も楽」だと思っています。
+
+
+## QuestionAgent
+- [question_agent.md](question_agent.md)  
+  Question Agent の本体
