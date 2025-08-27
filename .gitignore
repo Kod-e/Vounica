@@ -5,3 +5,5 @@
 __pycache__/    
 !.vscode/    
 !.dockerignore
+!.example.docker.env
+!.example.env

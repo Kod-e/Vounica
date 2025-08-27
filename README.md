@@ -4,6 +4,23 @@
 > 全体の意味は「一人一人に unique な language learning コースを作る」です。
 
 
+## 🔧 Install（おすすめ）
+
+### 1. リポジトリを clone
+```bash
+git clone https://github.com/Kod-e/Vounica.git
+cd Vounica
+```
+### 2. 環境変数を作成
+```bash
+cp .example.env .env
+cp .example.docker.env .docker.env
+```
+### 3. Docker Compose で起動（おすすめ）
+docker compose up -d --build
+
+### 4. Access
+APIとVue Dist: http://localhost:8000/
 ## 使用している技術
 
 ### backend：Python + Fa stAPI + SQLAlchemy + Qdrant
