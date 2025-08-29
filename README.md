@@ -26,7 +26,6 @@ cd Vounica
 ### 2. 環境変数を作成
 ```bash
 cp .example.env .env
-cp .example.docker.env .docker.env
 ```
 .env と .docker.env をコピーしたあと、OPENAI_API_KEY, JWT_PRIVATE_KEY_B64, JWT_PUBLIC_KEY_B64 など未記入の値を必ず設定してください。
 JWT鍵は ES256 (ECDSA P-256) を PEM形式で生成し、Base64 に変換して入れます。
