@@ -23,16 +23,46 @@ https://vounica.com
 git clone https://github.com/Kod-e/Vounica.git
 cd Vounica
 ```
-### 2. 環境変数を作成
+### 2. 環境変数を作成 
+
+#### Docker（おすすめ）
+```bash
+cp .example.docker.env .docker.env
+```
+.docker.env をコピーしたあと、OPENAI_API_KEY など未記入の値を必ず設定してください。
+JWT鍵は ES256 (ECDSA P-256) を PEM形式で生成し、Base64 に変換して入れます。
+localhostで使うなら デフォルト の JWT_PRIVATE_KEY_B64, JWT_PUBLIC_KEY_B64 でOK
+公開では必ず新しい鍵を生成して置き換えてください
+#### Dockerなし（おすすめしません）
 ```bash
 cp .example.env .env
 ```
-.env と .docker.env をコピーしたあと、OPENAI_API_KEY, JWT_PRIVATE_KEY_B64, JWT_PUBLIC_KEY_B64 など未記入の値を必ず設定してください。
-JWT鍵は ES256 (ECDSA P-256) を PEM形式で生成し、Base64 に変換して入れます。
-### 3. Docker Compose で起動（おすすめ）
+..env をコピーしたあと、OPENAI_API_KEY など未記入の値を必ず設定してください。
+さらに以下の接続URLを記入する必要があります
+- DATABASE_URL = PostgreSQL の接続先
+- REDIS_URL    = Redis の接続先
+- QDRANT_URL   = Qdrant の接続先
+
+localhostで使うなら デフォルト の JWT_PRIVATE_KEY_B64, JWT_PUBLIC_KEY_B64 でOK
+公開では必ず新しい鍵を生成して置き換えてください
+
+postgre: https://github.com/postgres/postgres
+redis: https://github.com/redis/redis
+qdrant: https://github.com/qdrant/qdrant
+
+### 3. 起動
+#### Docker Compose で （おすすめ）
 ```bash
 docker compose up -d --build
 ```
+#### Dockerなし（おすすめしません）
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
 ### 4. Access
 - Frontend (Vue Dist): http://localhost:8000/  
 - API (例: http://localhost:8000/v1/auth/guest)  
