@@ -37,19 +37,20 @@ localhostで使うなら デフォルト の JWT_PRIVATE_KEY_B64, JWT_PUBLIC_KEY
 ```bash
 cp .example.env .env
 ```
-..env をコピーしたあと、OPENAI_API_KEY など未記入の値を必ず設定してください。
-さらに以下の接続URLを記入する必要があります
-DATABASE_URL = PostgreSQL の接続先
-REDIS_URL    = Redis の接続先
-QDRANT_URL   = Qdrant の接続先
+.env をコピーしたあと、OPENAI_API_KEY など未記入の値を必ず設定してください。
+さらに以下の接続URLを記入する必要があります. 
 
-localhostで使うなら デフォルト の JWT_PRIVATE_KEY_B64, JWT_PUBLIC_KEY_B64 でOK
-公開では必ず新しい鍵を生成して置き換えてください
+DATABASE_URL = PostgreSQL の接続先. 
+REDIS_URL    = Redis の接続先. 
+QDRANT_URL   = Qdrant の接続先. 
 
-postgre: https://github.com/postgres/postgres
-redis: https://github.com/redis/redis
-qdrant: https://github.com/qdrant/qdrant
+localhostで使うなら デフォルト の JWT_PRIVATE_KEY_B64, JWT_PUBLIC_KEY_B64 でOK. 
+公開では必ず新しい鍵を生成して置き換えてください. 
 
+postgre: https://github.com/postgres/postgres 
+redis: https://github.com/redis/redis 
+qdrant: https://github.com/qdrant/qdrant 
+ 
 ### 3. 起動
 #### Docker Compose で （おすすめ）
 ```bash
