@@ -71,13 +71,13 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 ## 使用している技術
 
-### backend：Python + FastAPI + SQLAlchemy + Qdrant
+### バックエンド：Python + FastAPI + SQLAlchemy + Qdrant
 
 - Python は library が多く、とても便利です。  
 - ORM, Qdrant SDK, OpenAI SDK, LangChain などを使っています。  
 - 性能の問題は Python 自体より、設計や database に出ると思います。
 
-### frontend：Vue 3 + Pinia + OpenAPI Fetch
+### フロントエンド：Vue 3 + Pinia + OpenAPI Fetch
 
 - この GitHub repo には backend の code だけです。frontend は別 repo https://github.com/Kod-e/Vounica-Web
 - Vue3 + Pinia を使うと、UI は data を管理せず、ただ表示するだけです。imperative な code はほとんど不要です。  
