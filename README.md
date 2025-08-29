@@ -29,10 +29,10 @@ cd Vounica
 ```bash
 cp .example.docker.env .docker.env
 ```
-.docker.env をコピーしたあと、OPENAI_API_KEY など未記入の値を必ず設定してください。
-JWT鍵は ES256 (ECDSA P-256) を PEM形式で生成し、Base64 に変換して入れます。
-localhostで使うなら デフォルト の JWT_PRIVATE_KEY_B64, JWT_PUBLIC_KEY_B64 でOK
-公開では必ず新しい鍵を生成して置き換えてください
+.docker.env をコピーしたあと、`OPENAI_API_KEY` など未記入の値を必ず設定してください  
+JWT鍵は ES256 (ECDSA P-256) を PEM形式で生成し、`Base64` に変換して入れます  
+localhostで使うなら デフォルト の `JWT_PRIVATE_KEY_B64`, `JWT_PUBLIC_KEY_B64` でOK  
+公開では必ず新しい鍵を生成して置き換えてください  
 #### Dockerなし（おすすめしません）
 ```bash
 cp .example.env .env
@@ -40,11 +40,11 @@ cp .example.env .env
 .env をコピーしたあと、OPENAI_API_KEY など未記入の値を必ず設定してください。
 さらに以下の接続URLを記入する必要があります. 
 
-- DATABASE_URL = PostgreSQL の接続先  
-- REDIS_URL    = Redis の接続先  
-- QDRANT_URL   = Qdrant の接続先  
+- `DATABASE_URL` = PostgreSQL の接続先  
+- `REDIS_URL`    = Redis の接続先  
+- `QDRANT_URL`   = Qdrant の接続先  
 
-localhostで使うなら デフォルト の JWT_PRIVATE_KEY_B64, JWT_PUBLIC_KEY_B64 でOK  
+localhostで使うなら デフォルト の `JWT_PRIVATE_KEY_B64`, `JWT_PUBLIC_KEY_B64` でOK  
 公開では必ず新しい鍵を生成して置き換えてください. 
 
 postgre: https://github.com/postgres/postgres 
